@@ -1,0 +1,22 @@
+{
+  "short_name": "KidHub",
+  "name": "Kid Explorer Hub",
+  "description": "Educational games and fun activities for kids.",
+  "icons": [
+    {
+      "src": "assets/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "assets/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "index.html",
+  "background_color": "#FFDEED",
+  "theme_color": "#FF8DA1",
+  "display": "standalone",
+  "orientation": "landscape"
+}

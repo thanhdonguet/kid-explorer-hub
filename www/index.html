@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Đảo Khám Phá - Học Mà Chơi</title>
+  
+  <!-- PWA & Mobile Optimization -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#FF8DA1">
+  <link rel="manifest" href="manifest.json">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&family=Outfit:wght@600;800&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/games.css">
+  
+  <!-- Capacitor Bridge (Optional local runtime) -->
+  <script src="capacitor.js" defer></script>
+</head>
+<body>
+  
+  <!-- Sound Toggle & Global HUD -->
+  <div id="hud-bar">
+    <button id="btn-back" class="hud-btn hidden" aria-label="Quay lại">
+      <svg viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z"/></svg>
+    </button>
+    <div id="star-counter" class="hud-item">
+      <span class="icon">⭐</span>
+      <span id="star-count">0</span>
+    </div>
+    <div id="app-title-hud" class="hud-item title">Đảo Khám Phá</div>
+    <button id="btn-sound" class="hud-btn" aria-label="Bật/Tắt âm thanh">
+      <svg id="sound-on-icon" viewBox="0 0 24 24"><path d="M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.85 14,18.71V20.77C18,19.86 21,16.28 21,12C21,7.72 18,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16C15.5,15.29 16.5,13.77 16.5,12M3,9V15H7L12,20V4L7,9H3Z"/></svg>
+      <svg id="sound-off-icon" class="hidden" viewBox="0 0 24 24"><path d="M12,4L9.91,6.09L12,8.18V4M16.5,12A4.5,4.5 0 0,0 14,7.97V10.18L16.45,12.63C16.48,12.43 16.5,12.22 16.5,12M19,12C19,12.9 18.82,13.75 18.48,14.53L20,16.05C20.64,14.83 21,13.46 21,12A9,9 0 0,0 14,3.23V5.29C16.89,6.15 19,8.83 19,12M4.27,3L3,4.27L7.73,9H3V15H7L12,20V13.27L16.25,17.53C15.58,18.04 14.83,18.44 14,18.71V20.77C15.38,20.44 16.63,19.79 17.7,18.9L20.73,21.93L22,20.66L4.27,3M12,9V11.18L9.82,9H12Z"/></svg>
+    </button>
+  </div>
+
+  <!-- Screen 1: Dashboard (Interactive Map of Islands) -->
+  <div id="dashboard-screen" class="screen active">
+    <!-- Parallax/Floating Background Elements -->
+    <div class="sky-background">
+      <div class="sun-glow"></div>
+      <div class="clouds">
+        <div class="cloud cloud-1"></div>
+        <div class="cloud cloud-2"></div>
+        <div class="cloud cloud-3"></div>
+      </div>
+      <div class="stars-bg"></div>
+    </div>
+
+    <!-- The Magical Exploration Map -->
+    <div class="map-container">
+      <!-- Dotted paths connecting islands -->
+      <svg class="map-paths" viewBox="0 0 1000 600">
+        <path d="M 220 400 Q 350 250 480 320 T 780 200" fill="none" stroke="rgba(255, 255, 255, 0.4)" stroke-width="4" stroke-dasharray="10, 10" />
+        <path d="M 480 320 Q 420 480 280 480" fill="none" stroke="rgba(255, 255, 255, 0.4)" stroke-width="4" stroke-dasharray="10, 10" />
+        <path d="M 480 320 Q 640 460 760 420" fill="none" stroke="rgba(255, 255, 255, 0.4)" stroke-width="4" stroke-dasharray="10, 10" />
+      </svg>
+
+      <!-- Island 1: Math Adventure -->
+      <div class="island-card" id="island-math" data-game="math">
+        <div class="island-view">
+          <div class="island-sprite math-island">
+            <!-- Cute floating elements -->
+            <span class="math-symbol plus">+</span>
+            <span class="math-symbol multiply">×</span>
+            <div class="balloon-illustration">🎈</div>
+          </div>
+          <div class="island-shadow"></div>
+        </div>
+        <div class="island-info">
+          <h3>Bóng Bay Toán Học</h3>
+          <p>Cộng trừ thử thách</p>
+        </div>
+      </div>
+
+      <!-- Island 2: Word Quest -->
+      <div class="island-card" id="island-spelling" data-game="spelling">
+        <div class="island-view">
+          <div class="island-sprite spelling-island">
+            <span class="spelling-letter l-a">A</span>
+            <span class="spelling-letter l-b">B</span>
+            <span class="spelling-letter l-c">C</span>
+            <div class="book-illustration">📖</div>
+          </div>
+          <div class="island-shadow"></div>
+        </div>
+        <div class="island-info">
+          <h3>Thám Hiểm Từ Vựng</h3>
+          <p>Ghép chữ vui nhộn</p>
+        </div>
+      </div>
+
+      <!-- Island 3: Magic Canvas -->
+      <div class="island-card" id="island-drawing" data-game="drawing">
+        <div class="island-view">
+          <div class="island-sprite drawing-island">
+            <div class="palette-illustration">🎨</div>
+            <div class="brush-illustration">🖌️</div>
+          </div>
+          <div class="island-shadow"></div>
+        </div>
+        <div class="island-info">
+          <h3>Vương Quốc Cọ Vẽ</h3>
+          <p>Sáng tạo không giới hạn</p>
+        </div>
+      </div>
+
+      <!-- Island 4: Memory Jungle -->
+      <div class="island-card" id="island-memory" data-game="memory">
+        <div class="island-view">
+          <div class="island-sprite memory-island">
+            <div class="card-illustration card-1">🦁</div>
+            <div class="card-illustration card-2">🐵</div>
+          </div>
+          <div class="island-shadow"></div>
+        </div>
+        <div class="island-info">
+          <h3>Khu Rừng Trí Nhớ</h3>
+          <p>Thử thách cặp bài trùng</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screen 2: Game Screen -->
+  <div id="game-screen" class="screen">
+    <!-- Active Game Title and Dashboard -->
+    <div id="game-dashboard">
+      <div id="game-timer" class="game-hud-item hidden">⏱️ <span id="timer-val">00</span></div>
+      <div id="game-score" class="game-hud-item">🏆 Điểm: <span id="score-val">0</span></div>
+      <div id="game-lives" class="game-hud-item hidden">❤️ <span id="lives-val">⭐⭐⭐</span></div>
+    </div>
+
+    <!-- Active Game Content Stage -->
+    <div id="game-stage">
+      <!-- Game layouts will be generated dynamically here -->
+    </div>
+  </div>
+
+  <!-- Victory Overlay (Popup dialog) -->
+  <div id="victory-modal" class="overlay hidden">
+    <div class="modal-content scale-in">
+      <div class="confetti-container"></div>
+      <div class="star-burst">🎉</div>
+      <h2>Xuất sắc quá bé ơi!</h2>
+      <p>Bé nhận được thêm sao vàng!</p>
+      <div class="stars-earned">
+        <span class="big-star animate-star-1">⭐</span>
+        <span class="big-star animate-star-2">⭐</span>
+        <span class="big-star animate-star-3">⭐</span>
+      </div>
+      <div class="reward-points">+<span id="star-reward-count">10</span> Sao</div>
+      <button id="btn-next-action" class="btn-primary">Chơi Tiếp Thôi!</button>
+    </div>
+  </div>
+
+  <!-- Script Files -->
+  <script src="js/audio.js"></script>
+  <script src="js/games/math.js"></script>
+  <script src="js/games/spelling.js"></script>
+  <script src="js/games/drawing.js"></script>
+  <script src="js/games/memory.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

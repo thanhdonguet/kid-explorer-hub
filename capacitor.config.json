@@ -1,0 +1,8 @@
+{
+  "appId": "com.kidexplorer.hub",
+  "appName": "Kid Explorer Hub",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}
