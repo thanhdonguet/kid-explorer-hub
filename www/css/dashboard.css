@@ -3,138 +3,107 @@
   justify-content: center;
   align-items: center;
   position: relative;
-  background: linear-gradient(180deg, #b3e5fc 0%, #e1f5fe 60%, #fff9c4 100%);
+  overflow: hidden;
 }
 
 /* Background elements styling */
-.sky-background {
+.ocean-background {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
+  background-image: url('../img/treasure_map_bg.png');
+  background-size: cover;
+  background-position: center;
   overflow: hidden;
   pointer-events: none;
+  z-index: 0;
 }
 
-.sun-glow {
+/* Water waves/ripples */
+.wave {
   position: absolute;
-  top: -100px;
-  right: -100px;
-  width: 300px;
-  height: 300px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(253, 224, 71, 0.4) 0%, rgba(253, 224, 71, 0) 70%);
-  animation: pulse-glow 6s ease-in-out infinite alternate;
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  animation: ripple 8s linear infinite;
+  opacity: 0;
 }
 
-@keyframes pulse-glow {
-  0% {
-    transform: scale(0.9);
-    opacity: 0.7;
-  }
+.wave-1 { width: 100px; height: 30px; top: 20%; left: 15%; animation-delay: 0s; }
+.wave-2 { width: 150px; height: 40px; top: 50%; right: 20%; animation-delay: 2s; }
+.wave-3 { width: 120px; height: 35px; bottom: 15%; left: 30%; animation-delay: 4s; }
+.wave-4 { width: 80px; height: 25px; top: 30%; right: 40%; animation-delay: 6s; }
 
-  100% {
-    transform: scale(1.1);
-    opacity: 1;
-  }
+@keyframes ripple {
+  0% { transform: scale(0.5); opacity: 0; }
+  20% { opacity: 1; }
+  80% { transform: scale(2.5); opacity: 0; }
+  100% { opacity: 0; }
 }
 
-.clouds {
+/* Compass Rose */
+.compass-rose {
   position: absolute;
+  bottom: 25px;
+  left: 25px;
+  width: 100px;
+  height: 100px;
+  background: rgba(255, 245, 215, 0.8);
+  border: 4px solid #8b5a2b;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  z-index: 1;
+}
+
+.compass-inner {
+  position: relative;
   width: 100%;
   height: 100%;
 }
 
-.cloud {
+.compass-point {
   position: absolute;
-  background: white;
-  border-radius: 100px;
-  opacity: 0.75;
+  font-family: var(--font-title);
+  font-weight: 800;
+  font-size: 16px;
+  color: #5c3a21;
 }
 
-.cloud::before,
-.cloud::after {
-  content: '';
+.north { top: 2px; left: 50%; transform: translateX(-50%); color: #ff477e; font-size: 20px;}
+.south { bottom: 2px; left: 50%; transform: translateX(-50%); }
+.east { top: 50%; right: 5px; transform: translateY(-50%); }
+.west { top: 50%; left: 5px; transform: translateY(-50%); }
+
+/* Map Decorations */
+.map-decor {
   position: absolute;
-  background: white;
-  border-radius: 50%;
+  font-size: 2.5rem;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+  z-index: 1;
 }
 
-.cloud-1 {
-  width: 120px;
-  height: 40px;
-  top: 15%;
-  left: 10%;
-  animation: drift 25s linear infinite;
-}
+.ship { top: 15%; right: 10%; animation: sail 20s linear infinite; }
+.sea-monster { bottom: 20%; right: 15%; font-size: 3rem; animation: float-island 5s ease-in-out infinite 1s; }
+.tree-1 { top: 25%; left: 5%; font-size: 2.5rem; }
+.tree-2 { bottom: 15%; right: 35%; font-size: 2rem; transform: scaleX(-1); }
+.rocks { top: 10%; left: 40%; font-size: 2rem; }
+.mountain-1 { top: 5%; right: 30%; font-size: 3.5rem; }
+.mountain-2 { top: 15%; right: 25%; font-size: 3rem; }
+.volcano { top: 5%; left: 20%; font-size: 4rem; }
+.forest-1 { top: 35%; left: 10%; font-size: 2.5rem; }
+.forest-2 { bottom: 25%; left: 40%; font-size: 2.5rem; }
 
-.cloud-1::before {
-  width: 50px;
-  height: 50px;
-  top: -20px;
-  left: 15px;
-}
-
-.cloud-1::after {
-  width: 70px;
-  height: 70px;
-  top: -35px;
-  left: 40px;
-}
-
-.cloud-2 {
-  width: 160px;
-  height: 50px;
-  top: 30%;
-  right: 15%;
-  animation: drift 35s linear infinite reverse;
-}
-
-.cloud-2::before {
-  width: 60px;
-  height: 60px;
-  top: -25px;
-  left: 20px;
-}
-
-.cloud-2::after {
-  width: 90px;
-  height: 90px;
-  top: -45px;
-  left: 55px;
-}
-
-.cloud-3 {
-  width: 100px;
-  height: 35px;
-  bottom: 25%;
-  left: 30%;
-  animation: drift 20s linear infinite;
-}
-
-.cloud-3::before {
-  width: 40px;
-  height: 40px;
-  top: -15px;
-  left: 10px;
-}
-
-.cloud-3::after {
-  width: 55px;
-  height: 55px;
-  top: -25px;
-  left: 30px;
-}
-
-@keyframes drift {
-  0% {
-    transform: translateX(-150px);
-  }
-
-  100% {
-    transform: translateX(calc(100vw + 150px));
-  }
+@keyframes sail {
+  0% { transform: translateX(50px) translateY(0) rotate(-5deg); opacity: 0; }
+  10% { opacity: 1; }
+  45% { transform: translateX(-150px) translateY(-20px) rotate(5deg); }
+  90% { opacity: 1; }
+  100% { transform: translateX(-300px) translateY(10px) rotate(-5deg); opacity: 0; }
 }
 
 /* Map Layout – 4 islands */
@@ -407,28 +376,39 @@
 .color-result::after {
   content: '';
   position: absolute;
-  top: 14%; left: 22%;
-  width: 30%; height: 18%;
+  top: 14%;
+  left: 22%;
+  width: 30%;
+  height: 18%;
   background: rgba(255, 255, 255, 0.65);
   border-radius: 50%;
   transform: rotate(-30deg);
 }
+
 .color-bubble-1 {
-  width: 32px; height: 32px;
+  width: 32px;
+  height: 32px;
   background: radial-gradient(circle at 35% 30%, #a8ff78, #34c759 60%, #1e8f3a);
-  top: 15px; left: 16px;
+  top: 15px;
+  left: 16px;
   animation: float 2.5s ease-in-out infinite alternate;
 }
+
 .color-bubble-2 {
-  width: 32px; height: 32px;
+  width: 32px;
+  height: 32px;
   background: radial-gradient(circle at 35% 30%, #ff7b7b, #ff3b30 60%, #cc2b20);
-  top: 12px; right: 20px;
+  top: 12px;
+  right: 20px;
   animation: float 2.8s ease-in-out infinite alternate 0.4s;
 }
+
 .color-result {
-  width: 44px; height: 44px;
+  width: 44px;
+  height: 44px;
   background: radial-gradient(circle at 35% 30%, #ffea8a, #ffcc00 60%, #cca300);
-  bottom: 8px; left: 37px;
+  bottom: 8px;
+  left: 37px;
   animation: float 3s ease-in-out infinite alternate 0.8s;
 }
 
