@@ -40,6 +40,7 @@
       <svg id="sound-on-icon" viewBox="0 0 24 24"><path d="M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.85 14,18.71V20.77C18,19.86 21,16.28 21,12C21,7.72 18,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16C15.5,15.29 16.5,13.77 16.5,12M3,9V15H7L12,20V4L7,9H3Z"/></svg>
       <svg id="sound-off-icon" class="hidden" viewBox="0 0 24 24"><path d="M12,4L9.91,6.09L12,8.18V4M16.5,12A4.5,4.5 0 0,0 14,7.97V10.18L16.45,12.63C16.48,12.43 16.5,12.22 16.5,12M19,12C19,12.9 18.82,13.75 18.48,14.53L20,16.05C20.64,14.83 21,13.46 21,12A9,9 0 0,0 14,3.23V5.29C16.89,6.15 19,8.83 19,12M4.27,3L3,4.27L7.73,9H3V15H7L12,20V13.27L16.25,17.53C15.58,18.04 14.83,18.44 14,18.71V20.77C15.38,20.44 16.63,19.79 17.7,18.9L20.73,21.93L22,20.66L4.27,3M12,9V11.18L9.82,9H12Z"/></svg>
     </button>
+    <button id="btn-lang" class="hud-btn" style="font-family: var(--font-kids); font-weight: 800; font-size: 1.1rem; color: var(--text-dark);" aria-label="Đổi ngôn ngữ">VI</button>
   </div>
 
   <!-- Screen 1: Dashboard (Interactive Map of Islands) -->
@@ -135,7 +136,7 @@
     <!-- Active Game Title and Dashboard -->
     <div id="game-dashboard">
       <div id="game-timer" class="game-hud-item hidden">⏱️ <span id="timer-val">00</span></div>
-      <div id="game-score" class="game-hud-item">🏆 Điểm: <span id="score-val">0</span></div>
+      <div id="game-score" class="game-hud-item">🏆 <span id="score-label">Điểm</span>: <span id="score-val">0</span></div>
       <div id="game-lives" class="game-hud-item hidden">❤️ <span id="lives-val">⭐⭐⭐</span></div>
     </div>
 

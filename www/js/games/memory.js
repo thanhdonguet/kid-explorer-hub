@@ -37,6 +37,10 @@ class MemoryJungle {
     document.getElementById('score-val').textContent = `${this.matchedPairs}/${this.pairsCount}`;
   }
 
+  updateLanguage() {
+    this.updateHUD();
+  }
+
   setupBoard() {
     // 1. Select subset of animals and double them
     const selectedAnimals = this.animals.slice(0, this.pairsCount);

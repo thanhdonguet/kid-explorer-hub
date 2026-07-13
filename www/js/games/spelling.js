@@ -89,6 +89,7 @@ class SpellingQuest {
     this.container.innerHTML = `
       <div id="spelling-container">
         <div class="word-image-view" id="word-image"></div>
+        <div id="word-translation-label" style="font-size: 1.3rem; margin-top: 10px; color: var(--text-dark); background: white; padding: 4px 15px; border-radius: 15px; border: 2px solid var(--secondary); font-weight: 700; box-shadow: 0 4px 6px rgba(0,0,0,0.05);"></div>
         <div class="slots-row" id="slots-container"></div>
         <div class="letters-pool" id="pool-container"></div>
       </div>
@@ -99,6 +100,21 @@ class SpellingQuest {
 
   updateHUD() {
     document.getElementById('score-val').textContent = `${this.score}/${this.targetScore}`;
+  }
+
+  updateLanguage() {
+    this.updateHUD();
+    this.renderTranslationLabel();
+  }
+
+  renderTranslationLabel() {
+    const label = document.getElementById('word-translation-label');
+    if (label && this.currentWord) {
+      const translationText = this.app.lang === 'vi' 
+        ? this.currentWord.vietnamese 
+        : this.currentWord.word.charAt(0) + this.currentWord.word.slice(1).toLowerCase();
+      label.textContent = translationText;
+    }
   }
 
   nextWord() {
@@ -119,10 +135,10 @@ class SpellingQuest {
     this.currentWord = selected;
     this.usedWords.push(selected.word);
 
-    // 1. Draw SVG Image & tooltip
+    // 1. Draw SVG Image & translation label
     const imgDiv = document.getElementById('word-image');
     imgDiv.innerHTML = selected.svg;
-    imgDiv.setAttribute('title', selected.vietnamese);
+    this.renderTranslationLabel();
 
     // 2. Draw slots
     const slotsContainer = document.getElementById('slots-container');

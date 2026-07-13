@@ -46,6 +46,10 @@ class MathAdventure {
     document.getElementById('score-val').textContent = `${this.score}/${this.targetScore}`;
   }
 
+  updateLanguage() {
+    this.updateHUD();
+  }
+
   nextQuestion() {
     // Generate simple sum
     const a = Math.floor(Math.random() * 8) + 1; // 1-8

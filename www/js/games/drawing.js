@@ -28,7 +28,8 @@ class MagicCanvas {
     this.strokeCount = 0;
     
     // Set score indicator as strokes count
-    document.getElementById('score-val').textContent = "0 nét vẽ";
+    const t = TRANSLATIONS[this.app.lang];
+    document.getElementById('score-val').textContent = `0 ${t.score_drawing}`;
 
     this.container.innerHTML = `
       <div id="drawing-container">
@@ -36,12 +37,12 @@ class MagicCanvas {
         <div id="drawing-toolbox">
           
           <div class="toolbox-section">
-            <div class="toolbox-label">Màu vẽ</div>
+            <div class="toolbox-label" id="lbl-draw-color">${t.draw_color}</div>
             <div class="color-palette" id="colors-container"></div>
           </div>
 
           <div class="toolbox-section">
-            <div class="toolbox-label">Kích thước</div>
+            <div class="toolbox-label" id="lbl-draw-size">${t.draw_size}</div>
             <div class="size-selectors">
               <button class="size-btn active" data-size="6"><div class="size-dot size-small"></div></button>
               <button class="size-btn" data-size="14"><div class="size-dot size-medium"></div></button>
@@ -50,14 +51,14 @@ class MagicCanvas {
           </div>
 
           <div class="toolbox-section">
-            <div class="toolbox-label">Hình Dán</div>
+            <div class="toolbox-label" id="lbl-draw-stamp">${t.draw_stamp}</div>
             <div class="stamps-palette" id="stamps-container"></div>
           </div>
 
           <div class="toolbox-section" style="margin-top: auto; gap: 8px;">
-            <button id="btn-rainbow-toggle" class="tool-action-btn btn-rainbow">🌈 Bút Cầu Vồng</button>
-            <button id="btn-clear-canvas" class="tool-action-btn btn-clear">🗑️ Xoá Sạch</button>
-            <button id="btn-submit-art" class="btn-primary" style="padding: 10px 15px; font-size: 1rem; width: 100%; box-shadow: 0 4px 0 #d93d5f;">🖼️ Xong!</button>
+            <button id="btn-rainbow-toggle" class="tool-action-btn btn-rainbow">${t.draw_rainbow}</button>
+            <button id="btn-clear-canvas" class="tool-action-btn btn-clear">${t.draw_clear}</button>
+            <button id="btn-submit-art" class="btn-primary" style="padding: 10px 15px; font-size: 1rem; width: 100%; box-shadow: 0 4px 0 #d93d5f;">${t.draw_submit}</button>
           </div>
 
         </div>
@@ -80,6 +81,31 @@ class MagicCanvas {
     // Redraw on window resize
     this.resizeHandler = () => this.handleResize();
     window.addEventListener('resize', this.resizeHandler);
+  }
+
+  updateLanguage() {
+    const t = TRANSLATIONS[this.app.lang];
+    document.getElementById('score-val').textContent = `${this.strokeCount} ${t.score_drawing}`;
+    
+    // Update static labels in DOM
+    const lblColor = document.getElementById('lbl-draw-color');
+    if (lblColor) lblColor.textContent = t.draw_color;
+    
+    const lblSize = document.getElementById('lbl-draw-size');
+    if (lblSize) lblSize.textContent = t.draw_size;
+    
+    const lblStamp = document.getElementById('lbl-draw-stamp');
+    if (lblStamp) lblStamp.textContent = t.draw_stamp;
+
+    // Update buttons
+    const btnRainbow = document.getElementById('btn-rainbow-toggle');
+    if (btnRainbow) btnRainbow.textContent = t.draw_rainbow;
+    
+    const btnClear = document.getElementById('btn-clear-canvas');
+    if (btnClear) btnClear.textContent = t.draw_clear;
+    
+    const btnSubmit = document.getElementById('btn-submit-art');
+    if (btnSubmit) btnSubmit.textContent = t.draw_submit;
   }
 
   setupCanvas() {
@@ -200,7 +226,7 @@ class MagicCanvas {
       // Clear
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
       this.strokeCount = 0;
-      document.getElementById('score-val').textContent = "0 nét vẽ";
+      document.getElementById('score-val').textContent = `0 ${TRANSLATIONS[this.app.lang].score_drawing}`;
     });
 
     const submitBtn = document.getElementById('btn-submit-art');
@@ -210,7 +236,7 @@ class MagicCanvas {
         this.app.winGame(12); // Award stars
       } else {
         // Encourage to draw first
-        alert("Bé vẽ thêm chút nữa rồi hẵng nộp tranh nha! 🥰");
+        alert(TRANSLATIONS[this.app.lang].draw_alert);
       }
     });
   }

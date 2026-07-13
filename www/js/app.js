@@ -1,7 +1,65 @@
 /* Central Application Router & State Manager */
+const TRANSLATIONS = {
+  vi: {
+    title: "Đảo Khám Phá",
+    title_math: "Bóng Bay Toán Học",
+    subtitle_math: "Cộng trừ thử thách",
+    title_spelling: "Thám Hiểm Từ Vựng",
+    subtitle_spelling: "Ghép chữ vui nhộn",
+    title_drawing: "Vương Quốc Cọ Vẽ",
+    subtitle_drawing: "Sáng tạo không giới hạn",
+    title_memory: "Khu Rừng Trí Nhớ",
+    subtitle_memory: "Thử thách cặp bài trùng",
+    victory_title: "Xuất sắc quá bé ơi!",
+    victory_subtitle: "Bé nhận được thêm sao vàng!",
+    victory_points: "Sao",
+    btn_next: "Chơi Tiếp Thôi!",
+    score_math: "Điểm",
+    score_spelling: "Điểm",
+    score_memory: "Cặp đã ghép",
+    score_drawing: "nét vẽ",
+    draw_color: "Màu vẽ",
+    draw_size: "Kích thước",
+    draw_stamp: "Hình Dán",
+    draw_rainbow: "🌈 Bút Cầu Vồng",
+    draw_clear: "🗑️ Xoá Sạch",
+    draw_submit: "🖼️ Xong!",
+    draw_alert: "Bé vẽ thêm chút nữa rồi hẵng nộp tranh nha! 🥰",
+    alert_spelling_undo: "Bấm vào chữ đã ghép để sửa bé nhé!"
+  },
+  en: {
+    title: "Explorer Island",
+    title_math: "Math Balloon Pop",
+    subtitle_math: "Math Challenges",
+    title_spelling: "Spelling Quest",
+    subtitle_spelling: "Fun Word Builder",
+    title_drawing: "Magic Drawing",
+    subtitle_drawing: "Unlimited Creativity",
+    title_memory: "Memory Jungle",
+    subtitle_memory: "Match Cute Animals",
+    victory_title: "Awesome Job, Kiddo!",
+    victory_subtitle: "You earned gold stars!",
+    victory_points: "Stars",
+    btn_next: "Keep Playing!",
+    score_math: "Score",
+    score_spelling: "Score",
+    score_memory: "Matched",
+    score_drawing: "strokes",
+    draw_color: "Paint Color",
+    draw_size: "Brush Size",
+    draw_stamp: "Stamps",
+    draw_rainbow: "🌈 Rainbow Pen",
+    draw_clear: "🗑️ Clear All",
+    draw_submit: "🖼️ Done!",
+    draw_alert: "Draw a little more before submitting! 🥰",
+    alert_spelling_undo: "Click a filled slot to undo it!"
+  }
+};
+
 class AppController {
   constructor() {
     this.stars = parseInt(localStorage.getItem('kid_explorer_stars')) || 0;
+    this.lang = localStorage.getItem('kid_explorer_lang') || 'vi';
     this.activeGame = null;
     this.activeGameId = '';
     
@@ -15,6 +73,7 @@ class AppController {
       soundBtn: document.getElementById('btn-sound'),
       soundOnIcon: document.getElementById('sound-on-icon'),
       soundOffIcon: document.getElementById('sound-off-icon'),
+      langBtn: document.getElementById('btn-lang'),
       starCount: document.getElementById('star-count'),
       title: document.getElementById('app-title-hud')
     };
@@ -26,6 +85,8 @@ class AppController {
   init() {
     // 1. Render Initial HUD
     this.hud.starCount.textContent = this.stars;
+    this.hud.langBtn.textContent = this.lang === 'vi' ? 'VI' : 'EN';
+    this.updateLanguageUI();
 
     // 2. Attach Global Event Listeners
     // Island clicks
@@ -56,6 +117,20 @@ class AppController {
       }
     });
 
+    // Language toggle
+    this.hud.langBtn.addEventListener('click', () => {
+      this.lang = this.lang === 'vi' ? 'en' : 'vi';
+      audio.playTap();
+      localStorage.setItem('kid_explorer_lang', this.lang);
+      this.hud.langBtn.textContent = this.lang === 'vi' ? 'VI' : 'EN';
+      this.updateLanguageUI();
+
+      // Notify active game to update language if running
+      if (this.activeGame && typeof this.activeGame.updateLanguage === 'function') {
+        this.activeGame.updateLanguage();
+      }
+    });
+
     // Next game action button inside victory overlay
     this.victoryNextBtn.addEventListener('click', () => {
       audio.playTap();
@@ -80,6 +155,51 @@ class AppController {
     }, { once: true });
   }
 
+  // Translates all static text in DOM based on current active language
+  updateLanguageUI() {
+    const t = TRANSLATIONS[this.lang];
+
+    // HUD Title
+    if (this.activeGameId === '') {
+      this.hud.title.textContent = t.title;
+    } else {
+      this.hud.title.textContent = t[`title_${this.activeGameId}`];
+    }
+
+    // Score Label Translation
+    const scoreLabel = document.getElementById('score-label');
+    if (scoreLabel && this.activeGameId !== '') {
+      scoreLabel.textContent = t[`score_${this.activeGameId}`];
+    }
+
+    // Island Titles & Subtitles
+    const setIslandText = (id, key) => {
+      const card = document.getElementById(id);
+      if (card) {
+        card.querySelector('h3').textContent = t[`title_${key}`];
+        card.querySelector('p').textContent = t[`subtitle_${key}`];
+      }
+    };
+    setIslandText('island-math', 'math');
+    setIslandText('island-spelling', 'spelling');
+    setIslandText('island-drawing', 'drawing');
+    setIslandText('island-memory', 'memory');
+
+    // Victory Screen Modal Texts
+    if (this.victoryModal) {
+      this.victoryModal.querySelector('h2').textContent = t.victory_title;
+      this.victoryModal.querySelector('p').textContent = t.victory_subtitle;
+      this.victoryNextBtn.textContent = t.btn_next;
+      
+      const ptsSpan = this.victoryModal.querySelector('.reward-points');
+      if (ptsSpan) {
+        ptsSpan.innerHTML = `+<span id="star-reward-count">${this.victoryStarsRewardVal.textContent}</span> ${t.victory_points}`;
+        // Re-cache reference since we replaced innerHTML
+        this.victoryStarsRewardVal = document.getElementById('star-reward-count');
+      }
+    }
+  }
+
   // Routing: Switch Screen helper
   showScreen(screenName) {
     Object.keys(this.screens).forEach(key => {
@@ -94,7 +214,7 @@ class AppController {
       this.hud.backBtn.classList.remove('hidden');
     } else {
       this.hud.backBtn.classList.add('hidden');
-      this.hud.title.textContent = "Đảo Khám Phá";
+      this.hud.title.textContent = TRANSLATIONS[this.lang].title;
     }
   }
 
@@ -106,22 +226,21 @@ class AppController {
     const stage = document.getElementById('game-stage');
     stage.innerHTML = ''; // Reset container
 
+    // Translate HUD title for the active game
+    this.hud.title.textContent = TRANSLATIONS[this.lang][`title_${gameId}`];
+
     // Load specific game module
     switch(gameId) {
       case 'math':
-        this.hud.title.textContent = "Bóng Bay Toán Học";
         this.activeGame = new MathAdventure(stage, this);
         break;
       case 'spelling':
-        this.hud.title.textContent = "Thám Hiểm Từ Vựng";
         this.activeGame = new SpellingQuest(stage, this);
         break;
       case 'drawing':
-        this.hud.title.textContent = "Vương Quốc Cọ Vẽ";
         this.activeGame = new MagicCanvas(stage, this);
         break;
       case 'memory':
-        this.hud.title.textContent = "Khu Rừng Trí Nhớ";
         this.activeGame = new MemoryJungle(stage, this);
         break;
     }
