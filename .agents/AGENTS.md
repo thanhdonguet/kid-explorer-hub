@@ -12,6 +12,7 @@ To prevent unwanted changes and resource waste, the AI MUST adhere to these stri
 * **Preserve Unrelated Code**: Do not modify, clean, or delete comments, docstrings, or helpers that are unrelated to the current task.
 * **Propose Before Restructuring**: Any change to file structures, folder layouts, or core architectural layers must be proposed in text first. Wait for explicit user confirmation before applying.
 * **Token Conservation**: Use localized search/replace or targeted line edits. DO NOT read or write entire files if only small sections are changing.
+* **Git Commit & Push Frequency**: Commit and push changes to GitHub once every hour of continuous work, or upon completing a significant feature. DO NOT commit after every single prompt/edit, to maintain a clean repository history.
 
 ---
 

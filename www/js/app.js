@@ -1,320 +1,241 @@
-/* Central Application Router & State Manager */
-const TRANSLATIONS = {
-  vi: {
-    title: "Đảo Khám Phá",
-    title_math: "Bóng Bay Toán Học",
-    subtitle_math: "Cộng trừ thử thách",
-    title_spelling: "Thám Hiểm Từ Vựng",
-    subtitle_spelling: "Ghép chữ vui nhộn",
-    title_drawing: "Vương Quốc Cọ Vẽ",
-    subtitle_drawing: "Sáng tạo không giới hạn",
-    title_memory: "Khu Rừng Trí Nhớ",
-    subtitle_memory: "Thử thách cặp bài trùng",
-    victory_title: "Xuất sắc quá bé ơi!",
-    victory_subtitle: "Bé nhận được thêm sao vàng!",
-    victory_points: "Sao",
-    btn_next: "Chơi Tiếp Thôi!",
-    score_math: "Điểm",
-    score_spelling: "Điểm",
-    score_memory: "Cặp đã ghép",
-    score_drawing: "nét vẽ",
-    draw_color: "Màu vẽ",
-    draw_size: "Kích thước",
-    draw_stamp: "Hình Dán",
-    draw_rainbow: "🌈 Bút Cầu Vồng",
-    draw_clear: "🗑️ Xoá Sạch",
-    draw_submit: "🖼️ Xong!",
-    draw_alert: "Bé vẽ thêm chút nữa rồi hẵng nộp tranh nha! 🥰",
-    alert_spelling_undo: "Bấm vào chữ đã ghép để sửa bé nhé!"
-  },
-  en: {
-    title: "Explorer Island",
-    title_math: "Math Balloon Pop",
-    subtitle_math: "Math Challenges",
-    title_spelling: "Spelling Quest",
-    subtitle_spelling: "Fun Word Builder",
-    title_drawing: "Magic Drawing",
-    subtitle_drawing: "Unlimited Creativity",
-    title_memory: "Memory Jungle",
-    subtitle_memory: "Match Cute Animals",
-    victory_title: "Awesome Job, Kiddo!",
-    victory_subtitle: "You earned gold stars!",
-    victory_points: "Stars",
-    btn_next: "Keep Playing!",
-    score_math: "Score",
-    score_spelling: "Score",
-    score_memory: "Matched",
-    score_drawing: "strokes",
-    draw_color: "Paint Color",
-    draw_size: "Brush Size",
-    draw_stamp: "Stamps",
-    draw_rainbow: "🌈 Rainbow Pen",
-    draw_clear: "🗑️ Clear All",
-    draw_submit: "🖼️ Done!",
-    draw_alert: "Draw a little more before submitting! 🥰",
-    alert_spelling_undo: "Click a filled slot to undo it!"
-  }
-};
+/* ================================================================
+   Central Application Router & State Manager
+   – Dashboard: Đảo Khám Phá (4 islands, only Memory is active)
+   – Language toggle: VI ↔ EN
+   ================================================================ */
 
 class AppController {
   constructor() {
-    this.stars = parseInt(localStorage.getItem('kid_explorer_stars')) || 0;
-    this.lang = localStorage.getItem('kid_explorer_lang') || 'vi';
-    this.activeGame = null;
-    this.activeGameId = '';
-    
-    // UI Cache
+    // ── UI Cache ──
     this.screens = {
       dashboard: document.getElementById('dashboard-screen'),
-      game: document.getElementById('game-screen')
+      game:      document.getElementById('game-screen'),
     };
     this.hud = {
-      backBtn: document.getElementById('btn-back'),
-      soundBtn: document.getElementById('btn-sound'),
-      soundOnIcon: document.getElementById('sound-on-icon'),
+      backBtn:      document.getElementById('btn-back'),
+      soundBtn:     document.getElementById('btn-sound'),
+      soundOnIcon:  document.getElementById('sound-on-icon'),
       soundOffIcon: document.getElementById('sound-off-icon'),
-      langBtn: document.getElementById('btn-lang'),
-      starCount: document.getElementById('star-count'),
-      title: document.getElementById('app-title-hud')
+      starCount:    document.getElementById('star-count'),
+      title:        document.getElementById('app-title-hud'),
+      langBtn:      document.getElementById('btn-lang'),
     };
-    this.victoryModal = document.getElementById('victory-modal');
-    this.victoryNextBtn = document.getElementById('btn-next-action');
-    this.victoryStarsRewardVal = document.getElementById('star-reward-count');
+
+    // ── State ──
+    this.activeGame   = null;
+    this.activeGameId = '';
+    this.lang         = 'vi';
+    this.stars        = parseInt(localStorage.getItem('kid_explorer_stars') || '0', 10);
+
+    // ── i18n Translations ──
+    this.T = {
+      vi: {
+        appTitle:     'Đảo Khám Phá',
+        memoryName:   'Khu Rừng Trí Nhớ',
+        memoryDesc:   'Lật thẻ tìm cặp đôi',
+        mathName:     'Bóng Bay Toán Học',
+        mathDesc:     'Cộng trừ thử thách',
+        spellingName: 'Thám Hiểm Từ Vựng',
+        spellingDesc: 'Ghép chữ vui nhộn',
+        drawingName:  'Vương Quốc Cọ Vẽ',
+        drawingDesc:  'Sáng tạo không giới hạn',
+        colorName:    'Phòng Thí Nghiệm Màu',
+        colorDesc:    'Pha màu kỳ diệu',
+        comingSoon:   '🔒 Sắp Ra Mắt',
+        scoreLabel:   'Điểm',
+        backTo:       'Đảo Khám Phá',
+      },
+      en: {
+        appTitle:     'Explorer Island',
+        memoryName:   'Memory Jungle',
+        memoryDesc:   'Flip cards, find pairs!',
+        mathName:     'Math Balloons',
+        mathDesc:     'Addition challenges',
+        spellingName: 'Word Explorer',
+        spellingDesc: 'Fun word building',
+        drawingName:  'Paint Kingdom',
+        drawingDesc:  'Create without limits',
+        colorName:    'Color Mix Lab',
+        colorDesc:    'Mix magical colors',
+        comingSoon:   '🔒 Coming Soon',
+        scoreLabel:   'Score',
+        backTo:       'Explorer Island',
+      },
+    };
   }
 
+  /* ================================================================
+     INIT
+     ================================================================ */
   init() {
-    // 1. Render Initial HUD
+    // 1. Init HUD values
     this.hud.starCount.textContent = this.stars;
-    this.hud.langBtn.textContent = this.lang === 'vi' ? 'VI' : 'EN';
-    this.updateLanguageUI();
+    this.applyLang();
 
-    // 2. Attach Global Event Listeners
-    // Island clicks
+    // 2. Island click listeners
     document.querySelectorAll('.island-card').forEach(card => {
       card.addEventListener('click', () => {
         const gameId = card.getAttribute('data-game');
         audio.playTap();
+
+        if (card.classList.contains('island-locked')) {
+          this._showToast(this.T[this.lang].comingSoon);
+          return;
+        }
         this.launchGame(gameId);
       });
     });
 
-    // Back button
+    // 3. Back button
     this.hud.backBtn.addEventListener('click', () => {
       audio.playTap();
       this.closeActiveGame();
     });
 
-    // Sound toggle
+    // 4. Sound toggle
     this.hud.soundBtn.addEventListener('click', () => {
       const isMuted = audio.toggleMute();
       audio.playTap();
-      if (isMuted) {
-        this.hud.soundOnIcon.classList.add('hidden');
-        this.hud.soundOffIcon.classList.remove('hidden');
-      } else {
-        this.hud.soundOnIcon.classList.remove('hidden');
-        this.hud.soundOffIcon.classList.add('hidden');
-      }
+      this.hud.soundOnIcon.classList.toggle('hidden', isMuted);
+      this.hud.soundOffIcon.classList.toggle('hidden', !isMuted);
     });
 
-    // Language toggle
+    // 5. Language toggle
     this.hud.langBtn.addEventListener('click', () => {
-      this.lang = this.lang === 'vi' ? 'en' : 'vi';
       audio.playTap();
-      localStorage.setItem('kid_explorer_lang', this.lang);
-      this.hud.langBtn.textContent = this.lang === 'vi' ? 'VI' : 'EN';
-      this.updateLanguageUI();
-
-      // Notify active game to update language if running
+      this.lang = this.lang === 'vi' ? 'en' : 'vi';
+      this.hud.langBtn.textContent = this.lang.toUpperCase();
+      document.documentElement.setAttribute('data-lang', this.lang);
+      this.applyLang();
+      // Pass lang to active game if it supports it
       if (this.activeGame && typeof this.activeGame.updateLanguage === 'function') {
-        this.activeGame.updateLanguage();
+        this.activeGame.updateLanguage(this.lang, this.T[this.lang]);
       }
     });
 
-    // Next game action button inside victory overlay
-    this.victoryNextBtn.addEventListener('click', () => {
-      audio.playTap();
-      this.hideVictory();
-      this.closeActiveGame();
-    });
-
-    // Service Worker Registration for PWA Capabilities
+    // 6. PWA Service Worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').then((reg) => {
-          console.log('Service Worker registered successfully!', reg.scope);
-        }).catch((err) => {
-          console.warn('Service Worker registration failed: ', err);
-        });
+        navigator.serviceWorker.register('sw.js')
+          .then(reg  => console.log('SW registered:', reg.scope))
+          .catch(err => console.warn('SW failed:', err));
       });
     }
 
-    // Audio Context unlock listener
-    document.body.addEventListener('click', () => {
-      audio.resume();
-    }, { once: true });
+    // 7. Unlock Web Audio on first interaction
+    document.body.addEventListener('click', () => audio.resume(), { once: true });
   }
 
-  // Translates all static text in DOM based on current active language
-  updateLanguageUI() {
-    const t = TRANSLATIONS[this.lang];
-
-    // HUD Title
-    if (this.activeGameId === '') {
-      this.hud.title.textContent = t.title;
-    } else {
-      this.hud.title.textContent = t[`title_${this.activeGameId}`];
-    }
-
-    // Score Label Translation
-    const scoreLabel = document.getElementById('score-label');
-    if (scoreLabel && this.activeGameId !== '') {
-      scoreLabel.textContent = t[`score_${this.activeGameId}`];
-    }
-
-    // Island Titles & Subtitles
-    const setIslandText = (id, key) => {
-      const card = document.getElementById(id);
-      if (card) {
-        card.querySelector('h3').textContent = t[`title_${key}`];
-        card.querySelector('p').textContent = t[`subtitle_${key}`];
-      }
-    };
-    setIslandText('island-math', 'math');
-    setIslandText('island-spelling', 'spelling');
-    setIslandText('island-drawing', 'drawing');
-    setIslandText('island-memory', 'memory');
-
-    // Victory Screen Modal Texts
-    if (this.victoryModal) {
-      this.victoryModal.querySelector('h2').textContent = t.victory_title;
-      this.victoryModal.querySelector('p').textContent = t.victory_subtitle;
-      this.victoryNextBtn.textContent = t.btn_next;
-      
-      const ptsSpan = this.victoryModal.querySelector('.reward-points');
-      if (ptsSpan) {
-        ptsSpan.innerHTML = `+<span id="star-reward-count">${this.victoryStarsRewardVal.textContent}</span> ${t.victory_points}`;
-        // Re-cache reference since we replaced innerHTML
-        this.victoryStarsRewardVal = document.getElementById('star-reward-count');
-      }
+  /* ================================================================
+     LANGUAGE
+     ================================================================ */
+  applyLang() {
+    const t = this.T[this.lang];
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      if (t[key] !== undefined) el.textContent = t[key];
+    });
+    // Sync HUD title with current screen
+    if (!this.activeGameId) {
+      this.hud.title.textContent = t.appTitle;
+    } else if (this.activeGameId === 'memory') {
+      this.hud.title.textContent = t.memoryName;
+    } else if (this.activeGameId === 'color') {
+      this.hud.title.textContent = t.colorName;
     }
   }
 
-  // Routing: Switch Screen helper
-  showScreen(screenName) {
-    Object.keys(this.screens).forEach(key => {
-      if (key === screenName) {
-        this.screens[key].classList.add('active');
-      } else {
-        this.screens[key].classList.remove('active');
-      }
+  /* ── Toast notification for locked islands ── */
+  _showToast(msg) {
+    // Remove any existing toast
+    const old = document.getElementById('app-toast');
+    if (old) old.remove();
+
+    const toast = document.createElement('div');
+    toast.id = 'app-toast';
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+
+    // Trigger animation via rAF
+    requestAnimationFrame(() => {
+      toast.classList.add('toast-visible');
     });
 
-    if (screenName === 'game') {
+    setTimeout(() => {
+      toast.classList.remove('toast-visible');
+      setTimeout(() => toast.remove(), 400);
+    }, 2000);
+  }
+
+  /* ================================================================
+     NAVIGATION
+     ================================================================ */
+  showScreen(name) {
+    Object.keys(this.screens).forEach(key => {
+      this.screens[key].classList.toggle('active', key === name);
+    });
+
+    const t = this.T[this.lang];
+    if (name === 'game') {
       this.hud.backBtn.classList.remove('hidden');
     } else {
       this.hud.backBtn.classList.add('hidden');
-      this.hud.title.textContent = TRANSLATIONS[this.lang].title;
+      this.hud.title.textContent = t.appTitle;
     }
   }
 
-  // Load and start game
+  /* ── Launch a game ── */
   launchGame(gameId) {
     this.activeGameId = gameId;
     this.showScreen('game');
 
     const stage = document.getElementById('game-stage');
-    stage.innerHTML = ''; // Reset container
+    stage.innerHTML = '';
+    
+    const dashboard = document.getElementById('game-dashboard');
+    if (dashboard) dashboard.style.display = 'flex';
 
-    // Translate HUD title for the active game
-    this.hud.title.textContent = TRANSLATIONS[this.lang][`title_${gameId}`];
+    const t = this.T[this.lang];
 
-    // Load specific game module
-    switch(gameId) {
-      case 'math':
-        this.activeGame = new MathAdventure(stage, this);
-        break;
-      case 'spelling':
-        this.activeGame = new SpellingQuest(stage, this);
-        break;
-      case 'drawing':
-        this.activeGame = new MagicCanvas(stage, this);
-        break;
+    switch (gameId) {
       case 'memory':
+        this.hud.title.textContent = t.memoryName;
         this.activeGame = new MemoryJungle(stage, this);
         break;
+      case 'color':
+        this.hud.title.textContent = t.colorName;
+        if (dashboard) dashboard.style.display = 'none';
+        this.activeGame = new ColorMixLab(stage, this);
+        break;
+      default:
+        // Unknown / unimplemented game – go back to dashboard
+        console.warn('Game not implemented:', gameId);
+        this.showScreen('dashboard');
+        return;
     }
 
-    if (this.activeGame) {
-      this.activeGame.start();
-    }
+    this.activeGame.start();
   }
 
+  /* ── Close active game ── */
   closeActiveGame() {
     if (this.activeGame) {
       this.activeGame.destroy();
       this.activeGame = null;
     }
     this.activeGameId = '';
-    
-    // Hide game elements
-    document.getElementById('game-timer').classList.add('hidden');
-    document.getElementById('game-lives').classList.add('hidden');
-    
     this.showScreen('dashboard');
   }
 
-  // Win Event Handler
-  winGame(starsEarned = 10) {
-    // Play sound and increment stars
-    audio.playCheer();
-    this.stars += starsEarned;
+  /* ── (Legacy) Star reward – kept for future games ── */
+  addStars(count) {
+    this.stars += count;
     localStorage.setItem('kid_explorer_stars', this.stars);
     this.hud.starCount.textContent = this.stars;
-
-    // Show Victory Overlay
-    this.victoryStarsRewardVal.textContent = starsEarned;
-    this.victoryModal.classList.remove('hidden');
-    this.createConfetti();
-  }
-
-  hideVictory() {
-    this.victoryModal.classList.add('hidden');
-    const container = this.victoryModal.querySelector('.confetti-container');
-    if (container) container.innerHTML = '';
-  }
-
-  // Visual Confetti explosion
-  createConfetti() {
-    const container = this.victoryModal.querySelector('.confetti-container');
-    if (!container) return;
-    
-    const colors = ['#ff6b8b', '#4ecdc4', '#ffbe0b', '#a1c4fd', '#ff8da1', '#84fab0'];
-    const numConfetti = 50;
-
-    for (let i = 0; i < numConfetti; i++) {
-      const el = document.createElement('div');
-      el.classList.add('confetti');
-      
-      const left = Math.random() * 100;
-      const delay = Math.random() * 1.5;
-      const duration = 2 + Math.random() * 2;
-      const size = 6 + Math.random() * 10;
-      const color = colors[Math.floor(Math.random() * colors.length)];
-      
-      el.style.left = left + '%';
-      el.style.animationDelay = delay + 's';
-      el.style.animationDuration = duration + 's';
-      el.style.width = size + 'px';
-      el.style.height = size + 'px';
-      el.style.backgroundColor = color;
-      
-      container.appendChild(el);
-    }
   }
 }
 
-// Global App Initialization
+/* ── Bootstrap ── */
 let app;
 window.addEventListener('DOMContentLoaded', () => {
   app = new AppController();
