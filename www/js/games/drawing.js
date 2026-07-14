@@ -28,7 +28,7 @@ class MagicCanvas {
     this.strokeCount = 0;
     
     // Set score indicator as strokes count
-    const t = TRANSLATIONS[this.app.lang];
+    const t = this.app.T[this.app.lang];
     document.getElementById('score-val').textContent = `0 ${t.score_drawing}`;
 
     this.container.innerHTML = `
@@ -84,7 +84,7 @@ class MagicCanvas {
   }
 
   updateLanguage() {
-    const t = TRANSLATIONS[this.app.lang];
+    const t = this.app.T[this.app.lang];
     document.getElementById('score-val').textContent = `${this.strokeCount} ${t.score_drawing}`;
     
     // Update static labels in DOM
@@ -226,7 +226,7 @@ class MagicCanvas {
       // Clear
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
       this.strokeCount = 0;
-      document.getElementById('score-val').textContent = `0 ${TRANSLATIONS[this.app.lang].score_drawing}`;
+      document.getElementById('score-val').textContent = `0 ${this.app.T[this.app.lang].score_drawing}`;
     });
 
     const submitBtn = document.getElementById('btn-submit-art');
@@ -236,7 +236,7 @@ class MagicCanvas {
         this.app.winGame(12); // Award stars
       } else {
         // Encourage to draw first
-        alert(TRANSLATIONS[this.app.lang].draw_alert);
+        alert(this.app.T[this.app.lang].draw_alert);
       }
     });
   }
@@ -309,7 +309,7 @@ class MagicCanvas {
       if (this.isDrawing) {
         this.isDrawing = false;
         this.strokeCount++;
-        document.getElementById('score-val').textContent = `${this.strokeCount} nét vẽ`;
+        document.getElementById('score-val').textContent = `${this.strokeCount} ${this.app.T[this.app.lang].score_drawing}`;
       }
     };
 
@@ -345,7 +345,7 @@ class MagicCanvas {
     audio.playPop(); // Cute bubble pop on stamp placement
     
     this.strokeCount++;
-    document.getElementById('score-val').textContent = `${this.strokeCount} nét vẽ`;
+    document.getElementById('score-val').textContent = `${this.strokeCount} ${this.app.T[this.app.lang].score_drawing}`;
   }
 
   destroy() {

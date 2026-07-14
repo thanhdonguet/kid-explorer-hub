@@ -213,6 +213,11 @@
   animation: float-island 4.8s ease-in-out infinite 1s;
 }
 
+#island-math .island-sprite {
+  background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+  animation: float-island 4.2s ease-in-out infinite 0.5s;
+}
+
 @keyframes float-island {
 
   0%,
@@ -244,12 +249,16 @@
   animation: scale-shadow 4.5s ease-in-out infinite 0.3s;
 }
 
-#island-spelling.island-shadow {
+#island-spelling .island-shadow {
   animation: scale-shadow 5s ease-in-out infinite 0.7s;
 }
 
 #island-drawing .island-shadow {
   animation: scale-shadow 4.8s ease-in-out infinite 1s;
+}
+
+#island-math .island-shadow {
+  animation: scale-shadow 4.2s ease-in-out infinite 0.5s;
 }
 
 @keyframes scale-shadow {

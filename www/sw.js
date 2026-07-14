@@ -10,7 +10,9 @@ const ASSETS = [
   'js/games/math.js',
   'js/games/spelling.js',
   'js/games/drawing.js',
-  'js/games/memory.js'
+  'js/games/memory.js',
+  'js/games/color-mix.js',
+  'img/treasure_map_bg.png'
 ];
 
 // Install event - Cache all core files

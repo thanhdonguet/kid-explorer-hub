@@ -35,8 +35,8 @@ class AppController {
         memoryDesc:   'Lật thẻ tìm cặp đôi',
         mathName:     'Bóng Bay Toán Học',
         mathDesc:     'Cộng trừ thử thách',
-        spellingName: 'Thám Hiểm Từ Vựng',
-        spellingDesc: 'Ghép chữ vui nhộn',
+        alphabetPopName: 'Bong Bóng Chữ Cái',
+        alphabetPopDesc: 'Học chữ vui nhộn',
         drawingName:  'Vương Quốc Cọ Vẽ',
         drawingDesc:  'Sáng tạo không giới hạn',
         colorName:    'Phòng Thí Nghiệm Màu',
@@ -44,6 +44,13 @@ class AppController {
         comingSoon:   '🔒 Sắp Ra Mắt',
         scoreLabel:   'Điểm',
         backTo:       'Đảo Khám Phá',
+        score_drawing: 'Điểm vẽ',
+        draw_color: 'Màu',
+        draw_size: 'Nét vẽ',
+        draw_stamp: 'Con dấu',
+        draw_rainbow: 'Cầu vồng',
+        draw_clear: 'Xóa',
+        draw_submit: 'Hoàn thành',
       },
       en: {
         appTitle:     'Explorer Island',
@@ -51,8 +58,8 @@ class AppController {
         memoryDesc:   'Flip cards, find pairs!',
         mathName:     'Math Balloons',
         mathDesc:     'Addition challenges',
-        spellingName: 'Word Explorer',
-        spellingDesc: 'Fun word building',
+        alphabetPopName: 'Alphabet Pop',
+        alphabetPopDesc: 'Fun letters learning',
         drawingName:  'Paint Kingdom',
         drawingDesc:  'Create without limits',
         colorName:    'Color Mix Lab',
@@ -60,6 +67,13 @@ class AppController {
         comingSoon:   '🔒 Coming Soon',
         scoreLabel:   'Score',
         backTo:       'Explorer Island',
+        score_drawing: 'Drawing Score',
+        draw_color: 'Color',
+        draw_size: 'Brush size',
+        draw_stamp: 'Stamp',
+        draw_rainbow: 'Rainbow',
+        draw_clear: 'Clear',
+        draw_submit: 'Submit',
       },
     };
   }
@@ -94,8 +108,8 @@ class AppController {
 
     // 4. Sound toggle
     this.hud.soundBtn.addEventListener('click', () => {
+      audio.playTap(); // Play sound before muting
       const isMuted = audio.toggleMute();
-      audio.playTap();
       this.hud.soundOnIcon.classList.toggle('hidden', isMuted);
       this.hud.soundOffIcon.classList.toggle('hidden', !isMuted);
     });
@@ -207,6 +221,18 @@ class AppController {
         if (dashboard) dashboard.style.display = 'none';
         this.activeGame = new ColorMixLab(stage, this);
         break;
+      case 'alphabet-pop':
+        this.hud.title.textContent = t.alphabetPopName;
+        this.activeGame = new AlphabetPop(stage, this);
+        break;
+      case 'drawing':
+        this.hud.title.textContent = t.drawingName;
+        this.activeGame = new MagicCanvas(stage, this);
+        break;
+      case 'math':
+        this.hud.title.textContent = t.mathName;
+        this.activeGame = new MathAdventure(stage, this);
+        break;
       default:
         // Unknown / unimplemented game – go back to dashboard
         console.warn('Game not implemented:', gameId);
@@ -232,6 +258,16 @@ class AppController {
     this.stars += count;
     localStorage.setItem('kid_explorer_stars', this.stars);
     this.hud.starCount.textContent = this.stars;
+  }
+
+  /* ── Win Game helper ── */
+  winGame(starsToAdd) {
+    this.addStars(starsToAdd);
+    if (typeof audio !== 'undefined' && audio.playCheer) {
+      audio.playCheer();
+    }
+    const msg = this.lang === 'vi' ? 'Hoan hô! Bạn đã hoàn thành xuất sắc!' : 'Hurray! You did a great job!';
+    this._showToast(msg);
   }
 }
 
