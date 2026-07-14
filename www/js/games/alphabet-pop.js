@@ -154,7 +154,8 @@ class AlphabetPop {
       visualEl.className = 'ap-object-visual';
       
       const themeImg = document.createElement('img');
-      themeImg.src = `img/themes/${themeClass.replace('theme-', '')}.svg`;
+      const currentTheme = this.themes[this.currentThemeIndex];
+      themeImg.src = `img/themes/${currentTheme.replace('theme-', '')}.svg`;
       themeImg.className = 'ap-theme-icon';
       themeImg.onerror = () => { themeImg.style.display = 'none'; }; // fallback if theme SVG fails
       visualEl.appendChild(themeImg);
