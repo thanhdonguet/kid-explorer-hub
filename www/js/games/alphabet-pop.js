@@ -33,22 +33,22 @@ class AlphabetPop {
       'H': [{ word: 'Horse', image: 'img/vocab/h.png' }],
       'I': [{ word: 'Ice cream', image: 'img/vocab/i.png' }],
       'J': [{ word: 'Jellyfish', image: 'img/vocab/j.png' }],
-      'K': [{ word: 'Kangaroo', image: 'img/vocab/k.png' }],
-      'L': [{ word: 'Lion', image: 'img/vocab/l.png' }],
-      'M': [{ word: 'Monkey', image: 'img/vocab/m.png' }],
-      'N': [{ word: 'Nest', image: 'img/vocab/n.png' }],
-      'O': [{ word: 'Owl', image: 'img/vocab/o.png' }],
-      'P': [{ word: 'Pig', image: 'img/vocab/p.png' }],
-      'Q': [{ word: 'Queen', image: 'img/vocab/q.png' }],
-      'R': [{ word: 'Rabbit', image: 'img/vocab/r.png' }],
-      'S': [{ word: 'Snake', image: 'img/vocab/s.png' }],
-      'T': [{ word: 'Tiger', image: 'img/vocab/t.png' }],
-      'U': [{ word: 'Umbrella', image: 'img/vocab/u.png' }],
-      'V': [{ word: 'Violin', image: 'img/vocab/v.png' }],
-      'W': [{ word: 'Whale', image: 'img/vocab/w.png' }],
-      'X': [{ word: 'X-ray', image: 'img/vocab/x.png' }],
-      'Y': [{ word: 'Yak', image: 'img/vocab/y.png' }],
-      'Z': [{ word: 'Zebra', image: 'img/vocab/z.png' }]
+      'K': [{ word: 'Kangaroo', image: 'img/vocab/k.svg' }],
+      'L': [{ word: 'Lion', image: 'img/vocab/l.svg' }],
+      'M': [{ word: 'Monkey', image: 'img/vocab/m.svg' }],
+      'N': [{ word: 'Nest', image: 'img/vocab/n.svg' }],
+      'O': [{ word: 'Owl', image: 'img/vocab/o.svg' }],
+      'P': [{ word: 'Pig', image: 'img/vocab/p.svg' }],
+      'Q': [{ word: 'Queen', image: 'img/vocab/q.svg' }],
+      'R': [{ word: 'Rabbit', image: 'img/vocab/r.svg' }],
+      'S': [{ word: 'Snake', image: 'img/vocab/s.svg' }],
+      'T': [{ word: 'Tiger', image: 'img/vocab/t.svg' }],
+      'U': [{ word: 'Umbrella', image: 'img/vocab/u.svg' }],
+      'V': [{ word: 'Violin', image: 'img/vocab/v.svg' }],
+      'W': [{ word: 'Whale', image: 'img/vocab/w.svg' }],
+      'X': [{ word: 'X-ray', image: 'img/vocab/x.svg' }],
+      'Y': [{ word: 'Yak', image: 'img/vocab/y.svg' }],
+      'Z': [{ word: 'Zebra', image: 'img/vocab/z.svg' }]
     };
 
     // Synthesizer for TTS
@@ -152,6 +152,13 @@ class AlphabetPop {
       // We use a pseudo-element or an img child for the visual
       const visualEl = document.createElement('div');
       visualEl.className = 'ap-object-visual';
+      
+      const themeImg = document.createElement('img');
+      themeImg.src = `img/themes/${themeClass.replace('theme-', '')}.svg`;
+      themeImg.className = 'ap-theme-icon';
+      themeImg.onerror = () => { themeImg.style.display = 'none'; }; // fallback if theme SVG fails
+      visualEl.appendChild(themeImg);
+
       objEl.appendChild(visualEl);
 
       if (isCorrect) {

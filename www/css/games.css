@@ -997,7 +997,9 @@
 .ap-flying-object { position: absolute; width: 60px; height: 60px; display: flex; justify-content: center; align-items: center; cursor: pointer; animation: float 4s ease-in-out infinite alternate; }
 
 .ap-object-visual { width: 100%; height: 100%; background: #b3e5fc; border-radius: 50%; border: 2px solid #03a9f4; position: absolute; top:0; left:0; z-index: 1; transition: transform 0.2s; }
-.ap-object-text { position: relative; z-index: 2; font-size: 1.8rem; font-weight: bold; color: #0288d1; font-family: var(--font-kids); }
+.ap-object-text { position: relative; z-index: 2; font-size: 1.8rem; font-weight: bold; color: #0288d1; font-family: var(--font-kids); text-shadow: 0 0 5px rgba(255,255,255,0.8); }
+
+.ap-theme-icon { width: 70%; height: 70%; object-fit: contain; margin-top: 15%; margin-left: 15%; opacity: 0.8; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
 
 .ap-vocab-result { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 20px; border: 4px solid #ffca28; display: flex; flex-direction: column; align-items: center; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 20; cursor: pointer; transition: transform 0.2s; }
 .ap-vocab-image-container { width: 150px; height: 150px; display: flex; justify-content: center; align-items: center; background: #fff8e1; border-radius: 10px; }
