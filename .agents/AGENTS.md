@@ -41,6 +41,7 @@ Every task must follow this three-phase workflow:
 * Implement changes in small, incremental steps.
 * Create new modular files in `www/js/games/` for new games rather than piling code into `app.js`.
 * Update `.gitignore` if new build artifacts or temp files are introduced.
+* **Global Integrations**: Any global state or logic (like Language Localization) MUST be thoroughly integrated when adding new mini-games. Do not forget to update central maps (e.g., in `app.js`'s `applyLang()`) to ensure new games respond to global adjustments.
 
 ### Phase 3: Verification
 * Verify changes locally.
