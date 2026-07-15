@@ -13,9 +13,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-image: url('../img/treasure_map_bg.png');
-  background-size: cover;
-  background-position: center;
+  background: radial-gradient(circle at center, #e1f5fe 0%, #b3e5fc 60%, #81d4fa 100%);
   overflow: hidden;
   pointer-events: none;
   z-index: 0;
@@ -85,6 +83,7 @@
   font-size: 2.5rem;
   filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
   z-index: 1;
+  opacity: 0.4;
 }
 
 .ship { top: 15%; right: 10%; animation: sail 20s linear infinite; }
