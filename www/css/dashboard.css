@@ -203,7 +203,7 @@
   animation: float-island 4.5s ease-in-out infinite 0.3s;
 }
 
-#island-spelling .island-sprite {
+#island-alphabet-pop .island-sprite {
   background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
   animation: float-island 5s ease-in-out infinite 0.7s;
 }
@@ -249,7 +249,7 @@
   animation: scale-shadow 4.5s ease-in-out infinite 0.3s;
 }
 
-#island-spelling .island-shadow {
+#island-alphabet-pop .island-shadow {
   animation: scale-shadow 5s ease-in-out infinite 0.7s;
 }
 

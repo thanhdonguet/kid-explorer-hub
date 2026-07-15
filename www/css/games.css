@@ -978,7 +978,13 @@
 /* ==========================================================================
    ALPHABET POP GAME
    ========================================================================== */
-.ap-container { width: 100%; height: 100%; position: relative; overflow: hidden; background: linear-gradient(180deg, #e1f5fe 0%, #b3e5fc 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: var(--font-kids); }
+.ap-container { width: 100%; height: 100%; position: relative; overflow: hidden; background: linear-gradient(180deg, #81d4fa 0%, #e1f5fe 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: var(--font-kids); }
+
+.ap-container::before, .ap-container::after { content: "☁️"; position: absolute; color: rgba(255, 255, 255, 0.7); z-index: 0; animation: cloud-drift 40s linear infinite; pointer-events: none; opacity: 0.6; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.05)); }
+.ap-container::before { top: 15%; left: -200px; font-size: 8rem; animation-duration: 45s; }
+.ap-container::after { top: 60%; left: -200px; font-size: 5rem; animation-duration: 60s; animation-delay: -20s; }
+
+@keyframes cloud-drift { from { transform: translateX(-10vw); } to { transform: translateX(120vw); } }
 
 .ap-board { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
 .ap-title { font-size: 2.5rem; color: #0288d1; margin-bottom: 20px; font-family: var(--font-title); text-align: center; }
