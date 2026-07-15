@@ -37,8 +37,8 @@ class AppController {
         mathDesc:     'Đếm và học số',
         alphabetPopName: 'Bong Bóng Chữ Cái',
         alphabetPopDesc: 'Học chữ vui nhộn',
-        drawingName:  'Vương Quốc Cọ Vẽ',
-        drawingDesc:  'Sáng tạo không giới hạn',
+        drawingName:  'Khủng Long Sắc Màu',
+        drawingDesc:  'Khủng long đổi màu vui nhộn',
         colorName:    'Phòng Thí Nghiệm Màu',
         colorDesc:    'Pha màu kỳ diệu',
         comingSoon:   '🔒 Sắp Ra Mắt',
@@ -60,8 +60,8 @@ class AppController {
         mathDesc:     'Count & learn numbers',
         alphabetPopName: 'Alphabet Pop',
         alphabetPopDesc: 'Fun letters learning',
-        drawingName:  'Paint Kingdom',
-        drawingDesc:  'Create without limits',
+        drawingName:  'Colorful Dinosaur',
+        drawingDesc:  'Watch dino change colors!',
         colorName:    'Color Mix Lab',
         colorDesc:    'Mix magical colors',
         comingSoon:   '🔒 Coming Soon',
@@ -233,7 +233,7 @@ class AppController {
         break;
       case 'drawing':
         this.hud.title.textContent = t.drawingName;
-        this.activeGame = new MagicCanvas(stage, this);
+        this.activeGame = new DinosaurColors(stage, this);
         break;
       case 'math':
         this.hud.title.textContent = t.mathName;

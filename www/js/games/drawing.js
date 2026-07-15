@@ -1,356 +1,370 @@
-/* Magic Canvas (Creativity Studio) Game */
-class MagicCanvas {
+class DinosaurColors {
   constructor(container, app) {
     this.container = container;
     this.app = app;
-    this.isDrawing = false;
-    this.lastX = 0;
-    this.lastY = 0;
-    this.currentColor = '#ff6b8b';
-    this.currentSize = 12;
-    this.isRainbow = false;
-    this.activeStamp = null;
-    this.hue = 0;
-    this.strokeCount = 0;
-    this.active = false;
-
-    this.colors = [
-      '#ff6b8b', '#ff4757', '#ffa502', '#ffbe0b',
-      '#2ed573', '#1e90ff', '#a78bfa', '#2b2d42',
-      '#795548', '#ffffff' // Brown, Eraser (white)
+    
+    // Config
+    this.rounds = [
+      { fruit: 'banana', color: '#FFD700', speech: "Eating the banana turned me yellow!", audioKey: 'banana' },
+      { fruit: 'peach', color: '#FF8FAB', speech: "Eating the peach turned me pink!", audioKey: 'peach' },
+      { fruit: 'tomato', color: '#E53935', speech: "Eating the tomato turned me red!", audioKey: 'tomato' },
+      { fruit: 'cucumber', color: '#43A047', speech: "Eating the cucumber turned me green!", audioKey: 'cucumber' },
+      { fruit: 'grapes', color: '#7B1FA2', speech: "Eating the grapes turned me purple!", audioKey: 'grapes' },
+      { fruit: 'orange', color: '#FB8C00', speech: "Eating the orange turned me orange!", audioKey: 'orange' }
     ];
+    this.currentRound = 0;
+    this.lang = this.app.lang || 'vi';
+    
+    this.T_inline = {
+      vi: {
+        introText: "Đói quá! Tớ đi tìm đồ ăn đây.",
+        feedBtn: "Cho ăn nào! 🍽️",
+        fullText: "Ăn no rồi! 🤩",
+        replayBtn: "Chơi Lại",
+        backBtn: "Về Đảo"
+      },
+      en: {
+        introText: "I'm so hungry! I'm going to find some food!",
+        feedBtn: "Feed me! 🍽️",
+        fullText: "I'm so full! 🤩",
+        replayBtn: "Play Again",
+        backBtn: "Back to Island"
+      }
+    };
 
-    this.stamps = ['⭐', '❤️', '🌿', '🎈', '🐯', '🦄'];
+    // Clean container
+    this.container.innerHTML = '';
+    
+    // Main layout
+    this.wrapper = document.createElement('div');
+    this.wrapper.id = 'dino-game-container';
+    this.container.appendChild(this.wrapper);
+    
+    // Default color
+    document.documentElement.style.setProperty('--dino-body-color', '#9E9E9E');
   }
 
   start() {
-    this.active = true;
-    this.strokeCount = 0;
-    
-    // Set score indicator as strokes count
-    const t = this.app.T[this.app.lang];
-    document.getElementById('score-val').textContent = `0 ${t.score_drawing}`;
+    this.showIntroScreen();
+  }
 
-    this.container.innerHTML = `
-      <div id="drawing-container">
-        <!-- Left Toolbox -->
-        <div id="drawing-toolbox">
+  getT() {
+    return this.T_inline[this.lang];
+  }
+
+  updateLanguage(lang, T) {
+    this.lang = lang;
+    const t = this.getT();
+    const introText = this.wrapper.querySelector('.dino-intro-text');
+    if (introText) introText.textContent = t.introText;
+    const feedBtn = this.wrapper.querySelector('.dino-feed-btn');
+    if (feedBtn) feedBtn.textContent = t.feedBtn;
+    const fullText = this.wrapper.querySelector('.dino-full-text');
+    if (fullText) fullText.textContent = t.fullText;
+    const replayBtn = this.wrapper.querySelector('.dino-replay-btn');
+    if (replayBtn) replayBtn.textContent = t.replayBtn;
+    const backBtn = this.wrapper.querySelector('.dino-back-btn');
+    if (backBtn) backBtn.textContent = t.backBtn;
+  }
+
+  createDinoSVG() {
+    return `
+      <svg class="dino-svg" viewBox="0 0 200 200" width="100%" height="100%">
+        <!-- Body Layer -->
+        <g class="dino-body">
+          <path class="dino-body-path" d="M 90 40 C 130 35, 165 40, 165 65 C 165 85, 140 100, 120 100 C 110 100, 100 110, 100 130 C 100 155, 130 155, 130 175 C 130 185, 125 195, 110 195 L 90 195 C 85 195, 80 185, 85 175 C 80 180, 75 195, 65 195 L 45 195 C 40 195, 30 180, 40 165 C 30 160, 25 145, 35 135 C 45 145, 55 140, 60 120 C 65 90, 65 70, 70 50 C 75 35, 80 35, 90 40 Z" />
+        </g>
+        
+        <!-- Details Layer -->
+        <g class="dino-details">
+          <!-- Spikes -->
+          <path d="M 85 40 L 75 25 L 75 42 Z" fill="#555" />
+          <path d="M 72 45 L 60 30 L 68 52 Z" fill="#555" />
+          <path d="M 66 58 L 50 48 L 62 68 Z" fill="#555" />
+          <path d="M 60 75 L 45 70 L 58 85 Z" fill="#555" />
+          <path d="M 57 95 L 40 95 L 56 105 Z" fill="#555" />
+          <path d="M 55 112 L 38 120 L 52 120 Z" fill="#555" />
+          <path d="M 48 125 L 30 135 L 42 135 Z" fill="#555" />
           
-          <div class="toolbox-section">
-            <div class="toolbox-label" id="lbl-draw-color">${t.draw_color}</div>
-            <div class="color-palette" id="colors-container"></div>
-          </div>
-
-          <div class="toolbox-section">
-            <div class="toolbox-label" id="lbl-draw-size">${t.draw_size}</div>
-            <div class="size-selectors">
-              <button class="size-btn active" data-size="6"><div class="size-dot size-small"></div></button>
-              <button class="size-btn" data-size="14"><div class="size-dot size-medium"></div></button>
-              <button class="size-btn" data-size="24"><div class="size-dot size-large"></div></button>
-            </div>
-          </div>
-
-          <div class="toolbox-section">
-            <div class="toolbox-label" id="lbl-draw-stamp">${t.draw_stamp}</div>
-            <div class="stamps-palette" id="stamps-container"></div>
-          </div>
-
-          <div class="toolbox-section" style="margin-top: auto; gap: 8px;">
-            <button id="btn-rainbow-toggle" class="tool-action-btn btn-rainbow">${t.draw_rainbow}</button>
-            <button id="btn-clear-canvas" class="tool-action-btn btn-clear">${t.draw_clear}</button>
-            <button id="btn-submit-art" class="btn-primary" style="padding: 10px 15px; font-size: 1rem; width: 100%; box-shadow: 0 4px 0 #d93d5f;">${t.draw_submit}</button>
-          </div>
-
-        </div>
-
-        <!-- Right Canvas Area -->
-        <div id="canvas-area">
-          <canvas id="draw-canvas"></canvas>
-        </div>
-      </div>
+          <!-- White Belly -->
+          <ellipse cx="105" cy="150" rx="20" ry="30" fill="#fff" transform="rotate(-15 105 150)" />
+          
+          <!-- Eyes -->
+          <circle cx="105" cy="65" r="14" fill="#fff" />
+          <circle cx="110" cy="65" r="5" fill="#333" />
+          <circle cx="130" cy="68" r="16" fill="#fff" />
+          <circle cx="135" cy="68" r="6" fill="#333" />
+          
+          <!-- Mouth -->
+          <path d="M 120 95 C 130 90, 140 85, 155 80" fill="none" stroke="#333" stroke-width="3" stroke-linecap="round" />
+          
+          <!-- Tongue (hidden by default) -->
+          <path class="dino-tongue" d="M 130 90 C 120 120, 145 125, 145 100 C 145 95, 140 90, 140 85 Z" fill="#FF5722" opacity="0" />
+          
+          <!-- Arms -->
+          <g fill="none" stroke="#555" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M 115 145 L 130 142 L 135 138 M 130 142 L 136 143 M 130 142 L 133 148" />
+            <path d="M 90 140 L 80 135 L 75 130 M 80 135 L 75 136 M 80 135 L 77 142" />
+          </g>
+          
+          <!-- Toes -->
+          <path d="M 108 195 A 3 3 0 0 0 102 195 Z" fill="#555" />
+          <path d="M 101 195 A 3 3 0 0 0 95 195 Z" fill="#555" />
+          <path d="M 94 195 A 3 3 0 0 0 88 195 Z" fill="#555" />
+          
+          <path d="M 63 195 A 3 3 0 0 0 57 195 Z" fill="#555" />
+          <path d="M 56 195 A 3 3 0 0 0 50 195 Z" fill="#555" />
+          <path d="M 49 195 A 3 3 0 0 0 43 195 Z" fill="#555" />
+        </g>
+      </svg>
     `;
-
-    this.canvas = document.getElementById('draw-canvas');
-    this.ctx = this.canvas.getContext('2d');
-    this.canvasArea = document.getElementById('canvas-area');
-
-    this.setupCanvas();
-    this.setupToolbox();
-    this.attachDrawingEvents();
-
-    // Redraw on window resize
-    this.resizeHandler = () => this.handleResize();
-    window.addEventListener('resize', this.resizeHandler);
   }
 
-  updateLanguage() {
-    const t = this.app.T[this.app.lang];
-    document.getElementById('score-val').textContent = `${this.strokeCount} ${t.score_drawing}`;
+  showIntroScreen() {
+    this.wrapper.innerHTML = '';
+    document.documentElement.style.setProperty('--dino-body-color', '#9E9E9E');
     
-    // Update static labels in DOM
-    const lblColor = document.getElementById('lbl-draw-color');
-    if (lblColor) lblColor.textContent = t.draw_color;
+    const t = this.getT();
     
-    const lblSize = document.getElementById('lbl-draw-size');
-    if (lblSize) lblSize.textContent = t.draw_size;
+    const introDiv = document.createElement('div');
+    introDiv.className = 'dino-intro-screen';
     
-    const lblStamp = document.getElementById('lbl-draw-stamp');
-    if (lblStamp) lblStamp.textContent = t.draw_stamp;
-
-    // Update buttons
-    const btnRainbow = document.getElementById('btn-rainbow-toggle');
-    if (btnRainbow) btnRainbow.textContent = t.draw_rainbow;
+    const dinoContainer = document.createElement('div');
+    dinoContainer.className = 'dino-stage dino-wiggle';
+    dinoContainer.innerHTML = this.createDinoSVG();
     
-    const btnClear = document.getElementById('btn-clear-canvas');
-    if (btnClear) btnClear.textContent = t.draw_clear;
+    const bubble = document.createElement('div');
+    bubble.className = 'dino-bubble intro-bubble';
+    bubble.textContent = 'Ọc! Ọc!';
+    dinoContainer.appendChild(bubble);
+
+    const textEl = document.createElement('h2');
+    textEl.className = 'dino-intro-text';
+    textEl.textContent = t.introText;
     
-    const btnSubmit = document.getElementById('btn-submit-art');
-    if (btnSubmit) btnSubmit.textContent = t.draw_submit;
-  }
-
-  setupCanvas() {
-    // Set internal resolution of canvas to match visual size
-    this.canvas.width = this.canvasArea.clientWidth;
-    this.canvas.height = this.canvasArea.clientHeight;
-
-    // Line drawing defaults
-    this.ctx.lineCap = 'round';
-    this.ctx.lineJoin = 'round';
-  }
-
-  handleResize() {
-    // Save image before resize
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = this.canvas.width;
-    tempCanvas.height = this.canvas.height;
-    const tempCtx = tempCanvas.getContext('2d');
-    tempCtx.drawImage(this.canvas, 0, 0);
-
-    // Resize
-    this.canvas.width = this.canvasArea.clientWidth;
-    this.canvas.height = this.canvasArea.clientHeight;
-
-    this.ctx.lineCap = 'round';
-    this.ctx.lineJoin = 'round';
-
-    // Draw back
-    this.ctx.drawImage(tempCanvas, 0, 0);
-  }
-
-  setupToolbox() {
-    // 1. Color Palette Buttons
-    const colorsContainer = document.getElementById('colors-container');
-    this.colors.forEach(color => {
-      const btn = document.createElement('button');
-      btn.className = 'color-btn';
-      btn.style.backgroundColor = color;
-      if (color === this.currentColor) btn.classList.add('active');
-
-      btn.addEventListener('click', () => {
-        audio.playTap();
-        this.activeStamp = null;
-        this.isRainbow = false;
-        this.currentColor = color;
-        
-        // Update active states
-        document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        document.querySelectorAll('.stamp-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('btn-rainbow-toggle').classList.remove('active');
-      });
-
-      colorsContainer.appendChild(btn);
-    });
-
-    // 2. Size Button Selectors
-    document.querySelectorAll('.size-selectors button').forEach(btn => {
-      btn.addEventListener('click', () => {
-        audio.playTap();
-        this.currentSize = parseInt(btn.getAttribute('data-size'));
-        
-        document.querySelectorAll('.size-selectors button').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-      });
-    });
-
-    // 3. Stamp Buttons
-    const stampsContainer = document.getElementById('stamps-container');
-    this.stamps.forEach(stamp => {
-      const btn = document.createElement('button');
-      btn.className = 'stamp-btn';
-      btn.textContent = stamp;
-
-      btn.addEventListener('click', () => {
-        audio.playTap();
-        this.activeStamp = stamp;
-        this.isRainbow = false;
-
-        // Reset other states
-        document.querySelectorAll('.stamp-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('btn-rainbow-toggle').classList.remove('active');
-      });
-
-      stampsContainer.appendChild(btn);
-    });
-
-    // 4. Special Button Handlers
-    const rainbowToggle = document.getElementById('btn-rainbow-toggle');
-    rainbowToggle.addEventListener('click', () => {
+    const feedBtn = document.createElement('button');
+    feedBtn.className = 'btn-primary dino-feed-btn';
+    feedBtn.textContent = t.feedBtn;
+    
+    feedBtn.addEventListener('click', () => {
       audio.playTap();
-      this.isRainbow = !this.isRainbow;
-      this.activeStamp = null;
-
-      if (this.isRainbow) {
-        rainbowToggle.classList.add('active');
-        document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.stamp-btn').forEach(b => b.classList.remove('active'));
-      } else {
-        rainbowToggle.classList.remove('active');
-        // fall back to first color
-        document.querySelector('.color-btn').click();
-      }
+      this.startGame();
     });
 
-    const clearBtn = document.getElementById('btn-clear-canvas');
-    clearBtn.addEventListener('click', () => {
-      audio.playFail(); // Cute negative chime for clearing
+    introDiv.appendChild(dinoContainer);
+    introDiv.appendChild(textEl);
+    introDiv.appendChild(feedBtn);
+    
+    this.wrapper.appendChild(introDiv);
+    
+    this.speak("I'm so hungry! I'm going to find some food!", "intro");
+  }
+
+  startGame() {
+    this.currentRound = 0;
+    this.showRound(this.currentRound);
+  }
+
+  showRound(index) {
+    if (index >= this.rounds.length) {
+      this.showFullScreen();
+      return;
+    }
+    
+    const roundInfo = this.rounds[index];
+    this.wrapper.innerHTML = '';
+    
+    const gameDiv = document.createElement('div');
+    gameDiv.className = 'dino-game-screen';
+    
+    // Left: Dino
+    const dinoStage = document.createElement('div');
+    dinoStage.className = 'dino-stage';
+    dinoStage.innerHTML = this.createDinoSVG();
+    
+    const speechBubble = document.createElement('div');
+    speechBubble.className = 'dino-speech-bubble hidden';
+    dinoStage.appendChild(speechBubble);
+    
+    // Right: Fruit
+    const fruitDisplay = document.createElement('div');
+    fruitDisplay.className = 'fruit-display';
+    
+    const fruitImg = document.createElement('img');
+    fruitImg.src = `img/vocab/${roundInfo.fruit}.svg`;
+    fruitImg.className = 'fruit-item bounce-in';
+    
+    fruitDisplay.appendChild(fruitImg);
+    
+    // Make sure touch/click are handled well
+    const tapHandler = (e) => {
+      e.preventDefault();
+      this.handleFruitTap(fruitImg, index);
+    };
+    
+    fruitImg.addEventListener('click', tapHandler);
+    fruitImg.addEventListener('touchstart', tapHandler, {passive: false});
+    
+    gameDiv.appendChild(dinoStage);
+    gameDiv.appendChild(fruitDisplay);
+    this.wrapper.appendChild(gameDiv);
+  }
+
+  handleFruitTap(fruitImg, index) {
+    if (this.isEating) return;
+    this.isEating = true;
+    
+    const roundInfo = this.rounds[index];
+    
+    audio.playTap();
+    
+    fruitImg.classList.remove('bounce-in');
+    fruitImg.classList.add('fruit-slide-anim');
+    
+    const tongue = this.wrapper.querySelector('.dino-tongue');
+    if (tongue) tongue.setAttribute('opacity', '1');
+    
+    setTimeout(() => {
+      fruitImg.style.display = 'none';
+      if (tongue) tongue.setAttribute('opacity', '0');
       
-      // Shake animation
-      this.canvasArea.classList.add('shake-canvas');
+      this.changeDinoColor(roundInfo.color);
+      
+      this.showSpeechBubble(roundInfo.speech);
+      this.speak(roundInfo.speech, roundInfo.audioKey);
+      
+      const dinoSvg = this.wrapper.querySelector('.dino-svg');
+      if (dinoSvg) dinoSvg.classList.add('dino-jump-anim');
+      
       setTimeout(() => {
-        this.canvasArea.classList.remove('shake-canvas');
-      }, 400);
-
-      // Clear
-      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-      this.strokeCount = 0;
-      document.getElementById('score-val').textContent = `0 ${this.app.T[this.app.lang].score_drawing}`;
-    });
-
-    const submitBtn = document.getElementById('btn-submit-art');
-    submitBtn.addEventListener('click', () => {
-      audio.playTap();
-      if (this.strokeCount > 2) {
-        this.app.winGame(12); // Award stars
-      } else {
-        // Encourage to draw first
-        alert(this.app.T[this.app.lang].draw_alert);
-      }
-    });
+        this.isEating = false;
+        this.showRound(index + 1);
+      }, 3000);
+      
+    }, 600);
   }
 
-  getCoordinates(e) {
-    const rect = this.canvas.getBoundingClientRect();
-    let clientX, clientY;
+  changeDinoColor(hexColor) {
+    document.documentElement.style.setProperty('--dino-body-color', hexColor);
+  }
 
-    if (e.touches && e.touches.length > 0) {
-      clientX = e.touches[0].clientX;
-      clientY = e.touches[0].clientY;
-    } else {
-      clientX = e.clientX;
-      clientY = e.clientY;
+  speak(text, audioKey) {
+    if (this.currentAudio) {
+      this.currentAudio.pause();
+    }
+    
+    // Sử dụng file audio cố định để có giọng đều và ổn định
+    // Tăng playbackRate để tạo ra chất giọng the thé của trẻ con / chipmunk
+    if (audioKey) {
+      const audio = new Audio(`audio/dino/${audioKey}.mp3`);
+      audio.playbackRate = 1.35; 
+      audio.play().catch(e => console.warn('Audio play failed:', e));
+      this.currentAudio = audio;
+      return;
     }
 
-    return {
-      x: clientX - rect.left,
-      y: clientY - rect.top
-    };
+    // Fallback nếu không có audio file
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const msg = new SpeechSynthesisUtterance(text);
+      msg.lang = 'en-US';
+      msg.pitch = 2.0;
+      msg.rate = 1.1;
+      
+      const voices = window.speechSynthesis.getVoices();
+      const preferredVoice = voices.find(v => v.lang === 'en-US' && (v.name.includes('Google') || v.name.includes('Samantha') || v.name.includes('Karen')));
+      if (preferredVoice) {
+        msg.voice = preferredVoice;
+      }
+      
+      window.speechSynthesis.speak(msg);
+    }
   }
 
-  attachDrawingEvents() {
-    // Drawing Start helper
-    const drawStart = (e) => {
-      if (!this.active) return;
-      const coords = this.getCoordinates(e);
-
-      if (this.activeStamp) {
-        // If stamp selected, draw emoji
-        this.drawStamp(coords.x, coords.y);
-      } else {
-        // Regular line draw start
-        this.isDrawing = true;
-        this.lastX = coords.x;
-        this.lastY = coords.y;
-      }
-    };
-
-    // Drawing Move helper
-    const drawMove = (e) => {
-      if (!this.isDrawing || !this.active) return;
-      const coords = this.getCoordinates(e);
-
-      this.ctx.beginPath();
-      this.ctx.moveTo(this.lastX, this.lastY);
-      this.ctx.lineTo(coords.x, coords.y);
-
-      // Rainbow styling
-      if (this.isRainbow) {
-        this.ctx.strokeStyle = `hsl(${this.hue}, 100%, 55%)`;
-        this.hue = (this.hue + 4) % 360;
-      } else {
-        this.ctx.strokeStyle = this.currentColor;
-      }
-
-      this.ctx.lineWidth = this.currentSize;
-      this.ctx.stroke();
-
-      this.lastX = coords.x;
-      this.lastY = coords.y;
-
-      // Soft drawing sound
-      if (Math.random() > 0.8) {
-        audio.playPaint(0.2 + (this.currentSize / 30));
-      }
-    };
-
-    const drawEnd = () => {
-      if (this.isDrawing) {
-        this.isDrawing = false;
-        this.strokeCount++;
-        document.getElementById('score-val').textContent = `${this.strokeCount} ${this.app.T[this.app.lang].score_drawing}`;
-      }
-    };
-
-    // Mouse Listeners
-    this.canvas.addEventListener('mousedown', drawStart);
-    this.canvas.addEventListener('mousemove', drawMove);
-    this.canvas.addEventListener('mouseup', drawEnd);
-    this.canvas.addEventListener('mouseleave', drawEnd);
-
-    // Mobile Touch Listeners (Prevent bounce scrolling while drawing)
-    this.canvas.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      drawStart(e);
-    });
-    this.canvas.addEventListener('touchmove', (e) => {
-      e.preventDefault();
-      drawMove(e);
-    });
-    this.canvas.addEventListener('touchend', (e) => {
-      e.preventDefault();
-      drawEnd();
-    });
+  showSpeechBubble(text) {
+    const bubble = this.wrapper.querySelector('.dino-speech-bubble');
+    if (bubble) {
+      bubble.textContent = text;
+      bubble.classList.remove('hidden');
+      bubble.classList.add('bubble-pop-anim');
+    }
   }
 
-  drawStamp(x, y) {
-    this.ctx.font = `${this.currentSize * 2.5}px var(--font-kids)`;
-    this.ctx.textAlign = 'center';
-    this.ctx.textBaseline = 'middle';
+  showFullScreen() {
+    this.wrapper.innerHTML = '';
+    const t = this.getT();
     
-    // Draw text/emoji
-    this.ctx.fillText(this.activeStamp, x, y);
+    const fullDiv = document.createElement('div');
+    fullDiv.className = 'dino-full-screen';
+    
+    const dinoContainer = document.createElement('div');
+    dinoContainer.className = 'dino-stage dino-belly-grow';
+    dinoContainer.innerHTML = this.createDinoSVG();
+    
+    const textEl = document.createElement('h2');
+    textEl.className = 'dino-full-text';
+    textEl.textContent = t.fullText;
+    
+    const btnsDiv = document.createElement('div');
+    btnsDiv.className = 'dino-actions';
+    
+    const replayBtn = document.createElement('button');
+    replayBtn.className = 'btn-primary dino-replay-btn';
+    replayBtn.textContent = t.replayBtn;
+    replayBtn.addEventListener('click', () => {
+      audio.playTap();
+      this.resetGame();
+    });
+    
+    const backBtn = document.createElement('button');
+    backBtn.className = 'btn-secondary dino-back-btn';
+    backBtn.textContent = t.backBtn;
+    backBtn.addEventListener('click', () => {
+      audio.playTap();
+      this.app.closeActiveGame();
+    });
+    
+    btnsDiv.appendChild(replayBtn);
+    btnsDiv.appendChild(backBtn);
+    
+    fullDiv.appendChild(dinoContainer);
+    fullDiv.appendChild(textEl);
+    fullDiv.appendChild(btnsDiv);
+    
+    this.wrapper.appendChild(fullDiv);
+    
+    this.createConfetti(fullDiv);
+    
+    this.speak("I ate everything! I'm so full! Burp!", "full");
+    
+    this.app.addStars(10);
+  }
 
-    audio.playPop(); // Cute bubble pop on stamp placement
-    
-    this.strokeCount++;
-    document.getElementById('score-val').textContent = `${this.strokeCount} ${this.app.T[this.app.lang].score_drawing}`;
+  createConfetti(container) {
+    const colors = ['#FFD700', '#FF8FAB', '#E53935', '#43A047', '#7B1FA2', '#FB8C00'];
+    for(let i=0; i<30; i++) {
+      const c = document.createElement('div');
+      c.className = 'dino-confetti';
+      c.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+      c.style.left = Math.random() * 100 + '%';
+      c.style.animationDelay = Math.random() * 2 + 's';
+      container.appendChild(c);
+    }
+  }
+
+  resetGame() {
+    this.showIntroScreen();
   }
 
   destroy() {
-    this.active = false;
-    window.removeEventListener('resize', this.resizeHandler);
+    if (this.currentAudio) {
+      this.currentAudio.pause();
+      this.currentAudio = null;
+    }
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    document.documentElement.style.removeProperty('--dino-body-color');
     this.container.innerHTML = '';
   }
 }
