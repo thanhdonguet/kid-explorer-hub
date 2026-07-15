@@ -150,12 +150,18 @@ class AppController {
       if (t[key] !== undefined) el.textContent = t[key];
     });
     // Sync HUD title with current screen
+    const gameTitles = {
+      'memory': t.memoryName,
+      'color': t.colorName,
+      'alphabet-pop': t.alphabetPopName,
+      'drawing': t.drawingName,
+      'math': t.mathName
+    };
+
     if (!this.activeGameId) {
       this.hud.title.textContent = t.appTitle;
-    } else if (this.activeGameId === 'memory') {
-      this.hud.title.textContent = t.memoryName;
-    } else if (this.activeGameId === 'color') {
-      this.hud.title.textContent = t.colorName;
+    } else if (gameTitles[this.activeGameId]) {
+      this.hud.title.textContent = gameTitles[this.activeGameId];
     }
   }
 
