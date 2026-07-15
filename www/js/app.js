@@ -33,8 +33,8 @@ class AppController {
         appTitle:     'Đảo Khám Phá',
         memoryName:   'Khu Rừng Trí Nhớ',
         memoryDesc:   'Lật thẻ tìm cặp đôi',
-        mathName:     'Bóng Bay Toán Học',
-        mathDesc:     'Cộng trừ thử thách',
+        mathName:     'Chợ Trái Cây',
+        mathDesc:     'Đếm và học số',
         alphabetPopName: 'Bong Bóng Chữ Cái',
         alphabetPopDesc: 'Học chữ vui nhộn',
         drawingName:  'Vương Quốc Cọ Vẽ',
@@ -56,8 +56,8 @@ class AppController {
         appTitle:     'Explorer Island',
         memoryName:   'Memory Jungle',
         memoryDesc:   'Flip cards, find pairs!',
-        mathName:     'Math Balloons',
-        mathDesc:     'Addition challenges',
+        mathName:     'Fruit Market',
+        mathDesc:     'Count & learn numbers',
         alphabetPopName: 'Alphabet Pop',
         alphabetPopDesc: 'Fun letters learning',
         drawingName:  'Paint Kingdom',
@@ -237,7 +237,7 @@ class AppController {
         break;
       case 'math':
         this.hud.title.textContent = t.mathName;
-        this.activeGame = new MathAdventure(stage, this);
+        this.activeGame = new FruitMarket(stage, this);
         break;
       default:
         // Unknown / unimplemented game – go back to dashboard
