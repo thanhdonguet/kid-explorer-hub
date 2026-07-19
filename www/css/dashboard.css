@@ -1,9 +1,12 @@
 /* Dashboard Explorer Map Styles */
 #dashboard-screen {
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   position: relative;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-top: 80px; /* Space for HUD */
+  padding-bottom: 40px;
 }
 
 /* Background elements styling */
@@ -237,14 +240,15 @@
 .map-container {
   width: 90%;
   max-width: 1050px;
-  height: 78%;
+  min-height: 80%;
   position: relative;
   display: flex;
   justify-content: space-around;
   align-items: center;
   flex-wrap: wrap;
   gap: 20px;
-  padding: 36px 0;
+  padding: 20px 0;
+  margin: auto 0;
 }
 
 .map-paths {
