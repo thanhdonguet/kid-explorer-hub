@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kid-explorer-hub-v1';
+const CACHE_NAME = 'kid-explorer-hub-v2';
 const ASSETS = [
   'index.html',
   'manifest.json',
@@ -7,11 +7,13 @@ const ASSETS = [
   'css/games.css',
   'js/audio.js',
   'js/app.js',
-  'js/games/math.js',
-  'js/games/spelling.js',
+  'js/games/fruit-market.js',
+  'js/games/alphabet-pop.js',
   'js/games/drawing.js',
   'js/games/memory.js',
   'js/games/color-mix.js',
+  'js/games/vehicle-parking.js',
+  'img/vocab/fire_truck.svg',
   'img/treasure_map_bg.png'
 ];
 
