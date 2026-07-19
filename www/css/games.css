@@ -2592,3 +2592,54 @@
     opacity: 0;
   }
 }
+
+/* --- Vehicle Parking Responsive --- */
+@media (max-height: 500px), (max-width: 600px) {
+  #vehicle-parking-container {
+    padding: 10px 5px;
+    justify-content: flex-start;
+  }
+  .vp-sky {
+    height: 30%;
+  }
+  .vp-cityscape {
+    top: 35%;
+  }
+  .vp-bldg {
+    font-size: 2.5rem;
+  }
+  .vp-top-section {
+    min-height: 120px;
+    margin-bottom: 5px;
+  }
+  .vp-vehicle-display {
+    padding: 10px 20px;
+    border-width: 3px;
+  }
+  .vp-vehicle-img {
+    width: 90px;
+    height: 90px;
+  }
+  .vp-vehicle-name {
+    font-size: 1.2rem;
+    padding: 2px 10px;
+  }
+  .vp-stations-grid {
+    gap: 10px;
+    padding: 5px;
+    margin-bottom: 5px;
+  }
+  .vp-station-card {
+    width: 110px;
+    padding: 8px 5px;
+    border-width: 3px;
+  }
+  .vp-station-emoji {
+    font-size: 2rem;
+    margin-top: 2px;
+    margin-bottom: 4px;
+  }
+  .vp-station-name {
+    font-size: 0.85rem;
+  }
+}

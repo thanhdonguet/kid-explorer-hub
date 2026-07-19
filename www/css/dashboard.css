@@ -604,15 +604,38 @@
 }
 
 /* Responsive – Landscape Mobile */
-@media (max-height: 500px) {
+@media (max-height: 500px), (max-width: 850px) {
+  #dashboard-screen {
+    align-items: stretch;
+    justify-content: flex-start;
+  }
+  
   .map-container {
-    height: 88%;
-    padding: 8px 0;
-    gap: 12px;
+    height: 100%;
+    min-height: unset;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0 5%;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-items: center;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none; /* Firefox */
+  }
+  
+  .map-container::-webkit-scrollbar {
+    display: none; /* Chrome, Safari */
   }
 
   .island-card {
     width: 155px;
+    flex-shrink: 0;
+    scroll-snap-align: center;
+    margin-right: 15px;
   }
 
   .island-view {
