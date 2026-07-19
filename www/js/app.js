@@ -41,6 +41,8 @@ class AppController {
         drawingDesc:  'Khủng long đổi màu vui nhộn',
         colorName:    'Phòng Thí Nghiệm Màu',
         colorDesc:    'Pha màu kỳ diệu',
+        vehicleParkingName: 'Bến Xe Thành Phố',
+        vehicleParkingDesc: 'Đưa xe về đúng bến',
         comingSoon:   '🔒 Sắp Ra Mắt',
         scoreLabel:   'Điểm',
         backTo:       'Đảo Khám Phá',
@@ -64,6 +66,8 @@ class AppController {
         drawingDesc:  'Watch dino change colors!',
         colorName:    'Color Mix Lab',
         colorDesc:    'Mix magical colors',
+        vehicleParkingName: 'City Parking',
+        vehicleParkingDesc: 'Park each vehicle!',
         comingSoon:   '🔒 Coming Soon',
         scoreLabel:   'Score',
         backTo:       'Explorer Island',
@@ -155,7 +159,8 @@ class AppController {
       'color': t.colorName,
       'alphabet-pop': t.alphabetPopName,
       'drawing': t.drawingName,
-      'math': t.mathName
+      'math': t.mathName,
+      'vehicle-parking': t.vehicleParkingName
     };
 
     if (!this.activeGameId) {
@@ -238,6 +243,10 @@ class AppController {
       case 'math':
         this.hud.title.textContent = t.mathName;
         this.activeGame = new FruitMarket(stage, this);
+        break;
+      case 'vehicle-parking':
+        this.hud.title.textContent = t.vehicleParkingName;
+        this.activeGame = new VehicleParking(stage, this);
         break;
       default:
         // Unknown / unimplemented game – go back to dashboard

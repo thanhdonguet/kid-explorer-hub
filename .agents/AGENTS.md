@@ -61,3 +61,9 @@ Every task must follow this three-phase workflow:
 * **If using Cursor/Windsurf/Cline**:
   - Respect the rules in `.cursorrules` (which mirrors this file).
   - Use partial file diff edits instead of overwriting files.
+
+---
+
+## 5. Coding & Syntax Pitfalls (Agent Instructions)
+
+* **Avoid Escaping Backticks in JS**: When using tools like `write_to_file` or `multi_replace_file_content` to generate JavaScript that uses template literals (backticks `` ` ``), **DO NOT** mistakenly prepend backslashes to escape the backticks (`\``). The JSON protocol handles string escaping correctly. Prepending backslashes will literally write `\`` to the JS file, leading to `Uncaught SyntaxError: Invalid or unexpected token` which crashes the game screen. Always double-check this when generating a new game or inserting large HTML templates in JS!

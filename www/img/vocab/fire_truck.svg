@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <!-- Body -->
+  <rect x="10" y="40" width="100" height="50" rx="5" fill="#e74c3c"/>
+  <rect x="75" y="20" width="35" height="30" rx="5" fill="#e74c3c"/>
+  <!-- Window -->
+  <rect x="85" y="25" width="25" height="15" rx="2" fill="#ecf0f1"/>
+  <!-- Wheels -->
+  <circle cx="30" cy="90" r="12" fill="#2c3e50"/>
+  <circle cx="30" cy="90" r="6" fill="#bdc3c7"/>
+  <circle cx="90" cy="90" r="12" fill="#2c3e50"/>
+  <circle cx="90" cy="90" r="6" fill="#bdc3c7"/>
+  <!-- Ladder -->
+  <rect x="15" y="30" width="55" height="4" fill="#95a5a6"/>
+  <rect x="15" y="36" width="55" height="4" fill="#95a5a6"/>
+  <rect x="20" y="30" width="2" height="10" fill="#95a5a6"/>
+  <rect x="35" y="30" width="2" height="10" fill="#95a5a6"/>
+  <rect x="50" y="30" width="2" height="10" fill="#95a5a6"/>
+  <rect x="65" y="30" width="2" height="10" fill="#95a5a6"/>
+  <!-- Siren -->
+  <path d="M 85 20 Q 90 10 95 20 Z" fill="#f1c40f"/>
+</svg>

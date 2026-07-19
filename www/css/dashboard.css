@@ -29,16 +29,56 @@
   opacity: 0;
 }
 
-.wave-1 { width: 100px; height: 30px; top: 20%; left: 15%; animation-delay: 0s; }
-.wave-2 { width: 150px; height: 40px; top: 50%; right: 20%; animation-delay: 2s; }
-.wave-3 { width: 120px; height: 35px; bottom: 15%; left: 30%; animation-delay: 4s; }
-.wave-4 { width: 80px; height: 25px; top: 30%; right: 40%; animation-delay: 6s; }
+.wave-1 {
+  width: 100px;
+  height: 30px;
+  top: 20%;
+  left: 15%;
+  animation-delay: 0s;
+}
+
+.wave-2 {
+  width: 150px;
+  height: 40px;
+  top: 50%;
+  right: 20%;
+  animation-delay: 2s;
+}
+
+.wave-3 {
+  width: 120px;
+  height: 35px;
+  bottom: 15%;
+  left: 30%;
+  animation-delay: 4s;
+}
+
+.wave-4 {
+  width: 80px;
+  height: 25px;
+  top: 30%;
+  right: 40%;
+  animation-delay: 6s;
+}
 
 @keyframes ripple {
-  0% { transform: scale(0.5); opacity: 0; }
-  20% { opacity: 1; }
-  80% { transform: scale(2.5); opacity: 0; }
-  100% { opacity: 0; }
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+
+  20% {
+    opacity: 1;
+  }
+
+  80% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 0;
+  }
 }
 
 /* Compass Rose */
@@ -54,7 +94,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   z-index: 1;
 }
 
@@ -72,37 +112,125 @@
   color: #5c3a21;
 }
 
-.north { top: 2px; left: 50%; transform: translateX(-50%); color: #ff477e; font-size: 20px;}
-.south { bottom: 2px; left: 50%; transform: translateX(-50%); }
-.east { top: 50%; right: 5px; transform: translateY(-50%); }
-.west { top: 50%; left: 5px; transform: translateY(-50%); }
+.north {
+  top: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #ff477e;
+  font-size: 20px;
+}
+
+.south {
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.east {
+  top: 50%;
+  right: 5px;
+  transform: translateY(-50%);
+}
+
+.west {
+  top: 50%;
+  left: 5px;
+  transform: translateY(-50%);
+}
 
 /* Map Decorations */
 .map-decor {
   position: absolute;
   font-size: 2.5rem;
-  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
   z-index: 1;
   opacity: 0.4;
 }
 
-.ship { top: 15%; right: 10%; animation: sail 20s linear infinite; }
-.sea-monster { bottom: 20%; right: 15%; font-size: 3rem; animation: float-island 5s ease-in-out infinite 1s; }
-.tree-1 { top: 25%; left: 5%; font-size: 2.5rem; }
-.tree-2 { bottom: 15%; right: 35%; font-size: 2rem; transform: scaleX(-1); }
-.rocks { top: 10%; left: 40%; font-size: 2rem; }
-.mountain-1 { top: 5%; right: 30%; font-size: 3.5rem; }
-.mountain-2 { top: 15%; right: 25%; font-size: 3rem; }
-.volcano { top: 5%; left: 20%; font-size: 4rem; }
-.forest-1 { top: 35%; left: 10%; font-size: 2.5rem; }
-.forest-2 { bottom: 25%; left: 40%; font-size: 2.5rem; }
+.ship {
+  top: 15%;
+  right: 10%;
+  animation: sail 20s linear infinite;
+}
+
+.sea-monster {
+  bottom: 20%;
+  right: 15%;
+  font-size: 3rem;
+  animation: float-island 5s ease-in-out infinite 1s;
+}
+
+.tree-1 {
+  top: 25%;
+  left: 5%;
+  font-size: 2.5rem;
+}
+
+.tree-2 {
+  bottom: 15%;
+  right: 35%;
+  font-size: 2rem;
+  transform: scaleX(-1);
+}
+
+.rocks {
+  top: 10%;
+  left: 40%;
+  font-size: 2rem;
+}
+
+.mountain-1 {
+  top: 5%;
+  right: 30%;
+  font-size: 3.5rem;
+}
+
+.mountain-2 {
+  top: 15%;
+  right: 25%;
+  font-size: 3rem;
+}
+
+.volcano {
+  top: 5%;
+  left: 20%;
+  font-size: 4rem;
+}
+
+.forest-1 {
+  top: 35%;
+  left: 10%;
+  font-size: 2.5rem;
+}
+
+.forest-2 {
+  bottom: 25%;
+  left: 40%;
+  font-size: 2.5rem;
+}
 
 @keyframes sail {
-  0% { transform: translateX(50px) translateY(0) rotate(-5deg); opacity: 0; }
-  10% { opacity: 1; }
-  45% { transform: translateX(-150px) translateY(-20px) rotate(5deg); }
-  90% { opacity: 1; }
-  100% { transform: translateX(-300px) translateY(10px) rotate(-5deg); opacity: 0; }
+  0% {
+    transform: translateX(50px) translateY(0) rotate(-5deg);
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  45% {
+    transform: translateX(-150px) translateY(-20px) rotate(5deg);
+  }
+
+  90% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateX(-300px) translateY(10px) rotate(-5deg);
+    opacity: 0;
+  }
 }
 
 /* Map Layout – 4 islands */

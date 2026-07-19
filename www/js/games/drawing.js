@@ -256,8 +256,11 @@ class DinosaurColors {
     // Sử dụng file audio cố định để có giọng đều và ổn định
     // Tăng playbackRate để tạo ra chất giọng the thé của trẻ con / chipmunk
     if (audioKey) {
-      const audio = new Audio(`audio/dino/${audioKey}.mp3`);
-      audio.playbackRate = 1.35; 
+      const audio = new Audio(`audio/dino/${audioKey}.wav`);
+      audio.preservesPitch = false; // Tắt giữ tông để tăng tông khi tăng tốc độ
+      if (typeof audio.mozPreservesPitch !== 'undefined') audio.mozPreservesPitch = false;
+      if (typeof audio.webkitPreservesPitch !== 'undefined') audio.webkitPreservesPitch = false;
+      audio.playbackRate = 1.2; // Để tốc độ 1.2 theo đúng yêu cầu
       audio.play().catch(e => console.warn('Audio play failed:', e));
       this.currentAudio = audio;
       return;
