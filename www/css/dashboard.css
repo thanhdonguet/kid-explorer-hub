@@ -603,41 +603,8 @@
   transform: translateX(-50%) translateY(0);
 }
 
-/* Responsive – Landscape Mobile */
-@media (max-height: 500px), (max-width: 850px) {
-  #dashboard-screen {
-    align-items: stretch;
-    justify-content: flex-start;
-  }
-  
-  .map-container {
-    height: 100%;
-    min-height: unset;
-    width: 100%;
-    max-width: 100%;
-    margin: 0;
-    padding: 0 5%;
-    flex-wrap: nowrap;
-    justify-content: flex-start;
-    align-items: center;
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-    scroll-snap-type: x mandatory;
-    scrollbar-width: none; /* Firefox */
-  }
-  
-  .map-container::-webkit-scrollbar {
-    display: none; /* Chrome, Safari */
-  }
-
-  .island-card {
-    width: 155px;
-    flex-shrink: 0;
-    scroll-snap-align: center;
-    margin-right: 15px;
-  }
-
+/* Responsive – Mobile Sizes (Common for both Portrait & Landscape) */
+@media (max-width: 850px), (max-height: 600px) {
   .island-view {
     width: 110px;
     height: 110px;
@@ -701,5 +668,76 @@
   .island-coming-soon {
     font-size: 0.55rem;
     padding: 3px 7px;
+  }
+}
+
+/* Responsive – Landscape Mobile (Horizontal Scroll) */
+@media (max-height: 500px) and (orientation: landscape), (max-width: 850px) and (orientation: landscape) {
+  #dashboard-screen {
+    align-items: stretch;
+    justify-content: flex-start;
+  }
+  
+  .map-container {
+    height: 100%;
+    min-height: unset;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0 5%;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-items: center;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none; /* Firefox */
+  }
+  
+  .map-container::-webkit-scrollbar {
+    display: none; /* Chrome, Safari */
+  }
+
+  .island-card {
+    width: 155px;
+    flex-shrink: 0;
+    scroll-snap-align: center;
+    margin-right: 15px;
+  }
+}
+
+/* Responsive – Portrait Mobile (Vertical Scroll) */
+@media (max-width: 850px) and (orientation: portrait) {
+  #dashboard-screen {
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 90px;
+    padding-bottom: 40px;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  
+  .map-container {
+    height: auto;
+    min-height: unset;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 10px 0 40px 0;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 30px;
+    overflow-x: hidden;
+    overflow-y: visible;
+  }
+
+  .island-card {
+    width: 160px;
+    margin-right: 0;
+    flex-shrink: 0;
   }
 }

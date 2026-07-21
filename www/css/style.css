@@ -297,68 +297,32 @@ body {
   100% { transform: translateY(500px) rotate(360deg); opacity: 0; }
 }
 
-/* ── Orientation Warning ── */
-#orientation-warning {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: var(--bg-gradient);
-  z-index: 99999;
-  display: none;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  padding: 30px;
-}
-
-#orientation-warning .warning-content {
-  background: rgba(255, 255, 255, 0.9);
-  padding: 40px;
-  border-radius: 30px;
-  box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-  border: 4px solid var(--primary);
-  max-width: 400px;
-  animation: bounceIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-#orientation-warning .rotate-icon {
-  font-size: 5rem;
-  margin-bottom: 20px;
-  animation: rotatePhone 2s ease-in-out infinite alternate;
-}
-
-#orientation-warning h2 {
-  font-family: var(--font-title);
-  color: var(--primary);
-  font-size: 2rem;
-  margin-bottom: 10px;
-}
-
-#orientation-warning p {
-  color: var(--text-dark);
-  font-size: 1.2rem;
-  line-height: 1.5;
-}
-
-@keyframes rotatePhone {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(90deg); }
-}
-
-@keyframes bounceIn {
-  0% { transform: scale(0.5); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
-}
-
-/* Show warning only on portrait screens smaller than 768px width (typical phones) */
-@media screen and (max-width: 768px) and (orientation: portrait) {
-  #orientation-warning {
-    display: flex !important;
+/* Responsive HUD for small mobile screens */
+@media (max-width: 480px) {
+  #hud-bar {
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    height: 50px;
   }
-  .screen {
-    display: none !important;
+  
+  .hud-item {
+    padding: 6px 12px;
+    font-size: 1rem;
+    gap: 5px;
+  }
+  
+  .hud-item.title {
+    font-size: 1.1rem;
+  }
+  
+  .hud-btn {
+    width: 42px;
+    height: 42px;
+  }
+  
+  .hud-btn svg {
+    width: 20px;
+    height: 20px;
   }
 }
