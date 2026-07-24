@@ -7,6 +7,8 @@
   overflow-x: hidden;
   padding-top: 80px; /* Space for HUD */
   padding-bottom: 40px;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
 }
 
 /* Background elements styling */
@@ -240,7 +242,7 @@
 .map-container {
   width: 90%;
   max-width: 1050px;
-  min-height: 80%;
+  min-height: 0; /* Allow natural content sizing */
   position: relative;
   display: flex;
   justify-content: space-around;
@@ -676,6 +678,7 @@
   #dashboard-screen {
     align-items: stretch;
     justify-content: flex-start;
+    touch-action: pan-x;
   }
   
   .map-container {
@@ -714,9 +717,11 @@
     align-items: center;
     justify-content: flex-start;
     padding-top: 90px;
-    padding-bottom: 40px;
+    padding-bottom: 60px;
     overflow-y: auto;
     overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
   }
   
   .map-container {
@@ -725,19 +730,33 @@
     width: 100%;
     max-width: 100%;
     margin: 0;
-    padding: 10px 0 40px 0;
+    padding: 10px 0 60px 0;
     flex-direction: column;
     flex-wrap: nowrap;
     justify-content: flex-start;
     align-items: center;
     gap: 30px;
-    overflow-x: hidden;
-    overflow-y: visible;
+    overflow: visible;
   }
 
   .island-card {
     width: 160px;
     margin-right: 0;
     flex-shrink: 0;
+  }
+
+  /* Scroll hint gradient at bottom */
+  #dashboard-screen::after {
+    content: '';
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 50px;
+    background: linear-gradient(to top, rgba(129, 212, 250, 0.9), transparent);
+    pointer-events: none;
+    z-index: 50;
+    opacity: 1;
+    transition: opacity 0.3s ease;
   }
 }

@@ -15,18 +15,29 @@ class ColorMixLab {
     this.app       = app;
     this.lang      = app ? app.lang : 'vi';
 
-    // ── Color Palette ──
+    // ── Color Palette (20 basic colors) ──
     this.COLORS = [
-      { id: 'red',    hex: '#FF0000', r: 255, g:   0, b:   0, vi: 'Đỏ',         en: 'Red'      },
-      { id: 'orange', hex: '#FFA500', r: 255, g: 165, b:   0, vi: 'Cam',        en: 'Orange'   },
-      { id: 'yellow', hex: '#FFFF00', r: 255, g: 255, b:   0, vi: 'Vàng',       en: 'Yellow'   },
-      { id: 'green',  hex: '#00FF00', r:   0, g: 255, b:   0, vi: 'Lục',        en: 'Green'    },
-      { id: 'blue',   hex: '#0000FF', r:   0, g:   0, b: 255, vi: 'Lam',        en: 'Blue'     },
-      { id: 'indigo', hex: '#4B0082', r:  75, g:   0, b: 130, vi: 'Chàm',       en: 'Indigo'   },
-      { id: 'purple', hex: '#800080', r: 128, g:   0, b: 128, vi: 'Tím',        en: 'Purple'   },
-      { id: 'pink',   hex: '#FFC0CB', r: 255, g: 192, b: 203, vi: 'Hồng',       en: 'Pink'     },
-      { id: 'white',  hex: '#FFFFFF', r: 255, g: 255, b: 255, vi: 'Trắng',      en: 'White'    },
-      { id: 'black',  hex: '#000000', r:   0, g:   0, b:   0, vi: 'Đen',        en: 'Black'    },
+      { id: 'red',       hex: '#FF0000', r: 255, g:   0, b:   0, vi: 'Đỏ',         en: 'Red'       },
+      { id: 'orange',    hex: '#FFA500', r: 255, g: 165, b:   0, vi: 'Cam',        en: 'Orange'    },
+      { id: 'yellow',    hex: '#FFFF00', r: 255, g: 255, b:   0, vi: 'Vàng',       en: 'Yellow'    },
+      { id: 'green',     hex: '#00FF00', r:   0, g: 255, b:   0, vi: 'Lục',        en: 'Green'     },
+      { id: 'blue',      hex: '#0000FF', r:   0, g:   0, b: 255, vi: 'Lam',        en: 'Blue'      },
+      { id: 'indigo',    hex: '#4B0082', r:  75, g:   0, b: 130, vi: 'Chàm',       en: 'Indigo'    },
+      { id: 'purple',    hex: '#800080', r: 128, g:   0, b: 128, vi: 'Tím',        en: 'Purple'    },
+      { id: 'pink',      hex: '#FFC0CB', r: 255, g: 192, b: 203, vi: 'Hồng',       en: 'Pink'      },
+      { id: 'white',     hex: '#FFFFFF', r: 255, g: 255, b: 255, vi: 'Trắng',      en: 'White'     },
+      { id: 'black',     hex: '#000000', r:   0, g:   0, b:   0, vi: 'Đen',        en: 'Black'     },
+      // 10 new colors
+      { id: 'coral',     hex: '#FF7F50', r: 255, g: 127, b:  80, vi: 'San hô',     en: 'Coral'     },
+      { id: 'gold',      hex: '#FFD700', r: 255, g: 215, b:   0, vi: 'Vàng kim',   en: 'Gold'      },
+      { id: 'cyan',      hex: '#00FFFF', r:   0, g: 255, b: 255, vi: 'Xanh lơ',    en: 'Cyan'      },
+      { id: 'magenta',   hex: '#FF00FF', r: 255, g:   0, b: 255, vi: 'Cánh sen',   en: 'Magenta'   },
+      { id: 'brown',     hex: '#8B4513', r: 139, g:  69, b:  19, vi: 'Nâu',        en: 'Brown'     },
+      { id: 'gray',      hex: '#808080', r: 128, g: 128, b: 128, vi: 'Xám',        en: 'Gray'      },
+      { id: 'lime',      hex: '#32CD32', r:  50, g: 205, b:  50, vi: 'Xanh chanh', en: 'Lime'      },
+      { id: 'turquoise', hex: '#40E0D0', r:  64, g: 224, b: 208, vi: 'Ngọc lâm',   en: 'Turquoise' },
+      { id: 'maroon',    hex: '#800000', r: 128, g:   0, b:   0, vi: 'Đỏ sẫm',     en: 'Maroon'    },
+      { id: 'navy',      hex: '#000080', r:   0, g:   0, b: 128, vi: 'Xanh hải',   en: 'Navy'      },
     ];
 
     // ── State ──
@@ -77,6 +88,8 @@ class ColorMixLab {
     if (ph) ph.textContent = lang === 'vi' ? 'Kéo màu vào đây' : 'Drag colors here';
     const resetBtn = this.container.querySelector('#cmx-reset-btn');
     if (resetBtn) resetBtn.textContent = lang === 'vi' ? '🗑️ Đổ ra' : '🗑️ Clear';
+    const bottomLabel = this.container.querySelector('.cmx-palette-bottom-label');
+    if (bottomLabel) bottomLabel.textContent = lang === 'vi' ? '🎨 Thêm màu' : '🎨 More colors';
   }
 
   /* ================================================================
@@ -92,24 +105,29 @@ class ColorMixLab {
       resetBtn:    this.lang === 'vi' ? '🗑️ Đổ ra'               : '🗑️ Clear',
     };
 
+    const colorsTop = this.COLORS.slice(0, 10);
+    const colorsBottom = this.COLORS.slice(10);
+
+    const renderBubble = (c) => `
+      <div class="cmx-bubble-wrap" data-color-id="${c.id}">
+        <div class="cmx-bubble"
+             id="bubble-${c.id}"
+             data-color-id="${c.id}"
+             style="background: radial-gradient(circle at 35% 30%, ${this._lighten(c.hex, 40)}, ${c.hex} 60%, ${this._darken(c.hex, 20)});">
+        </div>
+        <span class="cmx-bubble-label">${this.lang === 'vi' ? c.vi : c.en}</span>
+      </div>
+    `;
+
     this.container.innerHTML = `
       <div class="cmx-wrapper" id="cmx-wrapper">
 
-        <!-- Main 3-column layout -->
+        <!-- Main 3-column layout (top) -->
         <div class="cmx-main">
 
-          <!-- LEFT: Color Palette -->
+          <!-- LEFT: Primary Palette (10 colors) -->
           <div class="cmx-palette" id="cmx-palette">
-            ${this.COLORS.map(c => `
-              <div class="cmx-bubble-wrap" data-color-id="${c.id}">
-                <div class="cmx-bubble"
-                     id="bubble-${c.id}"
-                     data-color-id="${c.id}"
-                     style="background: radial-gradient(circle at 35% 30%, ${this._lighten(c.hex, 40)}, ${c.hex} 60%, ${this._darken(c.hex, 20)});">
-                </div>
-                <span class="cmx-bubble-label">${this.lang === 'vi' ? c.vi : c.en}</span>
-              </div>
-            `).join('')}
+            ${colorsTop.map(renderBubble).join('')}
           </div>
 
           <!-- CENTER: Mixing Bowl -->
@@ -138,6 +156,14 @@ class ColorMixLab {
               <div class="cmx-result-hex"  id="cmx-result-hex"></div>
               <div class="cmx-result-chips" id="cmx-result-chips"></div>
             </div>
+          </div>
+        </div>
+
+        <!-- Bottom: Extended Palette (10 extra colors) -->
+        <div class="cmx-palette-bottom" id="cmx-palette-bottom">
+          <div class="cmx-palette-bottom-label">${this.lang === 'vi' ? '🎨 Thêm màu' : '🎨 More colors'}</div>
+          <div class="cmx-palette-bottom-grid">
+            ${colorsBottom.map(renderBubble).join('')}
           </div>
         </div>
 
@@ -263,7 +289,7 @@ class ColorMixLab {
       const inside = clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom;
 
       if (inside) {
-        if (this.mixedColors.length < 3) {
+        if (this.mixedColors.length < 5) {
           this._dropColorInBowl(colorObj, clientX, clientY);
         } else {
           bowl.classList.add('cmx-bowl-shake');
@@ -391,7 +417,7 @@ class ColorMixLab {
 
     // Bowl liquid
     liquid.style.background = `linear-gradient(180deg, ${this._lighten(hex, 25)}, ${hex})`;
-    liquid.style.height  = Math.min(40 + this.mixedColors.length * 8, 80) + '%';
+    liquid.style.height  = Math.min(30 + this.mixedColors.length * 10, 85) + '%';
     liquid.style.opacity = '1';
     ph.style.display     = 'none';
 
@@ -443,16 +469,39 @@ class ColorMixLab {
     const uniqueIds = Array.from(new Set(this.mixedColors.map(c => c.id))).sort().join('+');
     
     const recipes = {
-      'red+yellow': 'orange',
-      'orange+red+yellow': 'orange',
-      'blue+yellow': 'green',
-      'blue+green+yellow': 'green',
-      'blue+red': 'purple',
-      'blue+purple+red': 'purple',
-      'red+white': 'pink',
-      'pink+red+white': 'pink',
-      'black+white': 'gray',
-      'black+gray+white': 'gray',
+      // 2-color mixes
+      'red+yellow':       'orange',
+      'blue+yellow':      'green',
+      'blue+red':         'purple',
+      'red+white':        'pink',
+      'black+white':      'gray',
+      'blue+green':       'cyan',
+      'magenta+red':      'pink',
+      'blue+magenta':     'purple',
+      'green+yellow':     'lime',
+      'blue+cyan':        'navy',
+      'black+red':        'maroon',
+      'gold+yellow':      'gold',
+      'cyan+green':       'turquoise',
+      'orange+red':       'coral',
+      // 3-color mixes
+      'orange+red+yellow':     'orange',
+      'blue+green+yellow':     'green',
+      'blue+purple+red':       'purple',
+      'pink+red+white':        'pink',
+      'black+gray+white':      'gray',
+      'blue+green+white':      'turquoise',
+      'green+white+yellow':    'lime',
+      'black+blue+red':        'maroon',
+      'red+white+yellow':      'coral',
+      'orange+white+yellow':   'gold',
+      // 4-color mixes
+      'blue+green+white+yellow':  'turquoise',
+      'black+blue+red+white':     'gray',
+      'orange+red+white+yellow':  'coral',
+      'blue+green+red+yellow':    'brown',
+      // 5-color mixes
+      'black+blue+green+red+yellow': 'brown',
     };
 
     if (recipes[uniqueIds]) {
@@ -482,16 +531,36 @@ class ColorMixLab {
       { r: 255, g: 192, b: 203, vi: 'Hồng',          en: 'Pink'         },
       { r: 255, g: 255, b: 255, vi: 'Trắng',         en: 'White'        },
       { r:   0, g:   0, b:   0, vi: 'Đen',           en: 'Black'        },
-      // Common mixes
+      // New palette colors
+      { r: 255, g: 127, b:  80, vi: 'San hô',        en: 'Coral'        },
+      { r: 255, g: 215, b:   0, vi: 'Vàng kim',      en: 'Gold'         },
+      { r:   0, g: 255, b: 255, vi: 'Xanh lơ',       en: 'Cyan'         },
+      { r: 255, g:   0, b: 255, vi: 'Cánh sen',      en: 'Magenta'      },
+      { r: 139, g:  69, b:  19, vi: 'Nâu',           en: 'Brown'        },
+      { r: 128, g: 128, b: 128, vi: 'Xám',           en: 'Gray'         },
+      { r:  50, g: 205, b:  50, vi: 'Xanh chanh',    en: 'Lime'         },
+      { r:  64, g: 224, b: 208, vi: 'Ngọc lâm',      en: 'Turquoise'    },
+      { r: 128, g:   0, b:   0, vi: 'Đỏ sẫm',        en: 'Maroon'       },
+      { r:   0, g:   0, b: 128, vi: 'Xanh hải',      en: 'Navy'         },
+      // Common mix results
       { r: 155, g: 129, b: 152, vi: 'Xám tím',       en: 'Mauve'        },
       { r: 127, g: 130, b: 171, vi: 'Xanh tím',      en: 'Periwinkle'   },
       { r: 153, g: 113, b:  21, vi: 'Nâu vàng',      en: 'Goldenrod'    },
       { r: 115, g: 179, b: 172, vi: 'Xanh ngọc',     en: 'Teal'         },
-      { r: 255, g: 127, b:  67, vi: 'Cam đỏ',        en: 'Coral'        },
-      { r: 127, g: 127, b: 127, vi: 'Xám',           en: 'Gray'         },
       { r: 255, g: 176, b:  42, vi: 'Vàng cam',      en: 'Amber'        },
       { r: 166, g: 107, b: 136, vi: 'Hồng tím',      en: 'Mauve Pink'   },
       { r: 153, g: 202, b: 172, vi: 'Xanh nhạt',     en: 'Mint'         },
+      { r: 178, g:  34, b:  34, vi: 'Đỏ gạch',       en: 'Firebrick'    },
+      { r: 210, g: 105, b:  30, vi: 'Quế',           en: 'Chocolate'    },
+      { r:  70, g: 130, b: 180, vi: 'Xanh thép',     en: 'Steel Blue'   },
+      { r: 244, g: 164, b:  96, vi: 'Nâu cát',       en: 'Sandy Brown'  },
+      { r: 218, g: 112, b: 214, vi: 'Tím phong lan',  en: 'Orchid'       },
+      { r: 240, g: 230, b: 140, vi: 'Vàng nhạt',     en: 'Khaki'        },
+      { r: 173, g: 216, b: 230, vi: 'Xanh nhạt',     en: 'Light Blue'   },
+      { r: 144, g: 238, b: 144, vi: 'Lục nhạt',      en: 'Light Green'  },
+      { r: 255, g: 228, b: 196, vi: 'Be',            en: 'Bisque'       },
+      { r: 245, g: 222, b: 179, vi: 'Lúa mì',        en: 'Wheat'        },
+      { r: 188, g: 143, b: 143, vi: 'Hồng xám',      en: 'Rosy Brown'   },
     ];
 
     let best = NAMED[0], bestDist = Infinity;

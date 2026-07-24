@@ -174,11 +174,23 @@ class VehicleParking {
       
       vehicleEl.style.transform = `translate(${dx}px, ${dy}px) scale(1.15) rotate(-3deg)`;
       
-      // Check hover
+      // Find the single station with the LARGEST overlap area
       const vRect = vehicleEl.getBoundingClientRect();
+      let bestStation = null;
+      let bestArea = 0;
+      
       stationsEls.forEach(station => {
         const sRect = station.getBoundingClientRect();
-        if (this.isOverlap(vRect, sRect)) {
+        const area = this.overlapArea(vRect, sRect);
+        if (area > bestArea) {
+          bestArea = area;
+          bestStation = station;
+        }
+      });
+      
+      // Only highlight the single best match
+      stationsEls.forEach(station => {
+        if (station === bestStation) {
           station.classList.add('highlight');
         } else {
           station.classList.remove('highlight');
@@ -191,13 +203,17 @@ class VehicleParking {
       isDragging = false;
       stationsEls.forEach(s => s.style.animation = '');
       
+      // Find the best overlap station on drop
       const vRect = vehicleEl.getBoundingClientRect();
       let droppedStation = null;
+      let bestArea = 0;
       
       stationsEls.forEach(station => {
         station.classList.remove('highlight');
         const sRect = station.getBoundingClientRect();
-        if (this.isOverlap(vRect, sRect)) {
+        const area = this.overlapArea(vRect, sRect);
+        if (area > bestArea) {
+          bestArea = area;
           droppedStation = station;
         }
       });
@@ -228,28 +244,72 @@ class VehicleParking {
     this.dragHandlers = { onMove, onEnd };
   }
   
-  isOverlap(rect1, rect2) {
+  /** Returns the overlap area (px²) between two DOMRects. 0 = no overlap. */
+  overlapArea(rect1, rect2) {
     const overlapX = Math.max(0, Math.min(rect1.right, rect2.right) - Math.max(rect1.left, rect2.left));
     const overlapY = Math.max(0, Math.min(rect1.bottom, rect2.bottom) - Math.max(rect1.top, rect2.top));
-    const overlapArea = overlapX * overlapY;
-    return overlapArea > 0;
+    return overlapX * overlapY;
   }
 
   handleDrop(vehicleEl, stationEl) {
     const targetStation = stationEl.dataset.station;
-    if (targetStation === this.currentVehicle.station) {
-      this.onCorrect(vehicleEl);
-    } else {
-      this.onWrong(vehicleEl);
-    }
+    const isCorrect = targetStation === this.currentVehicle.station;
+    
+    // Animate vehicle shrinking into the station card
+    const vRect = vehicleEl.getBoundingClientRect();
+    const sRect = stationEl.getBoundingClientRect();
+    
+    // Calculate position to fly the vehicle into the station center
+    const sCenterX = sRect.left + sRect.width / 2;
+    const sCenterY = sRect.top + sRect.height / 2;
+    const vCenterX = vRect.left + vRect.width / 2;
+    const vCenterY = vRect.top + vRect.height / 2;
+    
+    // Current translate offset (from drag)
+    const style = window.getComputedStyle(vehicleEl);
+    const matrix = new DOMMatrix(style.transform);
+    const curTx = matrix.m41;
+    const curTy = matrix.m42;
+    
+    // Additional offset needed to reach station center
+    const flyDx = curTx + (sCenterX - vCenterX);
+    const flyDy = curTy + (sCenterY - vCenterY);
+    
+    // Scale down to fit inside the station card
+    const targetScale = Math.min(sRect.width, sRect.height) / Math.max(vRect.width, vRect.height) * 0.7;
+    
+    vehicleEl.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+    vehicleEl.style.transform = `translate(${flyDx}px, ${flyDy}px) scale(${targetScale}) rotate(0deg)`;
+    
+    // Briefly highlight the target station
+    stationEl.classList.add('highlight');
+    
+    setTimeout(() => {
+      stationEl.classList.remove('highlight');
+      if (isCorrect) {
+        this.onCorrect(vehicleEl, stationEl);
+      } else {
+        this.onWrong(vehicleEl);
+      }
+    }, 450);
   }
 
-  onCorrect(vehicleEl) {
+  onCorrect(vehicleEl, stationEl) {
     // Play vehicle sound then applause
     this.playGroupSound(this.currentVehicle.group);
     setTimeout(() => this.playApplause(), 1000);
     
-    vehicleEl.classList.add('anim-correct-park');
+    // Mark the station as "parked" visually
+    stationEl.classList.add('highlight');
+    stationEl.style.borderStyle = 'solid';
+    stationEl.style.borderColor = '#4CAF50';
+    stationEl.style.background = '#E8F5E9';
+    
+    // Fade out the vehicle in place
+    vehicleEl.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+    vehicleEl.style.opacity = '0';
+    vehicleEl.style.transform += ' scale(0.3)';
+    
     this.createConfetti(vehicleEl);
     
     this.score++;
@@ -261,7 +321,7 @@ class VehicleParking {
       } else {
         this.generateRound();
       }
-    }, 1500);
+    }, 1200);
   }
 
   onWrong(vehicleEl) {
