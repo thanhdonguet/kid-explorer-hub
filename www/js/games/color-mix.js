@@ -215,6 +215,7 @@ class ColorMixLab {
     this._onMouseMove = (e) => this._moveDrag(e.clientX, e.clientY);
     this._onMouseUp   = (e) => this._endDrag(e.clientX, e.clientY);
     this._onTouchMove = (e) => {
+      if (!this.dragging) return;
       e.preventDefault();
       const t = e.touches[0];
       this._moveDrag(t.clientX, t.clientY);
@@ -228,6 +229,7 @@ class ColorMixLab {
     document.addEventListener('mouseup',    this._onMouseUp);
     document.addEventListener('touchmove',  this._onTouchMove, { passive: false });
     document.addEventListener('touchend',   this._onTouchEnd);
+    document.addEventListener('touchcancel',this._onTouchEnd);
   }
 
   _unbindGlobalEvents() {
@@ -235,6 +237,7 @@ class ColorMixLab {
     document.removeEventListener('mouseup',    this._onMouseUp);
     document.removeEventListener('touchmove',  this._onTouchMove);
     document.removeEventListener('touchend',   this._onTouchEnd);
+    document.removeEventListener('touchcancel',this._onTouchEnd);
   }
 
   _bindBowlEvents() {

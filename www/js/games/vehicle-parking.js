@@ -137,6 +137,14 @@ class VehicleParking {
   }
 
   setupDragDrop() {
+    if (this.dragHandlers) {
+      document.removeEventListener('mousemove', this.dragHandlers.onMove);
+      document.removeEventListener('mouseup', this.dragHandlers.onEnd);
+      document.removeEventListener('touchmove', this.dragHandlers.onMove);
+      document.removeEventListener('touchend', this.dragHandlers.onEnd);
+      document.removeEventListener('touchcancel', this.dragHandlers.onEnd);
+    }
+
     const vehicleEl = document.getElementById('vp-vehicle-display');
     const stationsEls = this.stationsGrid.querySelectorAll('.vp-station-card');
     
@@ -240,6 +248,7 @@ class VehicleParking {
     vehicleEl.addEventListener('touchstart', onStart, {passive: false});
     document.addEventListener('touchmove', onMove, {passive: false});
     document.addEventListener('touchend', onEnd);
+    document.addEventListener('touchcancel', onEnd);
     
     this.dragHandlers = { onMove, onEnd };
   }
@@ -387,6 +396,7 @@ class VehicleParking {
       document.removeEventListener('mouseup', this.dragHandlers.onEnd);
       document.removeEventListener('touchmove', this.dragHandlers.onMove);
       document.removeEventListener('touchend', this.dragHandlers.onEnd);
+      document.removeEventListener('touchcancel', this.dragHandlers.onEnd);
     }
     
     if (this.audioCtx && this.audioCtx.state !== 'closed') {
