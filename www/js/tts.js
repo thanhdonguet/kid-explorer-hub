@@ -29,9 +29,11 @@
   ];
 
   // Known-good voices across platforms, checked first regardless of order.
+  // Deliberately American-accented only – the app teaches US English, so a
+  // British/Australian/Indian voice should never be preferred over these.
   const PREFERRED_VOICE_NAMES = [
-    'google us english', 'google uk english female', 'google uk english male',
-    'samantha', 'ava', 'alex', 'karen', 'daniel', 'moira', 'tessa', 'fiona',
+    'google us english',
+    'samantha', 'ava', 'alex',
     'microsoft aria online', 'microsoft jenny online', 'microsoft guy online',
     'microsoft zira', 'microsoft david',
   ];
@@ -67,10 +69,7 @@
     return uri.includes('network') && !uri.includes('local');
   }
 
-  function pickForLangPrefix(prefix) {
-    const candidates = cachedVoices.filter(
-      v => v.lang && v.lang.toLowerCase().startsWith(prefix)
-    );
+  function rankCandidates(candidates) {
     if (!candidates.length) return null;
 
     const preferred = candidates.find(v => nameMatches(v.name, PREFERRED_VOICE_NAMES));
@@ -91,10 +90,33 @@
     return pool.find(isNetworkVoice) || pool[0];
   }
 
+  function pickForLangPrefix(prefix) {
+    const candidates = cachedVoices.filter(
+      v => v.lang && v.lang.toLowerCase().startsWith(prefix)
+    );
+    return rankCandidates(candidates);
+  }
+
   function bestVoiceForLang(lang) {
     if (!cachedVoices.length) refreshVoices();
     const wanted = (lang || 'en-US').toLowerCase();
-    return pickForLangPrefix(wanted) || pickForLangPrefix(wanted.split('-')[0]) || null;
+
+    const exact = pickForLangPrefix(wanted);
+    if (exact) return exact;
+
+    if (wanted.startsWith('en')) {
+      // No en-US voice on this device. A British accent reads as "wrong"
+      // when every word taught is American English, so try any *other*
+      // English variant (en-AU, en-IN, ...) before ever touching en-GB.
+      const nonBritish = cachedVoices.filter(
+        v => v.lang && v.lang.toLowerCase().startsWith('en') && !v.lang.toLowerCase().startsWith('en-gb')
+      );
+      const best = rankCandidates(nonBritish);
+      if (best) return best;
+    }
+
+    // Last resort: whatever matches the bare language code, British included.
+    return pickForLangPrefix(wanted.split('-')[0]) || null;
   }
 
   /**
