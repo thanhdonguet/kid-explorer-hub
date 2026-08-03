@@ -6,10 +6,12 @@
    Why this exists: speechSynthesis.getVoices() on iOS/iPadOS returns
    many "novelty" joke voices (Zarvox, Whisper, Bells, Organ, ...) all
    tagged lang="en-US", same as the real narrator voice (Samantha).
-   Picking "the first en-US voice" can land on one of those by accident,
-   which is why some devices sound great and others sound terrible for
-   the exact same code. This module ranks voices instead of taking the
-   first match.
+   Android has the equivalent problem the other way round: cheap/older
+   devices without Google's TTS engine set as default fall back to the
+   ancient Pico/SVOX/eSpeak engine, which sounds robotic. Picking "the
+   first en-* voice" can land on either of those by accident, which is
+   why some devices sound great and others sound terrible for the exact
+   same code. This module ranks voices instead of taking the first match.
    ================================================================ */
 
 (function (global) {
@@ -20,6 +22,10 @@
     'trinoids', 'whisper', 'zarvox', 'jester', 'superstar', 'kathy',
     'junior', 'ralph', 'fred', 'rocko', 'sandy', 'shelley', 'grandma',
     'grandpa', 'eddy', 'flo', 'reed', 'rishi',
+    // Legacy/low-end Android TTS engines – robotic, pre-neural quality.
+    // Devices that only have these (no Google Speech Services installed or
+    // set as default) are the common cause of "Android sounds bad" reports.
+    'pico', 'svox', 'espeak',
   ];
 
   // Known-good voices across platforms, checked first regardless of order.
@@ -53,6 +59,14 @@
     return list.some(entry => n.includes(entry));
   }
 
+  // Some Chromium builds (notably on Android) don't set localService
+  // reliably, but do leak "network"/"local" in the voiceURI itself.
+  function isNetworkVoice(v) {
+    if (v.localService === false) return true;
+    const uri = (v.voiceURI || '').toLowerCase();
+    return uri.includes('network') && !uri.includes('local');
+  }
+
   function pickForLangPrefix(prefix) {
     const candidates = cachedVoices.filter(
       v => v.lang && v.lang.toLowerCase().startsWith(prefix)
@@ -62,12 +76,19 @@
     const preferred = candidates.find(v => nameMatches(v.name, PREFERRED_VOICE_NAMES));
     if (preferred) return preferred;
 
-    // Avoid known novelty/joke voices; among what's left, a network/cloud
-    // voice (localService === false) is generally higher quality than a
-    // bundled offline one.
+    // Any other Google-branded voice (Android/Chrome usually name theirs
+    // "Google <language>") beats an unbranded/OEM one we can't identify.
+    const google = candidates.find(v => v.name.toLowerCase().includes('google'));
+    if (google) return google;
+
+    // Avoid known novelty/legacy-engine voices; among what's left, a
+    // network/cloud voice is generally higher quality than a bundled
+    // offline one (this is what usually separates "Android sounds great"
+    // from "Android sounds robotic" – it comes down to which TTS engine/
+    // voice pack is actually installed and picked as default on device).
     const clean = candidates.filter(v => !nameMatches(v.name, NOVELTY_VOICE_NAMES));
     const pool = clean.length ? clean : candidates;
-    return pool.find(v => v.localService === false) || pool[0];
+    return pool.find(isNetworkVoice) || pool[0];
   }
 
   function bestVoiceForLang(lang) {
