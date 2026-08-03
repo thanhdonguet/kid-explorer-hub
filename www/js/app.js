@@ -132,16 +132,45 @@ class AppController {
     });
 
     // 6. PWA Service Worker
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-          .then(reg  => console.log('SW registered:', reg.scope))
-          .catch(err => console.warn('SW failed:', err));
-      });
-    }
+    this._initServiceWorker();
 
     // 7. Unlock Web Audio on first interaction
     document.body.addEventListener('click', () => audio.resume(), { once: true });
+  }
+
+  /* ================================================================
+     SERVICE WORKER
+     – The worker itself uses network-first for code, but the *page* still
+       has to get off the previous worker. Whoever is controlling the tab
+       when it loads has already served the old HTML/JS, so a new worker
+       taking over mid-load means the visible code is one build behind.
+       Reloading once on controllerchange makes a single manual refresh
+       enough to land on new code instead of two.
+     ================================================================ */
+  _initServiceWorker() {
+    if (!('serviceWorker' in navigator)) return;
+
+    // If nothing controls the tab yet this is a first install – there is no
+    // stale build on screen, so the claim below must NOT trigger a reload.
+    const hadController = !!navigator.serviceWorker.controller;
+    let reloading = false;
+
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!hadController || reloading) return;
+      reloading = true;
+      window.location.reload();
+    });
+
+    window.addEventListener('load', () => {
+      // updateViaCache:'none' keeps sw.js itself out of the HTTP cache,
+      // otherwise the phone can hand back the old worker for up to a day.
+      navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' })
+        .then(reg => {
+          console.log('SW registered:', reg.scope);
+          return reg.update(); // force an update check on every load
+        })
+        .catch(err => console.warn('SW failed:', err));
+    });
   }
 
   /* ================================================================
