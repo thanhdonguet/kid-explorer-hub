@@ -635,34 +635,37 @@ class ColorMixLab {
     if (!window.speechSynthesis) return;
 
     const synth = window.speechSynthesis;
-    synth.cancel();
 
-    // Chrome (desktop and Android) silently drops an utterance queued in the
-    // same tick as cancel() - the browser hasn't finished tearing down the
-    // previous one yet, so speak() is a no-op with no error. This is why
-    // colors were never read on mobile. Queuing on the next tick is the
-    // standard workaround.
-    setTimeout(() => {
-      if (!this.active) return;
+    // iOS/iPadOS Safari only allows speak() to fire when it is the direct,
+    // synchronous result of a user gesture (touchstart/touchend) - deferring
+    // it even by setTimeout(0) breaks that requirement and the utterance is
+    // dropped with no error, no sound. So this call must stay synchronous.
+    //
+    // Chrome (desktop/Android) has the opposite-flavored bug: calling
+    // cancel() and speak() back to back can drop the new utterance. Only
+    // canceling when something is actually mid-speech avoids that race for
+    // the common case (a fresh tap, nothing queued) without deferring.
+    if (synth.speaking || synth.pending) {
+      synth.cancel();
+    }
 
-      const utt = new SpeechSynthesisUtterance(text);
-      const voices = synth.getVoices();
-      const voice = voices.find(v => v.lang === 'en-US')
-        || voices.find(v => v.lang === 'en-GB')
-        || voices.find(v => v.lang && v.lang.startsWith('en'));
+    const utt = new SpeechSynthesisUtterance(text);
+    const voices = synth.getVoices();
+    const voice = voices.find(v => v.lang === 'en-US')
+      || voices.find(v => v.lang === 'en-GB')
+      || voices.find(v => v.lang && v.lang.startsWith('en'));
 
-      if (voice) {
-        utt.voice = voice;
-        utt.lang  = voice.lang; // must match the assigned voice or some engines stay silent
-      } else {
-        utt.lang = 'en-US';
-      }
+    if (voice) {
+      utt.voice = voice;
+      utt.lang  = voice.lang; // must match the assigned voice or some engines stay silent
+    } else {
+      utt.lang = 'en-US';
+    }
 
-      utt.rate   = 0.9;
-      utt.pitch  = 1.1;
-      utt.volume = 1;
-      synth.speak(utt);
-    }, 0);
+    utt.rate   = 0.9;
+    utt.pitch  = 1.1;
+    utt.volume = 1;
+    synth.speak(utt);
   }
 
   /* ================================================================
