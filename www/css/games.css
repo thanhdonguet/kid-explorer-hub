@@ -1228,103 +1228,251 @@
 
 /* ==========================================================================
    COLOR MIX – RESPONSIVE
+   The 3-column row (palette | bowl | result) doesn't fit once every piece is
+   sized for a child to see comfortably, so it stacks vertically on mobile
+   instead, with the bowl leading – it's the thing to look at, so it should
+   read as the center of the screen, not be squeezed into a cramped top row.
+   Both 10-color palettes become horizontal-scroll strips instead of a tall
+   grid, which is what actually lets .cmx-wrapper's justify-content:center
+   put the bowl near the middle of the screen rather than the top.
    ========================================================================== */
 @media (max-width: 600px) {
-  .cmx-main {
-    gap: 10px;
+  .cmx-wrapper {
+    justify-content: center;
+    padding: 12px 0 20px;
   }
 
+  .cmx-main {
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    max-width: 480px;
+  }
+
+  .cmx-center { order: 1; }
+  .cmx-result { order: 2; }
+  .cmx-palette { order: 3; }
+
   .cmx-palette {
-    padding: 8px 8px;
-    gap: 7px;
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 16px;
+    width: 100%;
+    padding: 8px 16px 10px;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .cmx-palette::-webkit-scrollbar {
+    display: none;
+  }
+
+  .cmx-bubble-wrap {
+    flex-shrink: 0;
+    scroll-snap-align: center;
   }
 
   .cmx-bubble {
-    width: 44px;
-    height: 44px;
+    width: 64px;
+    height: 64px;
+  }
+
+  .cmx-bubble-label {
+    font-size: 0.82rem;
   }
 
   .cmx-bowl {
-    width: 120px;
-    height: 120px;
+    width: 180px;
+    height: 180px;
+  }
+
+  .cmx-bowl-base {
+    width: 72px;
+    height: 16px;
+  }
+
+  .cmx-reset-btn {
+    font-size: 1.05rem;
+    padding: 12px 32px;
   }
 
   .cmx-result {
-    width: 90px;
-    padding: 10px 6px;
+    width: auto;
+    max-width: 320px;
+    flex-direction: row;
+    padding: 14px 20px;
+    gap: 16px;
+  }
+
+  .cmx-result-info {
+    align-items: flex-start;
+    text-align: left;
   }
 
   .cmx-result-preview {
-    width: 60px;
-    height: 60px;
+    width: 84px;
+    height: 84px;
+  }
+
+  .cmx-result-empty-icon {
+    font-size: 2.6rem;
+  }
+
+  .cmx-result-label {
+    font-size: 0.75rem;
   }
 
   .cmx-result-name-en {
-    font-size: 0.95rem;
+    font-size: 1.3rem;
   }
 
   .cmx-result-name-vi {
-    font-size: 0.75rem;
+    font-size: 1.02rem;
+  }
+
+  .cmx-result-hex {
+    font-size: 0.78rem;
   }
 
   .cmx-palette-bottom {
-    margin-top: 8px;
-    padding: 8px 10px 10px;
-  }
-
-  .cmx-palette-bottom-grid {
-    grid-template-columns: repeat(5, 1fr);
-    gap: 6px;
+    margin-top: 2px;
+    padding: 10px 0 14px;
+    max-width: 480px;
   }
 
   .cmx-palette-bottom-label {
-    font-size: 0.75rem;
-    margin-bottom: 6px;
-  }
-}
-
-@media (max-height: 480px) {
-  .cmx-wrapper {
-    padding: 8px;
-  }
-
-  .cmx-phase-label {
-    margin-bottom: 8px;
-    padding: 4px 14px;
-    font-size: 0.85rem;
-  }
-
-  .cmx-bowl {
-    width: 110px;
-    height: 110px;
-  }
-
-  .cmx-palette {
-    gap: 5px;
-  }
-
-  .cmx-bubble {
-    width: 40px;
-    height: 40px;
-  }
-
-  .cmx-palette-bottom {
-    margin-top: 5px;
-    padding: 6px 8px 8px;
+    font-size: 0.95rem;
+    padding: 0 16px;
   }
 
   .cmx-palette-bottom-grid {
-    grid-template-columns: repeat(5, 1fr);
-    gap: 4px;
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 16px;
+    padding: 4px 16px 8px;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .cmx-palette-bottom-grid::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Short viewports (landscape phones) need the same restructuring as the
+   max-width query above, but a wide-short screen won't match max-width:600px,
+   so every needed rule is repeated here rather than assumed inherited. */
+@media (max-height: 480px) {
+  .cmx-wrapper {
+    justify-content: center;
+    padding: 8px 0 12px;
+  }
+
+  .cmx-main {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    max-width: 480px;
+  }
+
+  .cmx-center { order: 1; }
+  .cmx-result { order: 2; }
+  .cmx-palette { order: 3; }
+
+  .cmx-palette {
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 12px;
+    width: 100%;
+    padding: 6px 14px 8px;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .cmx-palette::-webkit-scrollbar {
+    display: none;
+  }
+
+  .cmx-bubble-wrap {
+    flex-shrink: 0;
+    scroll-snap-align: center;
+  }
+
+  .cmx-bubble {
+    width: 52px;
+    height: 52px;
+  }
+
+  .cmx-bubble-label {
+    font-size: 0.68rem;
+  }
+
+  .cmx-bowl {
+    width: 140px;
+    height: 140px;
+  }
+
+  .cmx-result {
+    width: auto;
+    max-width: 300px;
+    flex-direction: row;
+    padding: 10px 16px;
+    gap: 12px;
+  }
+
+  .cmx-result-preview {
+    width: 64px;
+    height: 64px;
+  }
+
+  .cmx-result-name-en {
+    font-size: 1.05rem;
+  }
+
+  .cmx-result-name-vi {
+    font-size: 0.85rem;
+  }
+
+  .cmx-palette-bottom {
+    margin-top: 2px;
+    padding: 6px 0 10px;
+  }
+
+  .cmx-palette-bottom-label {
+    font-size: 0.78rem;
+    padding: 0 14px;
+  }
+
+  .cmx-palette-bottom-grid {
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 12px;
+    padding: 4px 14px 6px;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .cmx-palette-bottom-grid::-webkit-scrollbar {
+    display: none;
   }
 
   .cmx-palette-bottom .cmx-bubble {
-    width: 34px;
-    height: 34px;
+    width: 46px;
+    height: 46px;
   }
 
   .cmx-palette-bottom .cmx-bubble-label {
-    font-size: 0.48rem;
+    font-size: 0.6rem;
   }
 }
 

@@ -605,22 +605,26 @@
   transform: translateX(-50%) translateY(0);
 }
 
-/* Responsive – Mobile Sizes (Common for both Portrait & Landscape) */
+/* Responsive – Mobile Sizes (Common for both Portrait & Landscape)
+   Sized with clamp() so islands scale with the viewport instead of a single
+   fixed px value: too small on a phone strains a child's eyes, but a fixed
+   "big enough for a phone" size would overflow a short landscape strip. The
+   clamp() upper bound is what caps it in landscape, where vw is large. */
 @media (max-width: 850px), (max-height: 600px) {
   .island-view {
-    width: 110px;
-    height: 110px;
+    width: clamp(130px, 36vw, 168px);
+    height: clamp(130px, 36vw, 168px);
   }
 
   .island-sprite {
-    width: 88px;
-    height: 74px;
-    font-size: 2.2rem;
+    width: 82%;
+    height: 70%;
+    font-size: clamp(2.2rem, 8.5vw, 3rem);
   }
 
   .island-shadow {
-    width: 72px;
-    height: 13px;
+    width: 70%;
+    height: 14px;
     bottom: 6px;
   }
 
@@ -629,47 +633,47 @@
   .palette-illustration,
   .card-illustration,
   .color-result {
-    font-size: 1.8rem;
+    font-size: clamp(1.9rem, 7vw, 2.4rem);
   }
 
   .brush-illustration {
-    font-size: 1.3rem;
+    font-size: clamp(1.4rem, 5vw, 1.7rem);
   }
 
   .color-bubble-1,
   .color-bubble-2 {
-    font-size: 1.4rem;
+    font-size: clamp(1.5rem, 5.5vw, 1.8rem);
   }
 
   .l-b {
     top: -14px;
     left: 30px;
-    font-size: 1.2rem;
+    font-size: clamp(1.2rem, 4.5vw, 1.4rem);
   }
 
   .plus,
   .multiply,
   .l-a,
   .l-c {
-    font-size: 1rem;
+    font-size: clamp(1rem, 3.8vw, 1.2rem);
   }
 
   .island-info {
-    margin-top: 8px;
-    padding: 5px 12px;
+    margin-top: 10px;
+    padding: 8px 16px;
   }
 
   .island-info h2 {
-    font-size: 0.78rem;
+    font-size: clamp(1.02rem, 4vw, 1.25rem);
   }
 
   .island-info p {
-    font-size: 0.62rem;
+    font-size: clamp(0.82rem, 3.2vw, 1rem);
   }
 
   .island-coming-soon {
-    font-size: 0.55rem;
-    padding: 3px 7px;
+    font-size: 0.62rem;
+    padding: 4px 8px;
   }
 }
 
@@ -704,45 +708,46 @@
   }
 
   .island-card {
-    width: 155px;
+    width: 190px;
     flex-shrink: 0;
     scroll-snap-align: center;
-    margin-right: 15px;
+    margin-right: 18px;
   }
 }
 
-/* Responsive – Portrait Mobile (Vertical Scroll) */
+/* Responsive – Portrait Mobile (2-column grid)
+   All 6 islands used to stack in a single column, forcing a long scroll to
+   see the last ones. A 2-column grid shows them 3 rows deep instead. */
 @media (max-width: 850px) and (orientation: portrait) {
   #dashboard-screen {
     align-items: center;
     justify-content: flex-start;
     padding-top: 90px;
-    padding-bottom: 60px;
+    padding-bottom: 50px;
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
     touch-action: pan-y;
   }
-  
+
   .map-container {
     height: auto;
     min-height: unset;
-    width: 100%;
-    max-width: 100%;
-    margin: 0;
-    padding: 10px 0 60px 0;
-    flex-direction: column;
-    flex-wrap: nowrap;
-    justify-content: flex-start;
-    align-items: center;
-    gap: 30px;
-    overflow: visible;
+    width: 94%;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 10px 0 50px 0;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 26px 16px;
+    justify-items: center;
+    align-items: start;
   }
 
   .island-card {
-    width: 160px;
-    margin-right: 0;
-    flex-shrink: 0;
+    width: 100%;
+    max-width: 200px;
+    margin: 0;
   }
 
   /* Scroll hint gradient at bottom */

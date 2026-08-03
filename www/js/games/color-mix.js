@@ -633,22 +633,36 @@ class ColorMixLab {
     if (!this.active) return; // never talk over the dashboard after leaving
     if (typeof audio !== 'undefined' && audio.muted) return;
     if (!window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const utt  = new SpeechSynthesisUtterance(text);
-    
-    // Always use English voice
-    const voices = window.speechSynthesis.getVoices();
-    const voice = voices.find(v => v.lang === 'en-US' || v.lang === 'en-GB' || v.lang.startsWith('en'));
-    
-    if (voice) {
-      utt.voice = voice;
-    }
 
-    utt.lang   = 'en-US';
-    utt.rate   = 0.9;
-    utt.pitch  = 1.1;
-    utt.volume = 1;
-    window.speechSynthesis.speak(utt);
+    const synth = window.speechSynthesis;
+    synth.cancel();
+
+    // Chrome (desktop and Android) silently drops an utterance queued in the
+    // same tick as cancel() - the browser hasn't finished tearing down the
+    // previous one yet, so speak() is a no-op with no error. This is why
+    // colors were never read on mobile. Queuing on the next tick is the
+    // standard workaround.
+    setTimeout(() => {
+      if (!this.active) return;
+
+      const utt = new SpeechSynthesisUtterance(text);
+      const voices = synth.getVoices();
+      const voice = voices.find(v => v.lang === 'en-US')
+        || voices.find(v => v.lang === 'en-GB')
+        || voices.find(v => v.lang && v.lang.startsWith('en'));
+
+      if (voice) {
+        utt.voice = voice;
+        utt.lang  = voice.lang; // must match the assigned voice or some engines stay silent
+      } else {
+        utt.lang = 'en-US';
+      }
+
+      utt.rate   = 0.9;
+      utt.pitch  = 1.1;
+      utt.volume = 1;
+      synth.speak(utt);
+    }, 0);
   }
 
   /* ================================================================
