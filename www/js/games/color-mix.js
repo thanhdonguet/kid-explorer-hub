@@ -66,18 +66,21 @@ class ColorMixLab {
   destroy() {
     this.active = false;
     this._unbindGlobalEvents();
+
+    // The drag ghost lives on document.body – leaving mid-drag would strand it
+    // on top of the dashboard forever.
+    if (this.dragging && this.dragging.ghost) this.dragging.ghost.remove();
+    this.dragging = null;
+    document.querySelectorAll('.cmx-drag-ghost').forEach(el => el.remove());
+
     this.container.innerHTML = '';
     if (window.speechSynthesis) window.speechSynthesis.cancel();
   }
 
   updateLanguage(lang) {
     this.lang = lang;
-    // Update all color name labels
-    const nameEl = this.container.querySelector('.cmx-result-name');
-    if (nameEl && this.mixedColors.length > 0) {
-      const result = this._computeMix();
-      nameEl.textContent = this._getColorName(result);
-    }
+    // The result panel shows the English AND Vietnamese name side by side at all
+    // times, so it needs no language switch – only the chrome below does.
     // Update palette bubble titles
     this.COLORS.forEach(c => {
       const el = this.container.querySelector(`[data-color-id="${c.id}"] .cmx-bubble-label`);
@@ -365,12 +368,17 @@ class ColorMixLab {
     const hex = this._rgbToHex(result.r, result.g, result.b);
     
     try {
-      const res = await fetch(`https://www.thecolorapi.com/id?hex=${hex.replace('#', '')}`);
+      // Time-boxed: this is an offline-first PWA, a hanging request must not
+      // leave "⏳ Loading API..." on screen forever.
+      const controller = new AbortController();
+      const timeoutId  = setTimeout(() => controller.abort(), 4000);
+      const res = await fetch(`https://www.thecolorapi.com/id?hex=${hex.replace('#', '')}`, { signal: controller.signal });
+      clearTimeout(timeoutId);
       if (!res.ok) throw new Error('API Error');
       const data = await res.json();
-      
-      // Prevent race condition if user dropped another color or reset
-      if (this.mixedColors.length > 0) {
+
+      // Prevent race condition if user dropped another color, reset, or left
+      if (this.active && this.mixedColors.length > 0) {
         this.currentApiName = data.name.value;
         nameEnEl.textContent = this.currentApiName;
         
@@ -383,7 +391,7 @@ class ColorMixLab {
     } catch (e) {
       console.warn("Color API failed, using fallback");
       const bestMatch = this._getColorObj(result);
-      if (this.mixedColors.length > 0) {
+      if (this.active && this.mixedColors.length > 0) {
         this.currentApiName = bestMatch.en;
         nameEnEl.textContent = this.currentApiName;
         this._speakColorResult(this.currentApiName);
@@ -622,6 +630,7 @@ class ColorMixLab {
   }
 
   _speak(text) {
+    if (!this.active) return; // never talk over the dashboard after leaving
     if (typeof audio !== 'undefined' && audio.muted) return;
     if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();

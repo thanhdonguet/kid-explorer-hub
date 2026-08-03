@@ -1,4 +1,6 @@
-const CACHE_NAME = 'kid-explorer-hub-v2';
+/* Bump this on every release – the fetch handler is cache-first, so returning
+   visitors keep the old JS/CSS until the cache name changes. */
+const CACHE_NAME = 'kid-explorer-hub-v3';
 const ASSETS = [
   'index.html',
   'manifest.json',
@@ -13,15 +15,31 @@ const ASSETS = [
   'js/games/memory.js',
   'js/games/color-mix.js',
   'js/games/vehicle-parking.js',
+  'img/icon-192.png',
+  'img/icon-512.png',
   'img/vocab/fire_truck.svg',
-  'img/treasure_map_bg.png'
+  'img/treasure_map_bg.png',
+  'audio/dino/intro.wav',
+  'audio/dino/banana.wav',
+  'audio/dino/peach.wav',
+  'audio/dino/tomato.wav',
+  'audio/dino/cucumber.wav',
+  'audio/dino/grapes.wav',
+  'audio/dino/orange.wav',
+  'audio/dino/full.wav'
 ];
 
-// Install event - Cache all core files
+// Install event - Cache all core files.
+// Assets are added one by one: cache.addAll() rejects the whole install if a
+// single file 404s, which would silently disable offline support entirely.
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS);
+      return Promise.all(
+        ASSETS.map((url) =>
+          cache.add(url).catch((err) => console.warn('SW: skipped', url, err))
+        )
+      );
     }).then(() => self.skipWaiting())
   );
 });

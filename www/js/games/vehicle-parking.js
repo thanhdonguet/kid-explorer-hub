@@ -21,6 +21,11 @@ const ALL_VEHICLES = [
   { name: 'Tractor', nameVi: 'Máy Cày', img: 'tractor.svg', color: '#27ae60', station: 'Farm', stationVi: 'Nông Trại', emoji: '🌾', group: 'construction' }
 ];
 
+/** Pixels of movement before a pointer-down counts as a real drag (not a tap). */
+const DRAG_THRESHOLD = 8;
+/** Share of a station card the vehicle must cover for a drop to register. */
+const MIN_OVERLAP_RATIO = 0.25;
+
 class VehicleParking {
   constructor(container, app) {
     this.container = container;
@@ -36,22 +41,56 @@ class VehicleParking {
     this.currentRound = 0;
     this.currentVehicle = null;
     this.stations = [];
-    
-    // Audio Context (will be initialized on first user interaction or reuse global if possible)
+    this.destroyed = false;
+    this.timers = new Set();
+
+    // ── Inline i18n (screens owned by this game) ──
+    this.T_inline = {
+      vi: { winTitle: '🎉 Hoan Hô! 🎉', winSubtitle: 'Bạn đã đỗ đúng tất cả các xe!', replayBtn: 'Chơi Lại' },
+      en: { winTitle: '🎉 Hurray! 🎉',  winSubtitle: 'You parked every vehicle correctly!', replayBtn: 'Play Again' },
+    };
+
+    // Audio Context (shared with the global SoundEngine)
     this.audioCtx = null;
     this.initAudioContext();
   }
   
   initAudioContext() {
-    if (!this.audioCtx) {
-      this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    // Reuse the global SoundEngine context. Creating a fresh AudioContext per
+    // game instance leaks them (browsers cap ~6 per page, then throw) and also
+    // bypasses the HUD mute toggle.
+    if (typeof audio !== 'undefined') {
+      audio.resume();
+      this.audioCtx = audio.ctx;
     }
+  }
+
+  /** Shared AudioContext, or null when muted / unavailable. */
+  _ctx() {
+    if (typeof audio === 'undefined') return null;
+    if (audio.muted) return null;
+    audio.resume();
+    this.audioCtx = audio.ctx;
+    return this.audioCtx;
+  }
+
+  /** setTimeout wrapper so every pending callback can be cancelled in destroy(). */
+  _later(fn, delay) {
+    const id = setTimeout(() => {
+      this.timers.delete(id);
+      if (this.destroyed) return;
+      fn();
+    }, delay);
+    this.timers.add(id);
+    return id;
   }
 
   start() {
     this.score = 0;
+    this.won = false;
+    this.currentVehicle = null;
     if (this.scoreVal) this.scoreVal.textContent = `0 / ${this.maxScore}`;
-    
+
     this.container.innerHTML = `
       <div id="vehicle-parking-container">
         <!-- Scenery -->
@@ -85,10 +124,16 @@ class VehicleParking {
   }
 
   generateRound() {
-    // Pick a random vehicle to park
-    const shuffledVehicles = [...ALL_VEHICLES].sort(() => Math.random() - 0.5);
+    if (this.destroyed) return;
+
+    // Pick a random vehicle to park – never the same one twice in a row
+    const previousName = this.currentVehicle ? this.currentVehicle.name : null;
+    const pool = previousName
+      ? ALL_VEHICLES.filter(v => v.name !== previousName)
+      : ALL_VEHICLES;
+    const shuffledVehicles = [...pool].sort(() => Math.random() - 0.5);
     this.currentVehicle = shuffledVehicles[0];
-    
+
     // Pick 3-4 other random distinct stations
     this.stations = [this.currentVehicle];
     let index = 1;
@@ -108,6 +153,8 @@ class VehicleParking {
   }
 
   renderGameScreen() {
+    if (this.destroyed || !this.topSection || !this.stationsGrid) return;
+
     // Render vehicle
     const vName = this.lang === 'vi' ? this.currentVehicle.nameVi : this.currentVehicle.name;
     const filterCss = this.currentVehicle.color ? `style="filter: drop-shadow(0 0 5px ${this.currentVehicle.color});"` : '';
@@ -146,15 +193,17 @@ class VehicleParking {
     }
 
     const vehicleEl = document.getElementById('vp-vehicle-display');
+    if (!vehicleEl) return; // game was closed mid-round
     const stationsEls = this.stationsGrid.querySelectorAll('.vp-station-card');
-    
+
     let isDragging = false;
+    let hasMoved = false;
     let startX, startY;
-    let baseTransform = '';
-    
+
     const onStart = (e) => {
       if (e.type === 'touchstart') e.preventDefault();
       isDragging = true;
+      hasMoved = false;
       const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
       const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
       
@@ -179,23 +228,14 @@ class VehicleParking {
       
       const dx = clientX - startX;
       const dy = clientY - startY;
-      
+      if (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) hasMoved = true;
+
       vehicleEl.style.transform = `translate(${dx}px, ${dy}px) scale(1.15) rotate(-3deg)`;
-      
-      // Find the single station with the LARGEST overlap area
+
+      // Find the single station the vehicle sits on top of
       const vRect = vehicleEl.getBoundingClientRect();
-      let bestStation = null;
-      let bestArea = 0;
-      
-      stationsEls.forEach(station => {
-        const sRect = station.getBoundingClientRect();
-        const area = this.overlapArea(vRect, sRect);
-        if (area > bestArea) {
-          bestArea = area;
-          bestStation = station;
-        }
-      });
-      
+      const bestStation = this.findDropTarget(vRect, stationsEls);
+
       // Only highlight the single best match
       stationsEls.forEach(station => {
         if (station === bestStation) {
@@ -209,30 +249,22 @@ class VehicleParking {
     const onEnd = (e) => {
       if (!isDragging) return;
       isDragging = false;
-      stationsEls.forEach(s => s.style.animation = '');
-      
-      // Find the best overlap station on drop
-      const vRect = vehicleEl.getBoundingClientRect();
-      let droppedStation = null;
-      let bestArea = 0;
-      
-      stationsEls.forEach(station => {
-        station.classList.remove('highlight');
-        const sRect = station.getBoundingClientRect();
-        const area = this.overlapArea(vRect, sRect);
-        if (area > bestArea) {
-          bestArea = area;
-          droppedStation = station;
-        }
+      stationsEls.forEach(s => {
+        s.style.animation = '';
+        s.classList.remove('highlight');
       });
-      
+
+      // A plain tap (no real drag) must never count as an answer
+      const vRect = vehicleEl.getBoundingClientRect();
+      const droppedStation = hasMoved ? this.findDropTarget(vRect, stationsEls) : null;
+
       if (droppedStation) {
         this.handleDrop(vehicleEl, droppedStation);
       } else {
         // Reset position with smooth transition
         vehicleEl.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
         vehicleEl.style.transform = 'translate(0, 0) scale(1) rotate(0deg)';
-        setTimeout(() => {
+        this._later(() => {
           if (!isDragging) {
             vehicleEl.style.transition = 'none';
             vehicleEl.style.animation = 'vehicleBounce 2s infinite ease-in-out';
@@ -253,6 +285,28 @@ class VehicleParking {
     this.dragHandlers = { onMove, onEnd };
   }
   
+  /**
+   * Station the vehicle is really sitting on: the largest overlap, but only if
+   * it covers a meaningful slice of the card. Without the threshold a 1px graze
+   * counted as a drop and punished the child for barely nudging the vehicle.
+   */
+  findDropTarget(vRect, stationsEls) {
+    let best = null;
+    let bestArea = 0;
+
+    stationsEls.forEach(station => {
+      const sRect = station.getBoundingClientRect();
+      const area  = this.overlapArea(vRect, sRect);
+      const needed = sRect.width * sRect.height * MIN_OVERLAP_RATIO;
+      if (area > bestArea && area >= needed) {
+        bestArea = area;
+        best = station;
+      }
+    });
+
+    return best;
+  }
+
   /** Returns the overlap area (px²) between two DOMRects. 0 = no overlap. */
   overlapArea(rect1, rect2) {
     const overlapX = Math.max(0, Math.min(rect1.right, rect2.right) - Math.max(rect1.left, rect2.left));
@@ -293,7 +347,7 @@ class VehicleParking {
     // Briefly highlight the target station
     stationEl.classList.add('highlight');
     
-    setTimeout(() => {
+    this._later(() => {
       stationEl.classList.remove('highlight');
       if (isCorrect) {
         this.onCorrect(vehicleEl, stationEl);
@@ -306,7 +360,7 @@ class VehicleParking {
   onCorrect(vehicleEl, stationEl) {
     // Play vehicle sound then applause
     this.playGroupSound(this.currentVehicle.group);
-    setTimeout(() => this.playApplause(), 1000);
+    this._later(() => this.playApplause(), 1000);
     
     // Mark the station as "parked" visually
     stationEl.classList.add('highlight');
@@ -324,7 +378,7 @@ class VehicleParking {
     this.score++;
     if (this.scoreVal) this.scoreVal.textContent = `${this.score} / ${this.maxScore}`;
     
-    setTimeout(() => {
+    this._later(() => {
       if (this.score >= this.maxScore) {
         this.showWinScreen();
       } else {
@@ -337,13 +391,13 @@ class VehicleParking {
     this.playCrash();
     this.playGlass();
     this.speakOops();
-    
+
     vehicleEl.classList.add('anim-wrong-shake');
-    setTimeout(() => {
+    this._later(() => {
       vehicleEl.classList.remove('anim-wrong-shake');
       vehicleEl.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
       vehicleEl.style.transform = 'translate(0, 0) scale(1) rotate(0deg)';
-      setTimeout(() => {
+      this._later(() => {
         if (this.currentVehicle) {
           vehicleEl.style.transition = 'none';
           vehicleEl.style.animation = 'vehicleBounce 2s infinite ease-in-out';
@@ -370,11 +424,17 @@ class VehicleParking {
 
   showWinScreen() {
     this.app.winGame(1);
+    this.won = true;
+    this.renderWinScreen();
+  }
+
+  renderWinScreen() {
+    const t = this.T_inline[this.lang] || this.T_inline.vi;
     this.container.innerHTML = `
       <div style="text-align:center; padding-top: 50px;">
-        <h1 style="font-size:3rem; color:#00838f;">🎉 Hoan Hô! 🎉</h1>
-        <p style="font-size:1.5rem;">Bạn đã đỗ đúng tất cả các xe!</p>
-        <button id="vp-replay-btn" style="margin-top:20px; padding: 15px 30px; font-size:1.2rem; border-radius:30px; background:#ff9800; color:white; border:none; box-shadow:0 5px 15px rgba(0,0,0,0.2);">Chơi Lại</button>
+        <h1 style="font-size:3rem; color:#00838f;">${t.winTitle}</h1>
+        <p style="font-size:1.5rem;">${t.winSubtitle}</p>
+        <button id="vp-replay-btn" style="margin-top:20px; padding: 15px 30px; font-size:1.2rem; border-radius:30px; background:#ff9800; color:white; border:none; box-shadow:0 5px 15px rgba(0,0,0,0.2);">${t.replayBtn}</button>
       </div>
     `;
     document.getElementById('vp-replay-btn').addEventListener('click', () => {
@@ -384,13 +444,20 @@ class VehicleParking {
 
   updateLanguage(lang, T) {
     this.lang = lang;
-    if (this.score < this.maxScore && this.currentVehicle) {
+    if (this.won) {
+      this.renderWinScreen();
+    } else if (this.currentVehicle) {
       // re-render the current screen to update languages
       this.renderGameScreen();
     }
   }
 
   destroy() {
+    this.destroyed = true;
+    this.timers.forEach(id => clearTimeout(id));
+    this.timers.clear();
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+
     if (this.dragHandlers) {
       document.removeEventListener('mousemove', this.dragHandlers.onMove);
       document.removeEventListener('mouseup', this.dragHandlers.onEnd);
@@ -399,18 +466,20 @@ class VehicleParking {
       document.removeEventListener('touchcancel', this.dragHandlers.onEnd);
     }
     
-    if (this.audioCtx && this.audioCtx.state !== 'closed') {
-       // We can keep audioCtx alive or suspend it, but not close since it's heavy
-    }
+    // audioCtx belongs to the global SoundEngine – never close it here.
+    this.audioCtx = null;
+
+    // Confetti lives on document.body, so it must be swept up explicitly
+    document.querySelectorAll('.vp-confetti').forEach(c => c.remove());
+
     this.container.innerHTML = '';
   }
 
   /* --- Audio Synths (Web Audio API) --- */
   
   playGroupSound(group) {
-    if (!this.audioCtx) return;
-    if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
-    
+    if (!this._ctx()) return;
+
     switch(group) {
       case 'emergency': this.playSiren(); break;
       case 'aviation': this.playTurbine(); break;
@@ -421,6 +490,7 @@ class VehicleParking {
   }
   
   playSiren() {
+    if (!this._ctx()) return;
     const osc = this.audioCtx.createOscillator();
     const gain = this.audioCtx.createGain();
     osc.connect(gain);
@@ -443,6 +513,7 @@ class VehicleParking {
   }
   
   playTurbine() {
+    if (!this._ctx()) return;
     const osc = this.audioCtx.createOscillator();
     const gain = this.audioCtx.createGain();
     osc.connect(gain);
@@ -463,6 +534,7 @@ class VehicleParking {
   }
   
   playRumble() {
+    if (!this._ctx()) return;
     const bufferSize = this.audioCtx.sampleRate * 1.0;
     const buffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate);
     const data = buffer.getChannelData(0);
@@ -493,6 +565,7 @@ class VehicleParking {
   }
   
   playHonk() {
+    if (!this._ctx()) return;
     const osc = this.audioCtx.createOscillator();
     const gain = this.audioCtx.createGain();
     osc.connect(gain);
@@ -512,6 +585,7 @@ class VehicleParking {
   }
   
   playFoghorn() {
+    if (!this._ctx()) return;
     const osc = this.audioCtx.createOscillator();
     const gain = this.audioCtx.createGain();
     osc.connect(gain);
@@ -531,7 +605,7 @@ class VehicleParking {
   }
   
   playApplause() {
-    if (!this.audioCtx) return;
+    if (!this._ctx()) return;
     const bufferSize = this.audioCtx.sampleRate * 1.5;
     const buffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate);
     const data = buffer.getChannelData(0);
@@ -561,7 +635,7 @@ class VehicleParking {
   }
   
   playCrash() {
-    if (!this.audioCtx) return;
+    if (!this._ctx()) return;
     const bufferSize = this.audioCtx.sampleRate * 0.5;
     const buffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate);
     const data = buffer.getChannelData(0);
@@ -590,7 +664,7 @@ class VehicleParking {
   }
   
   playGlass() {
-    if (!this.audioCtx) return;
+    if (!this._ctx()) return;
     const bufferSize = this.audioCtx.sampleRate * 0.3;
     const buffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate);
     const data = buffer.getChannelData(0);
@@ -618,6 +692,7 @@ class VehicleParking {
   }
   
   speakOops() {
+    if (typeof audio !== 'undefined' && audio.muted) return;
     if ('speechSynthesis' in window) {
       const u = new SpeechSynthesisUtterance('Oops!');
       u.pitch = 1.8;

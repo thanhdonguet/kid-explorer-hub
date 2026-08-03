@@ -14,7 +14,9 @@ class FruitMarket {
     
     this.currentLevel = null;
     this.activeFruits = [];
-    
+    this.destroyed = false;
+    this.timers = new Set();
+
     this.fruitTypes = [
       'apple', 'banana', 'orange', 'lemon', 'grapes', 
       'watermelon', 'peach', 'pear', 'avocado', 'pineapple'
@@ -33,6 +35,17 @@ class FruitMarket {
     this.startLevel('hard');
   }
 
+  /** setTimeout wrapper so every pending callback dies with the game. */
+  _later(fn, delay) {
+    const id = setTimeout(() => {
+      this.timers.delete(id);
+      if (this.destroyed) return;
+      fn();
+    }, delay);
+    this.timers.add(id);
+    return id;
+  }
+
   updateHUD() {
     const scoreVal = document.getElementById('score-val');
     if (scoreVal) {
@@ -46,6 +59,8 @@ class FruitMarket {
   }
 
   speak(text) {
+    if (this.destroyed) return;
+    if (typeof audio !== 'undefined' && audio.muted) return;
     if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
     const utter = new SpeechSynthesisUtterance(text);
@@ -147,7 +162,7 @@ class FruitMarket {
       fruitEl.style.opacity = '0';
     }
     
-    setTimeout(() => {
+    this._later(() => {
       if (fruitEl.parentNode) fruitEl.parentNode.removeChild(fruitEl);
       this.currentCount++;
       this.speak(this.currentCount.toString());
@@ -175,16 +190,16 @@ class FruitMarket {
       this.score++;
       this.updateHUD();
       
-      setTimeout(() => {
+      this._later(() => {
         if (bear) bear.classList.remove('fm-bear-jump');
-        
+
         if (this.score >= this.targetScore) {
           this.showWinScreen();
         } else {
           this.showNextQuestion();
         }
       }, 1500);
-      
+
     } else if (this.currentCount > this.targetCount) {
       // Over count
       const msg = this.lang === 'vi' ? 'Nhiều quá rồi!' : 'Too many!';
@@ -194,15 +209,15 @@ class FruitMarket {
       const basket = document.getElementById('fm-basket');
       if (basket) {
         basket.classList.add('fm-basket-shake');
-        setTimeout(() => basket.classList.remove('fm-basket-shake'), 500);
+        this._later(() => basket.classList.remove('fm-basket-shake'), 500);
       }
-      
+
       this.resetBasket();
     }
   }
 
   resetBasket() {
-    setTimeout(() => {
+    this._later(() => {
       this.currentCount = 0;
       const basketContent = document.getElementById('fm-basket-content');
       if (basketContent) basketContent.innerHTML = '';
@@ -214,7 +229,7 @@ class FruitMarket {
     const area = document.getElementById('fm-fruit-area');
     if (area) {
       area.style.opacity = '0';
-      setTimeout(() => {
+      this._later(() => {
         area.style.opacity = '1';
         this.generateQuestion();
       }, 400);
@@ -256,6 +271,9 @@ class FruitMarket {
   }
 
   destroy() {
+    this.destroyed = true;
+    this.timers.forEach(id => clearTimeout(id));
+    this.timers.clear();
     if (window.speechSynthesis) window.speechSynthesis.cancel();
     this.container.innerHTML = '';
   }

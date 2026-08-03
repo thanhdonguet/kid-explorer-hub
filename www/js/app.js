@@ -216,9 +216,19 @@ class AppController {
 
     const stage = document.getElementById('game-stage');
     stage.innerHTML = '';
-    
+
+    // Reset the in-game HUD so a previous game's score never leaks into a new one
+    const scoreVal = document.getElementById('score-val');
+    if (scoreVal) scoreVal.textContent = '0';
+    const timerEl = document.getElementById('game-timer');
+    if (timerEl) timerEl.classList.add('hidden');
+
+    // Games without a numeric score hide the in-game dashboard entirely
+    const SCORELESS_GAMES = ['color', 'drawing'];
     const dashboard = document.getElementById('game-dashboard');
-    if (dashboard) dashboard.style.display = 'flex';
+    if (dashboard) {
+      dashboard.style.display = SCORELESS_GAMES.includes(gameId) ? 'none' : 'flex';
+    }
 
     const t = this.T[this.lang];
 
@@ -229,7 +239,6 @@ class AppController {
         break;
       case 'color':
         this.hud.title.textContent = t.colorName;
-        if (dashboard) dashboard.style.display = 'none';
         this.activeGame = new ColorMixLab(stage, this);
         break;
       case 'alphabet-pop':

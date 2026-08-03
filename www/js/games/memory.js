@@ -14,6 +14,33 @@ class MemoryJungle {
   constructor(container, app) {
     this.container    = container;
     this.app          = app;
+    this.lang         = app ? app.lang : 'vi';
+
+    // ── Inline i18n (screens owned by this game) ──
+    this.T_inline = {
+      vi: {
+        title: 'Khu Rừng Trí Nhớ',
+        subtitle: 'Chọn mức độ để bắt đầu!',
+        easy: 'Dễ', medium: 'Vừa', hard: 'Khó',
+        setsSuffix: 'bộ', piecesSuffix: 'mảnh',
+        newRecord: 'Kỷ lục mới!', excellent: 'Xuất sắc!',
+        completeSubtitle: 'Bé đã khám phá xong khu rừng!',
+        newRecordBadge: 'Kỷ lục mới!', bestBadge: 'Kỷ lục tốt nhất:',
+        statTime: 'Thời gian', statScore: 'Điểm', statLevel: 'Mức độ',
+        replayBtn: '🔄 Chơi Lại', menuBtn: '📋 Đổi Mức Độ',
+      },
+      en: {
+        title: 'Memory Jungle',
+        subtitle: 'Pick a level to start!',
+        easy: 'Easy', medium: 'Medium', hard: 'Hard',
+        setsSuffix: 'pairs', piecesSuffix: 'cards',
+        newRecord: 'New record!', excellent: 'Excellent!',
+        completeSubtitle: 'You explored the whole jungle!',
+        newRecordBadge: 'New record!', bestBadge: 'Best time:',
+        statTime: 'Time', statScore: 'Score', statLevel: 'Level',
+        replayBtn: '🔄 Play Again', menuBtn: '📋 Change Level',
+      },
+    };
 
     // ── Game State ──
     this.pairsCount   = 5;
@@ -83,17 +110,20 @@ class MemoryJungle {
 
     document.getElementById('score-val').textContent = '0';
 
+    const t = this.T_inline[this.lang];
+    const countText = (pairs) => `${pairs} ${t.setsSuffix} · ${pairs * 2} ${t.piecesSuffix}`;
+
     this.container.innerHTML = `
       <div id="memory-mode-screen">
         <div class="mem-mode-header">
           <div class="mem-mode-forest-emoji">🌳</div>
-          <h2 class="mem-mode-title">Khu Rừng Trí Nhớ</h2>
-          <p class="mem-mode-subtitle">Chọn mức độ để bắt đầu!</p>
+          <h2 class="mem-mode-title">${t.title}</h2>
+          <p class="mem-mode-subtitle">${t.subtitle}</p>
         </div>
         <div class="mem-mode-options">
-          ${this._renderModeBtn(5,  '🌱', 'Dễ',  '5 bộ · 10 mảnh',  'mem-mode-easy')}
-          ${this._renderModeBtn(10, '🌿', 'Vừa', '10 bộ · 20 mảnh', 'mem-mode-medium')}
-          ${this._renderModeBtn(15, '🌲', 'Khó', '15 bộ · 30 mảnh', 'mem-mode-hard')}
+          ${this._renderModeBtn(5,  '🌱', t.easy,   countText(5),  'mem-mode-easy')}
+          ${this._renderModeBtn(10, '🌿', t.medium, countText(10), 'mem-mode-medium')}
+          ${this._renderModeBtn(15, '🌲', t.hard,   countText(15), 'mem-mode-hard')}
         </div>
       </div>
     `;
@@ -323,41 +353,45 @@ class MemoryJungle {
   }
 
   showCompletion(isNewRecord, bestTime) {
+    // Remembered so a language switch can re-render this same screen
+    this.lastResult = { isNewRecord, bestTime };
+
+    const t       = this.T_inline[this.lang];
     const timeStr = this.formatTime(this.elapsedSeconds);
     const bestStr = this.formatTime(bestTime);
 
     const hsHTML = isNewRecord
-      ? `<span class="comp-new-record">🌟 Kỷ lục mới! ${bestStr}</span>`
-      : `<span class="comp-best">🏆 Kỷ lục tốt nhất: ${bestStr}</span>`;
+      ? `<span class="comp-new-record">🌟 ${t.newRecordBadge} ${bestStr}</span>`
+      : `<span class="comp-best">🏆 ${t.bestBadge} ${bestStr}</span>`;
 
     this.container.innerHTML = `
       <div id="memory-complete-screen">
         <div class="comp-confetti-layer" id="comp-confetti"></div>
         <div class="comp-card">
           <div class="comp-trophy-icon">${isNewRecord ? '🏆' : '🎉'}</div>
-          <h2 class="comp-title">${isNewRecord ? 'Kỷ lục mới!' : 'Xuất sắc!'}</h2>
-          <p class="comp-subtitle">Bé đã khám phá xong khu rừng!</p>
+          <h2 class="comp-title">${isNewRecord ? t.newRecord : t.excellent}</h2>
+          <p class="comp-subtitle">${t.completeSubtitle}</p>
 
           <div class="comp-stats">
             <div class="comp-stat">
               <span class="comp-stat-icon">⏱️</span>
               <div class="comp-stat-body">
-                <div class="comp-stat-label">Thời gian</div>
+                <div class="comp-stat-label">${t.statTime}</div>
                 <div class="comp-stat-value">${timeStr}</div>
               </div>
             </div>
             <div class="comp-stat">
               <span class="comp-stat-icon">🌟</span>
               <div class="comp-stat-body">
-                <div class="comp-stat-label">Điểm</div>
+                <div class="comp-stat-label">${t.statScore}</div>
                 <div class="comp-stat-value">${this.score}</div>
               </div>
             </div>
             <div class="comp-stat">
               <span class="comp-stat-icon">📊</span>
               <div class="comp-stat-body">
-                <div class="comp-stat-label">Mức độ</div>
-                <div class="comp-stat-value">${this.pairsCount} bộ</div>
+                <div class="comp-stat-label">${t.statLevel}</div>
+                <div class="comp-stat-value">${this.pairsCount} ${t.setsSuffix}</div>
               </div>
             </div>
           </div>
@@ -365,8 +399,8 @@ class MemoryJungle {
           <div class="comp-hs-row">${hsHTML}</div>
 
           <div class="comp-actions">
-            <button id="comp-btn-replay" class="btn-primary">🔄 Chơi Lại</button>
-            <button id="comp-btn-menu"   class="btn-secondary">📋 Đổi Mức Độ</button>
+            <button id="comp-btn-replay" class="btn-primary">${t.replayBtn}</button>
+            <button id="comp-btn-menu"   class="btn-secondary">${t.menuBtn}</button>
           </div>
         </div>
       </div>
@@ -419,6 +453,15 @@ class MemoryJungle {
     this._hideHUDTimer();
   }
 
-  /* Language hook (placeholder) */
-  updateLanguage() {}
+  /* Language hook – re-renders whichever static screen is showing.
+     The board itself has no text, so an in-progress game is left untouched. */
+  updateLanguage(lang) {
+    this.lang = lang;
+
+    if (this.container.querySelector('#memory-mode-screen')) {
+      this.showModeSelect();
+    } else if (this.container.querySelector('#memory-complete-screen') && this.lastResult) {
+      this.showCompletion(this.lastResult.isNewRecord, this.lastResult.bestTime);
+    }
+  }
 }

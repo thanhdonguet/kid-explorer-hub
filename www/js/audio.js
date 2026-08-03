@@ -257,6 +257,29 @@ class SoundEngine {
     });
   }
 
+  // Short "thud" for tapping an empty/wrong object (Alphabet Pop)
+  playMiss() {
+    if (this.muted) return;
+    this.resume();
+    if (!this.ctx) return;
+
+    const osc  = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(220, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(70, this.ctx.currentTime + 0.18);
+
+    gain.gain.setValueAtTime(0.18, this.ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 0.18);
+
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.18);
+  }
+
   // Subtle audio feedback when painting
   playPaint(intensity = 0.5) {
     if (this.muted) return;

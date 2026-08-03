@@ -12,7 +12,37 @@ class AlphabetPop {
     this.currentScreen = 1; // 1: Alphabet board, 2: Gameplay
     this.selectedLetter = null;
     this.currentThemeIndex = 0;
-    
+    this.destroyed = false;
+    this.timers = new Set();
+
+    // ── Round progression (a "session" is roundsPerLetter rounds of one letter) ──
+    this.roundsPerLetter = 5;
+    this.score      = 0;
+    this.usedWords  = [];   // avoids repeating vocab within one session
+    this.lastVocab  = null; // so a language switch can re-render the vocab card
+
+    // ── Inline i18n (screens owned by this game) ──
+    this.T_inline = {
+      vi: {
+        boardTitle: 'Chọn một chữ cái nhé!',
+        nextBtn: 'Tiếp tục →',
+        finishBtn: 'Xong rồi! 🎉',
+        completeTitle: 'Giỏi quá!',
+        completeSubtitle: (letter) => `Bé đã học xong chữ ${letter}!`,
+        replayBtn: '🔄 Học lại chữ này',
+        menuBtn: '🔤 Chọn chữ khác',
+      },
+      en: {
+        boardTitle: 'Choose a Letter!',
+        nextBtn: 'Next →',
+        finishBtn: 'All done! 🎉',
+        completeTitle: 'Great job!',
+        completeSubtitle: (letter) => `You finished the letter ${letter}!`,
+        replayBtn: '🔄 Practise this letter',
+        menuBtn: '🔤 Pick another letter',
+      },
+    };
+
     // 14 Themes setup (CSS animation classes will correspond to these)
     this.themes = [
       'theme-balloon', 'theme-rocket', 'theme-cloud', 'theme-cat',
@@ -59,17 +89,45 @@ class AlphabetPop {
     this.renderScreen1();
   }
 
+  /** setTimeout wrapper so every pending callback dies with the game. */
+  _later(fn, delay) {
+    const id = setTimeout(() => {
+      this.timers.delete(id);
+      if (this.destroyed) return;
+      fn();
+    }, delay);
+    this.timers.add(id);
+    return id;
+  }
+
   destroy() {
+    this.destroyed = true;
+    this.timers.forEach(id => clearTimeout(id));
+    this.timers.clear();
     this.container.innerHTML = '';
     this.synth.cancel(); // Stop any reading
   }
 
   updateLanguage(lang, T) {
     this.lang = lang;
+    const t = this.T_inline[this.lang];
+
+    // Letters and vocab words always stay in English – only the UI chrome moves
+    const titleEl = this.container.querySelector('.ap-title');
+    if (titleEl) titleEl.textContent = t.boardTitle;
+
+    const nextBtn = this.container.querySelector('.ap-next-btn');
+    if (nextBtn) {
+      nextBtn.textContent = this.score >= this.roundsPerLetter ? t.finishBtn : t.nextBtn;
+    }
+
+    if (this.container.querySelector('#alphabet-complete')) this.renderCompletion();
   }
 
   /* ── Text-to-Speech Helper ── */
   speak(text) {
+    if (this.destroyed) return;
+    if (typeof audio !== 'undefined' && audio.muted) return;
     if (!this.synth) return;
     this.synth.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
@@ -83,7 +141,7 @@ class AlphabetPop {
     this.currentScreen = 1;
     this.container.innerHTML = `
       <div id="alphabet-board" class="ap-board">
-        <h2 class="ap-title">Choose a Letter!</h2>
+        <h2 class="ap-title">${this.T_inline[this.lang].boardTitle}</h2>
         <div class="ap-grid"></div>
       </div>
     `;
@@ -100,24 +158,40 @@ class AlphabetPop {
         this.speak(letter);
         // Add effect, then transition to Screen 2
         btn.classList.add('ap-selected');
-        setTimeout(() => {
+        this._later(() => {
           this.selectedLetter = letter;
-          this.renderScreen2();
+          this.startSession();
         }, 1000); // wait for voice and animation
       });
       grid.appendChild(btn);
     });
   }
 
+  /* ── A session = roundsPerLetter rounds on the chosen letter ── */
+  startSession() {
+    this.score     = 0;
+    this.usedWords = [];
+    this.lastVocab = null;
+    this.updateHUD();
+    this.renderScreen2();
+  }
+
+  updateHUD() {
+    const el = document.getElementById('score-val');
+    if (el) el.textContent = `${this.score}/${this.roundsPerLetter}`;
+  }
+
   /* ── Screen 2: Gameplay ── */
   renderScreen2() {
     this.currentScreen = 2;
+    // A fresh theme each round keeps five rounds of the same letter interesting
     this.currentThemeIndex = Math.floor(Math.random() * this.themes.length);
     const themeClass = this.themes[this.currentThemeIndex];
 
     this.container.innerHTML = `
       <div id="alphabet-play" class="ap-play-area ${themeClass}">
         <button class="ap-back-btn" aria-label="Back to Board">⬅️</button>
+        <div class="ap-round-badge">${this.selectedLetter} · ${Math.min(this.score + 1, this.roundsPerLetter)}/${this.roundsPerLetter}</div>
         <div class="ap-objects-container"></div>
       </div>
     `;
@@ -184,14 +258,17 @@ class AlphabetPop {
 
     if (isCorrect) {
       this.speak(this.selectedLetter);
-      
+
       // Pop all others
       this.activeObjects.forEach(obj => {
         if (obj !== element) obj.classList.add('ap-popped');
       });
 
+      this.score++;
+      this.updateHUD();
+
       // Show vocab picture after pop
-      setTimeout(() => {
+      this._later(() => {
         this.showVocabResult();
       }, 600);
     } else {
@@ -200,13 +277,29 @@ class AlphabetPop {
     }
   }
 
-  showVocabResult() {
+  /** Picks a word for the current letter, avoiding repeats within a session.
+      Letters with few entries (X has one) fall back to allowing repeats. */
+  pickVocab() {
     const vocabList = this.VOCAB_DB[this.selectedLetter];
-    const vocabItem = vocabList[Math.floor(Math.random() * vocabList.length)];
-    
+    const fresh = vocabList.filter(v => !this.usedWords.includes(v.word));
+    const pool  = fresh.length ? fresh : vocabList;
+    const item  = pool[Math.floor(Math.random() * pool.length)];
+    this.usedWords.push(item.word);
+    return item;
+  }
+
+  showVocabResult() {
+    const playArea = this.container.querySelector('.ap-play-area');
+    if (!playArea) return; // game was closed mid-animation
+
+    const vocabItem = this.pickVocab();
+    this.lastVocab  = vocabItem;
+    const t = this.T_inline[this.lang];
+    const isLastRound = this.score >= this.roundsPerLetter;
+
     const resultEl = document.createElement('div');
     resultEl.className = 'ap-vocab-result';
-    
+
     // Instead of using missing images right away, use a fallback emoji or text if img fails
     resultEl.innerHTML = `
       <div class="ap-vocab-image-container">
@@ -214,21 +307,69 @@ class AlphabetPop {
         <div class="ap-vocab-placeholder" style="display:none;">${this.selectedLetter}</div>
       </div>
       <div class="ap-vocab-text">${vocabItem.word}</div>
+      <button class="ap-next-btn">${isLastRound ? t.finishBtn : t.nextBtn}</button>
     `;
 
+    // Tapping the card re-reads the word; the button advances the session
     resultEl.addEventListener('click', () => {
       this.speak(vocabItem.word);
-      // pop animation
       resultEl.style.transform = 'scale(1.1)';
-      setTimeout(() => resultEl.style.transform = 'scale(1)', 200);
+      this._later(() => resultEl.style.transform = 'scale(1)', 200);
     });
 
-    this.container.querySelector('.ap-play-area').appendChild(resultEl);
-    
+    resultEl.querySelector('.ap-next-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (typeof audio !== 'undefined') audio.playTap();
+      if (isLastRound) {
+        this.showCompletion();
+      } else {
+        this.renderScreen2();
+      }
+    });
+
+    playArea.appendChild(resultEl);
+
     // Play voice and cheer
-    setTimeout(() => {
+    this._later(() => {
       this.speak(vocabItem.word);
       if (typeof audio !== 'undefined' && audio.playCheer) audio.playCheer();
     }, 500);
+  }
+
+  showCompletion() {
+    this.currentScreen = 3;
+    this.appCtrl.addStars(5); // NOTE: this game names the controller appCtrl, not app
+    if (typeof audio !== 'undefined' && audio.playLevelComplete) audio.playLevelComplete();
+    this.renderCompletion();
+  }
+
+  renderCompletion() {
+    const t = this.T_inline[this.lang];
+
+    this.container.innerHTML = `
+      <div id="alphabet-complete" class="ap-complete-screen">
+        <div class="ap-complete-card">
+          <div class="ap-complete-letter">${this.selectedLetter}</div>
+          <h2 class="ap-complete-title">${t.completeTitle}</h2>
+          <p class="ap-complete-subtitle">${t.completeSubtitle(this.selectedLetter)}</p>
+          <div class="ap-complete-words">
+            ${this.usedWords.map(w => `<span class="ap-complete-word">${w}</span>`).join('')}
+          </div>
+          <div class="comp-actions">
+            <button id="ap-btn-replay" class="btn-primary">${t.replayBtn}</button>
+            <button id="ap-btn-menu" class="btn-secondary">${t.menuBtn}</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    this.container.querySelector('#ap-btn-replay').addEventListener('click', () => {
+      if (typeof audio !== 'undefined') audio.playTap();
+      this.startSession();
+    });
+    this.container.querySelector('#ap-btn-menu').addEventListener('click', () => {
+      if (typeof audio !== 'undefined') audio.playTap();
+      this.renderScreen1();
+    });
   }
 }

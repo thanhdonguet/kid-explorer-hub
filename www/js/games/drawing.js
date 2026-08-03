@@ -14,10 +14,13 @@ class DinosaurColors {
     ];
     this.currentRound = 0;
     this.lang = this.app.lang || 'vi';
-    
+    this.destroyed = false;
+    this.timers = new Set();
+
     this.T_inline = {
       vi: {
         introText: "Đói quá! Tớ đi tìm đồ ăn đây.",
+        introBubble: "Ọc! Ọc!",
         feedBtn: "Cho ăn nào! 🍽️",
         fullText: "Ăn no rồi! 🤩",
         replayBtn: "Chơi Lại",
@@ -25,6 +28,7 @@ class DinosaurColors {
       },
       en: {
         introText: "I'm so hungry! I'm going to find some food!",
+        introBubble: "Rumble!",
         feedBtn: "Feed me! 🍽️",
         fullText: "I'm so full! 🤩",
         replayBtn: "Play Again",
@@ -48,6 +52,17 @@ class DinosaurColors {
     this.showIntroScreen();
   }
 
+  /** setTimeout wrapper so every pending callback dies with the game. */
+  _later(fn, delay) {
+    const id = setTimeout(() => {
+      this.timers.delete(id);
+      if (this.destroyed) return;
+      fn();
+    }, delay);
+    this.timers.add(id);
+    return id;
+  }
+
   getT() {
     return this.T_inline[this.lang];
   }
@@ -57,6 +72,8 @@ class DinosaurColors {
     const t = this.getT();
     const introText = this.wrapper.querySelector('.dino-intro-text');
     if (introText) introText.textContent = t.introText;
+    const introBubble = this.wrapper.querySelector('.intro-bubble');
+    if (introBubble) introBubble.textContent = t.introBubble;
     const feedBtn = this.wrapper.querySelector('.dino-feed-btn');
     if (feedBtn) feedBtn.textContent = t.feedBtn;
     const fullText = this.wrapper.querySelector('.dino-full-text');
@@ -135,7 +152,7 @@ class DinosaurColors {
     
     const bubble = document.createElement('div');
     bubble.className = 'dino-bubble intro-bubble';
-    bubble.textContent = 'Ọc! Ọc!';
+    bubble.textContent = t.introBubble;
     dinoContainer.appendChild(bubble);
 
     const textEl = document.createElement('h2');
@@ -224,23 +241,23 @@ class DinosaurColors {
     const tongue = this.wrapper.querySelector('.dino-tongue');
     if (tongue) tongue.setAttribute('opacity', '1');
     
-    setTimeout(() => {
+    this._later(() => {
       fruitImg.style.display = 'none';
       if (tongue) tongue.setAttribute('opacity', '0');
-      
+
       this.changeDinoColor(roundInfo.color);
-      
+
       this.showSpeechBubble(roundInfo.speech);
       this.speak(roundInfo.speech, roundInfo.audioKey);
-      
+
       const dinoSvg = this.wrapper.querySelector('.dino-svg');
       if (dinoSvg) dinoSvg.classList.add('dino-jump-anim');
-      
-      setTimeout(() => {
+
+      this._later(() => {
         this.isEating = false;
         this.showRound(index + 1);
       }, 3000);
-      
+
     }, 600);
   }
 
@@ -252,17 +269,21 @@ class DinosaurColors {
     if (this.currentAudio) {
       this.currentAudio.pause();
     }
-    
+    if (this.destroyed) return;
+    if (typeof audio !== 'undefined' && audio.muted) return;
+
     // Sử dụng file audio cố định để có giọng đều và ổn định
     // Tăng playbackRate để tạo ra chất giọng the thé của trẻ con / chipmunk
     if (audioKey) {
-      const audio = new Audio(`audio/dino/${audioKey}.wav`);
-      audio.preservesPitch = false; // Tắt giữ tông để tăng tông khi tăng tốc độ
-      if (typeof audio.mozPreservesPitch !== 'undefined') audio.mozPreservesPitch = false;
-      if (typeof audio.webkitPreservesPitch !== 'undefined') audio.webkitPreservesPitch = false;
-      audio.playbackRate = 1.2; // Để tốc độ 1.2 theo đúng yêu cầu
-      audio.play().catch(e => console.warn('Audio play failed:', e));
-      this.currentAudio = audio;
+      // NOTE: must not be named `audio` – that would shadow the global SoundEngine
+      // for this whole function and make the mute check above throw (TDZ).
+      const clip = new Audio(`audio/dino/${audioKey}.wav`);
+      clip.preservesPitch = false; // Tắt giữ tông để tăng tông khi tăng tốc độ
+      if (typeof clip.mozPreservesPitch !== 'undefined') clip.mozPreservesPitch = false;
+      if (typeof clip.webkitPreservesPitch !== 'undefined') clip.webkitPreservesPitch = false;
+      clip.playbackRate = 1.2; // Để tốc độ 1.2 theo đúng yêu cầu
+      clip.play().catch(e => console.warn('Audio play failed:', e));
+      this.currentAudio = clip;
       return;
     }
 
@@ -360,6 +381,9 @@ class DinosaurColors {
   }
 
   destroy() {
+    this.destroyed = true;
+    this.timers.forEach(id => clearTimeout(id));
+    this.timers.clear();
     if (this.currentAudio) {
       this.currentAudio.pause();
       this.currentAudio = null;

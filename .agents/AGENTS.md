@@ -24,7 +24,7 @@ To prevent unwanted changes and resource waste, the AI MUST adhere to these stri
   - JS: Use modern vanilla ES6+ JavaScript. Avoid importing heavy framework runtimes (React/Vue/Angular) unless requested.
   - Audio: Synthesize sound effects programmatically using the **Web Audio API** (defined in `www/js/audio.js`) to keep the bundle small, fast, and offline-friendly.
   - Graphics: Prefer clean inline SVGs for UI illustrations rather than heavy PNG/JPG assets.
-* **Mobile-First Responsiveness**: All layouts must scale gracefully to mobile devices in landscape mode (as specified in `manifest.json`). Ensure touch events (`touchstart`, `touchmove`, `touchend`) are bound with `preventDefault()` on drawing elements to avoid viewport scrolling.
+* **Mobile-First Responsiveness**: All layouts must scale gracefully to mobile devices in **both portrait and landscape** (`manifest.json` sets `orientation: "any"`). Do not reintroduce an orientation lock or a "please rotate your device" warning. Ensure touch events (`touchstart`, `touchmove`, `touchend`) are bound with `preventDefault()` on drawing elements to avoid viewport scrolling.
 
 ---
 
