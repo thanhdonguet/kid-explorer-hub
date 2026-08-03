@@ -1232,9 +1232,12 @@
    sized for a child to see comfortably, so it stacks vertically on mobile
    instead, with the bowl leading – it's the thing to look at, so it should
    read as the center of the screen, not be squeezed into a cramped top row.
-   Both 10-color palettes become horizontal-scroll strips instead of a tall
-   grid, which is what actually lets .cmx-wrapper's justify-content:center
-   put the bowl near the middle of the screen rather than the top.
+   On portrait phones both 10-color palettes wrap into a 5-column grid (page
+   itself scrolls vertically via .cmx-wrapper) instead of a horizontal-scroll
+   strip – a strip hides half the colors off-screen with no visual hint that
+   more exist, which reads as "missing colors" to a kid. Short/landscape
+   viewports (below) keep the horizontal strip since vertical space is the
+   scarce one there.
    ========================================================================== */
 @media (max-width: 600px) {
   .cmx-wrapper {
@@ -1255,33 +1258,21 @@
   .cmx-palette { order: 3; }
 
   .cmx-palette {
-    display: flex;
-    flex-direction: row;
-    overflow-x: auto;
-    gap: 16px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
     width: 100%;
-    padding: 8px 16px 10px;
-    scroll-snap-type: x proximity;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-  }
-
-  .cmx-palette::-webkit-scrollbar {
-    display: none;
-  }
-
-  .cmx-bubble-wrap {
-    flex-shrink: 0;
-    scroll-snap-align: center;
+    max-width: 400px;
+    padding: 10px 14px;
   }
 
   .cmx-bubble {
-    width: 64px;
-    height: 64px;
+    width: 54px;
+    height: 54px;
   }
 
   .cmx-bubble-label {
-    font-size: 0.82rem;
+    font-size: 0.72rem;
   }
 
   .cmx-bowl {
@@ -1349,18 +1340,12 @@
   }
 
   .cmx-palette-bottom-grid {
-    display: flex;
-    flex-direction: row;
-    overflow-x: auto;
-    gap: 16px;
-    padding: 4px 16px 8px;
-    scroll-snap-type: x proximity;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-  }
-
-  .cmx-palette-bottom-grid::-webkit-scrollbar {
-    display: none;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    padding: 4px 14px 8px;
+    max-width: 400px;
+    margin: 0 auto;
   }
 }
 
