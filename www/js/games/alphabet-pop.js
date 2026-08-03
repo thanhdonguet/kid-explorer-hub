@@ -127,13 +127,9 @@ class AlphabetPop {
   /* ── Text-to-Speech Helper ── */
   speak(text) {
     if (this.destroyed) return;
-    if (typeof audio !== 'undefined' && audio.muted) return;
-    if (!this.synth) return;
-    this.synth.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'en-US'; // Always read in English for alphabet/vocab
-    utterance.rate = 0.9;
-    this.synth.speak(utterance);
+    if (!window.TTS) return;
+    // Always read in English for alphabet/vocab, regardless of UI language.
+    window.TTS.speak(text, { lang: 'en-US', rate: 0.9 });
   }
 
   /* ── Screen 1: Alphabet Board ── */

@@ -47,11 +47,7 @@ class ColorMixLab {
     this.active        = false;
     this.currentApiName = null;
 
-    // Warm up voices
-    if (window.speechSynthesis) {
-      window.speechSynthesis.getVoices();
-      window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
-    }
+    if (window.TTS) window.TTS.warm();
   }
 
   /* ================================================================
@@ -631,41 +627,12 @@ class ColorMixLab {
 
   _speak(text) {
     if (!this.active) return; // never talk over the dashboard after leaving
-    if (typeof audio !== 'undefined' && audio.muted) return;
-    if (!window.speechSynthesis) return;
+    if (!window.TTS) return;
 
-    const synth = window.speechSynthesis;
-
-    // iOS/iPadOS Safari only allows speak() to fire when it is the direct,
-    // synchronous result of a user gesture (touchstart/touchend) - deferring
-    // it even by setTimeout(0) breaks that requirement and the utterance is
-    // dropped with no error, no sound. So this call must stay synchronous.
-    //
-    // Chrome (desktop/Android) has the opposite-flavored bug: calling
-    // cancel() and speak() back to back can drop the new utterance. Only
-    // canceling when something is actually mid-speech avoids that race for
-    // the common case (a fresh tap, nothing queued) without deferring.
-    if (synth.speaking || synth.pending) {
-      synth.cancel();
-    }
-
-    const utt = new SpeechSynthesisUtterance(text);
-    const voices = synth.getVoices();
-    const voice = voices.find(v => v.lang === 'en-US')
-      || voices.find(v => v.lang === 'en-GB')
-      || voices.find(v => v.lang && v.lang.startsWith('en'));
-
-    if (voice) {
-      utt.voice = voice;
-      utt.lang  = voice.lang; // must match the assigned voice or some engines stay silent
-    } else {
-      utt.lang = 'en-US';
-    }
-
-    utt.rate   = 0.9;
-    utt.pitch  = 1.1;
-    utt.volume = 1;
-    synth.speak(utt);
+    // Must stay a synchronous call from the user gesture (touchstart/
+    // touchend) – deferring it even by setTimeout(0) breaks iOS Safari's
+    // gesture requirement and the utterance is dropped with no error.
+    window.TTS.speak(text, { lang: 'en-US', rate: 0.9, pitch: 1.1 });
   }
 
   /* ================================================================

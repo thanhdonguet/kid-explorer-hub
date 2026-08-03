@@ -60,13 +60,8 @@ class FruitMarket {
 
   speak(text) {
     if (this.destroyed) return;
-    if (typeof audio !== 'undefined' && audio.muted) return;
-    if (!window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = this.lang === 'vi' ? 'vi-VN' : 'en-US';
-    utter.rate = 0.9;
-    window.speechSynthesis.speak(utter);
+    if (!window.TTS) return;
+    window.TTS.speak(text, { lang: this.lang === 'vi' ? 'vi-VN' : 'en-US', rate: 0.9 });
   }
 
   renderLevelSelect() {

@@ -692,12 +692,7 @@ class VehicleParking {
   }
   
   speakOops() {
-    if (typeof audio !== 'undefined' && audio.muted) return;
-    if ('speechSynthesis' in window) {
-      const u = new SpeechSynthesisUtterance('Oops!');
-      u.pitch = 1.8;
-      u.rate = 1.5;
-      window.speechSynthesis.speak(u);
-    }
+    if (!window.TTS) return;
+    window.TTS.speak('Oops!', { lang: 'en-US', pitch: 1.8, rate: 1.5 });
   }
 }

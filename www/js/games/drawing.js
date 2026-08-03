@@ -288,20 +288,8 @@ class DinosaurColors {
     }
 
     // Fallback nếu không có audio file
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const msg = new SpeechSynthesisUtterance(text);
-      msg.lang = 'en-US';
-      msg.pitch = 2.0;
-      msg.rate = 1.1;
-      
-      const voices = window.speechSynthesis.getVoices();
-      const preferredVoice = voices.find(v => v.lang === 'en-US' && (v.name.includes('Google') || v.name.includes('Samantha') || v.name.includes('Karen')));
-      if (preferredVoice) {
-        msg.voice = preferredVoice;
-      }
-      
-      window.speechSynthesis.speak(msg);
+    if (window.TTS) {
+      window.TTS.speak(text, { lang: 'en-US', pitch: 2.0, rate: 1.1 });
     }
   }
 
