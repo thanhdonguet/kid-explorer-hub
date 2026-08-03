@@ -32,6 +32,7 @@
 
   let cachedVoices = [];
   let warmed = false;
+  let primed = false;
 
   function refreshVoices() {
     if (!('speechSynthesis' in global)) return;
@@ -119,5 +120,27 @@
     if ('speechSynthesis' in global) global.speechSynthesis.cancel();
   }
 
-  global.TTS = { speak, cancel, warm };
+  /**
+   * iOS Safari's speech engine has a noticeable one-time startup lag on the
+   * very first utterance of a page session (spinning up the underlying
+   * AVSpeechSynthesizer) – Android/Chrome don't have this, so the first
+   * color/letter/word a game speaks can lag or land late on iPad. Call this
+   * once, synchronously, from an early user gesture (e.g. tapping an island
+   * card to open a game) so that lag happens before the child taps anything
+   * that actually needs to be heard.
+   */
+  function primeIfNeeded() {
+    if (primed || !('speechSynthesis' in global)) return;
+    primed = true;
+    warm();
+    try {
+      const u = new SpeechSynthesisUtterance(' ');
+      u.volume = 0;
+      global.speechSynthesis.speak(u);
+    } catch (e) {
+      // best-effort warm-up only
+    }
+  }
+
+  global.TTS = { speak, cancel, warm, primeIfNeeded };
 })(window);

@@ -95,6 +95,7 @@ class AppController {
       card.addEventListener('click', () => {
         const gameId = card.getAttribute('data-game');
         audio.playTap();
+        if (window.TTS) window.TTS.primeIfNeeded();
 
         if (card.classList.contains('island-locked')) {
           this._showToast(this.T[this.lang].comingSoon);
