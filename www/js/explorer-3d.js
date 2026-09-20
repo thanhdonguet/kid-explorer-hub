@@ -11,12 +11,43 @@ const loader = new GLTFLoader();
 const assets = new Map();
 const geometries = new Map();
 const materials = new Map();
+const surfaceTextures = new Map();
 const motionQuery = matchMedia('(prefers-reduced-motion: reduce)');
 let renderer, failed = false, running = false, lastFrame = 0;
 
+function surfaceTexture(color) {
+  if (surfaceTextures.has(color)) return surfaceTextures.get(color);
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = 32;
+  const ctx = canvas.getContext('2d');
+  const image = ctx.createImageData(32, 32);
+  let seed = [...color].reduce((hash, char) => (hash * 31 + char.charCodeAt(0)) >>> 0, 2166136261);
+  for (let i = 0; i < image.data.length; i += 4) {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    const grain = 224 + (seed >>> 27);
+    image.data[i] = image.data[i + 1] = image.data[i + 2] = grain;
+    image.data[i + 3] = 255;
+  }
+  ctx.putImageData(image, 0, 0);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(3, 3);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  surfaceTextures.set(color, texture);
+  return texture;
+}
 function material(color, gloss = false) {
   const key = color + ':' + gloss;
-  if (!materials.has(key)) materials.set(key, new THREE.MeshStandardMaterial({ color, roughness: gloss ? .26 : .72, metalness: 0 }));
+  if (!materials.has(key)) {
+    const texture = gloss ? null : surfaceTexture(color);
+    materials.set(key, new THREE.MeshStandardMaterial({
+      color,
+      map: texture,
+      roughnessMap: texture,
+      roughness: gloss ? .26 : .78,
+      metalness: 0,
+    }));
+  }
   return materials.get(key);
 }
 function geometry(key, create) {
@@ -100,28 +131,84 @@ function dino(parent, color = '#66bf86') {
 }
 function animal(parent, name) {
   const g = group(parent);
-  const colors = { lion: '#e8af57', monkey: '#ab795d', panda: '#fffbec', rabbit: '#e9d3bc', fox: '#e98b4d', frog: '#74bd68', elephant: '#91b5c7', penguin: '#344f61', bear: '#b68560', cat: '#e9b774' };
-  const color = colors[name] || '#75bd8b';
+  const palettes = {
+    lion: ['#e7a43d', '#fff0c2', '#8e4d2a'],
+    monkey: ['#7047a6', '#f2c6a0', '#43265f'],
+    panda: ['#f8f5e9', '#2c4251', '#d5eadf'],
+    rabbit: ['#ddd1f1', '#fff4ef', '#ef91ac'],
+    fox: ['#ef6f45', '#fff0d8', '#3c5060'],
+    frog: ['#50bd75', '#d9f3a7', '#276d58'],
+    elephant: ['#649cc3', '#dcecf2', '#315d7e'],
+    penguin: ['#263f5a', '#fff5d8', '#f0a33d'],
+    bear: ['#8b5d9d', '#f4d5ac', '#52355e'],
+    cat: ['#50a7a0', '#fff0c9', '#28636d'],
+  };
+  const [color, accent, dark] = palettes[name] || ['#75bd8b', '#f5e1b7', '#365f54'];
   ball(g, color, [0, -.3, 0], [.65, .7, .51]);
   ball(g, color, [0, .52, .05], [.76, .67, .58]);
-  ball(g, '#ffefd4', [0, -.28, .44], [.39, .47, .15]);
+  ball(g, accent, [0, -.28, .44], [.4, .48, .15]);
   for (const side of [-1, 1]) {
-    ball(g, color, [side * .44, -.84, .18], [.3, .22, .32]);
-    const ears = ball(g, name === 'panda' ? '#34414d' : color, [side * .58, 1, .02], name === 'rabbit' ? [.19, .6, .2] : [.27, .27, .19]);
+    ball(g, dark, [side * .44, -.84, .18], [.3, .22, .32]);
+    const ears = ball(g, name === 'panda' || name === 'penguin' ? dark : color, [side * .58, 1, .02], name === 'rabbit' ? [.19, .6, .2] : [.27, .27, .19]);
     if (name === 'rabbit') ears.rotation.z = side * -.2;
     if (name === 'elephant') ears.scale.set(.47, .58, .14);
     if (name === 'fox' || name === 'cat') {
       cone(g, color, [side * .48, 1.13, .02], [.26, .5, .24]);
-      cone(g, '#f9d6b7', [side * .48, 1.17, .2], [.11, .22, .035]);
+      cone(g, accent, [side * .48, 1.17, .2], [.11, .22, .035]);
     }
   }
-  if (name === 'lion') for (let i = 0; i < 12; i++) ball(g, '#b97538', [Math.cos(i * Math.PI / 6) * .64, .52 + Math.sin(i * Math.PI / 6) * .62, -.06], [.32, .32, .3]);
-  if (name === 'panda') for (const x of [-.28, .28]) ball(g, '#34414d', [x, .62, .55], [.25, .27, .09]);
-  if (name === 'penguin') { ball(g, '#fffae6', [0, .42, .51], [.6, .52, .1]); cone(g, '#f5b24d', [0, .25, .78], [.2, .4, .18]).rotation.x = Math.PI / 2; }
-  else { ball(g, '#ffefd4', [0, .28, .54], [.37, .24, .16]); ball(g, '#435050', [0, .36, .72], [.12, .085, .075]); }
+  if (name === 'lion') {
+    for (let i = 0; i < 14; i++) ball(g, dark, [Math.cos(i * Math.PI / 7) * .66, .52 + Math.sin(i * Math.PI / 7) * .64, -.06], [.3, .3, .3]);
+    const tail = torus(g, color, .55, .09, [-.55, -.35, -.28], [0, 0, -.6], Math.PI * 1.2); tail.scale.y = .72;
+    ball(g, dark, [-.94, -.18, -.28], [.2, .24, .2]);
+  }
+  if (name === 'monkey') {
+    for (const side of [-1, 1]) {
+      ball(g, accent, [side * .62, .58, .1], [.22, .28, .16]);
+      const arm = cylinder(g, dark, [side * .62, -.2, .12], [.12, .67, .12]); arm.rotation.z = side * -.38;
+    }
+    const tail = torus(g, accent, .68, .08, [-.45, -.28, -.28], [0, 0, -.45], Math.PI * 1.65); tail.scale.y = 1.25;
+  }
+  if (name === 'panda') {
+    for (const x of [-.28, .28]) ball(g, dark, [x, .62, .55], [.25, .27, .09]);
+    for (const x of [-.46, .46]) ball(g, dark, [x, -.26, .2], [.2, .5, .2]);
+  }
+  if (name === 'rabbit') ball(g, '#ffffff', [-.62, -.36, -.35], [.28, .28, .28]);
+  if (name === 'fox') {
+    const tail = cone(g, color, [-.72, -.38, -.3], [.34, 1.05, .34]); tail.rotation.z = -.82;
+    cone(g, accent, [-1.1, -.02, -.3], [.27, .44, .27]).rotation.z = -.82;
+  }
+  if (name === 'bear') {
+    ball(g, accent, [0, -.22, .48], [.44, .5, .13]);
+    for (const side of [-1, 1]) ball(g, dark, [side * .27, .64, .55], [.12, .16, .06]);
+  }
+  if (name === 'cat') {
+    const tail = torus(g, dark, .66, .08, [-.55, -.34, -.26], [0, 0, -.62], Math.PI * 1.45); tail.scale.y = 1.18;
+    for (const side of [-1, 1]) for (let i = 0; i < 3; i++) {
+      const whisker = cylinder(g, accent, [side * (.45 + i * .03), .29 - i * .07, .72], [.012, .35, .012]);
+      whisker.rotation.z = Math.PI / 2 + side * (i - 1) * .12;
+    }
+  }
+  if (name === 'penguin') {
+    ball(g, accent, [0, .42, .51], [.6, .52, .1]);
+    cone(g, dark, [0, .25, .78], [.2, .4, .18]).rotation.x = Math.PI / 2;
+    for (const side of [-1, 1]) {
+      const wing = ball(g, color, [side * .65, -.05, 0], [.18, .55, .16]); wing.rotation.z = side * -.32;
+    }
+  } else {
+    ball(g, accent, [0, .28, .54], [.37, .24, .16]);
+    ball(g, dark, [0, .36, .72], [.12, .085, .075]);
+  }
   eyes(g, .63, .61, .28, .09);
-  if (name === 'elephant') { ball(g, color, [0, .05, .74], [.18, .52, .18]); ball(g, color, [.12, -.32, .79], [.28, .16, .18]); }
-  if (name === 'frog') { ball(g, color, [-.36, 1, .35], [.3, .28, .24]); ball(g, color, [.36, 1, .35], [.3, .28, .24]); eyes(g, 1.02, .55, .36, .12); }
+  if (name === 'elephant') {
+    ball(g, color, [0, .05, .74], [.18, .52, .18]); ball(g, color, [.12, -.32, .79], [.28, .16, .18]);
+    for (const side of [-1, 1]) cone(g, '#fff6de', [side * .18, .06, .82], [.06, .32, .06]).rotation.x = Math.PI / 2;
+  }
+  if (name === 'frog') {
+    ball(g, color, [-.36, 1, .35], [.3, .28, .24]); ball(g, color, [.36, 1, .35], [.3, .28, .24]);
+    eyes(g, 1.02, .55, .36, .12);
+    for (const side of [-1, 1]) ball(g, dark, [side * .62, -.76, .34], [.42, .16, .35]);
+  }
   return g;
 }
 function balloon(parent, color = '#f48d98') {

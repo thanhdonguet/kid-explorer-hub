@@ -1,0 +1,13 @@
+Animal model sources
+====================
+
+The following optimized GLB file was downloaded from Poly Pizza. Geometry,
+textures and animations were reduced for this mobile web app.
+
+Public Domain / CC0 1.0
+----------------------
+- Frog by Quaternius
+  https://poly.pizza/m/9Z2V8fpazF
+
+License texts:
+- CC0 1.0: https://creativecommons.org/publicdomain/zero/1.0/

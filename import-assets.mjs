@@ -38,5 +38,15 @@ for (const [pack, spec] of Object.entries(packs)) {
     manifest[name] = `img/models/${filename}`;
   }
 }
+// Poly Pizza animal sources are optimized separately to remove unused
+// animation data and keep the first PWA download small. See
+// www/img/models/LICENSE-animal.txt for source URLs and attribution.
+for (const name of ['frog']) {
+  const source = `.asset-cache/animals-optimized/${name}.glb`;
+  if (!fs.existsSync(source)) throw new Error(`Missing optimized animal source: ${source}`);
+  const filename = `animal-${name}.glb`;
+  fs.copyFileSync(source, `${out}/${filename}`);
+  manifest[name] = `img/models/${filename}`;
+}
 fs.writeFileSync(`${out}/manifest.json`, JSON.stringify(manifest, null, 2) + '\n');
 console.log(`Imported ${Object.keys(manifest).length} self-contained models.`);

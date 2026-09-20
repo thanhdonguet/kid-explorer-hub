@@ -39,5 +39,6 @@
   "rock_largeA": "img/models/nature-rock_largeA.glb",
   "flower_redA": "img/models/nature-flower_redA.glb",
   "mushroom_red": "img/models/nature-mushroom_red.glb",
-  "tent_smallOpen": "img/models/nature-tent_smallOpen.glb"
+  "tent_smallOpen": "img/models/nature-tent_smallOpen.glb",
+  "frog": "img/models/animal-frog.glb"
 }
