@@ -61,6 +61,7 @@ test('audio stays gesture-gated, mute covers music, and music remains lazy', asy
   await page.goto('/');
   expect(await page.evaluate(() => audio.ctx === null && audio.music === null)).toBe(true);
   expect(fs.readFileSync('www/asset-list.js', 'utf8')).not.toContain('audio/music/dashboard.ogg');
+  expect(fs.readFileSync('www/js/games/vehicle-parking.js', 'utf8')).not.toContain('gain.connect(this.audioCtx.destination)');
 
   await page.locator('#btn-music').click();
   expect(await page.evaluate(() => Boolean(audio.ctx) && audio.musicEnabled)).toBe(true);
@@ -170,6 +171,16 @@ test('every additional paint changes the mix and full-bowl feedback is localized
     return [game._deltaE(game._hexToRgb(before), red), game._deltaE(game._hexToRgb(after), red)];
   }, [orange, redder]);
   expect(distances[1]).toBeLessThan(distances[0]);
+
+  for (const id of ['red', 'white', 'black']) {
+    await page.locator('#cmx-reset-btn').click();
+    const shades = [];
+    for (let drop = 0; drop < 3; drop++) {
+      await page.locator(`#bubble-${id}`).press('Enter');
+      shades.push(await page.locator('#cmx-result-hex').textContent());
+    }
+    expect(new Set(shades).size, `${id} concentration should remain visible`).toBe(3);
+  }
 });
 
 test('alphabet session learns five words and awards stars', async ({ page }) => {

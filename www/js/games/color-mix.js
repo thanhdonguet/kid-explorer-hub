@@ -337,6 +337,24 @@ class ColorMixLab {
     const previous = this.currentMix;
     this.mixedColors.push(colorObj);
     let result = this._computeMix();
+    const pureCount = this.mixedColors.every(color => color.id === colorObj.id)
+      ? this.mixedColors.length
+      : 0;
+    if (pureCount > 1) {
+      const neutral = Math.max(colorObj.r, colorObj.g, colorObj.b) - Math.min(colorObj.r, colorObj.g, colorObj.b) < 3;
+      if (neutral) {
+        const direction = colorObj.r < 128 ? 1 : -1;
+        const value = Math.max(0, Math.min(255, colorObj.r + direction * 8 * (pureCount - 1)));
+        result = { r: value, g: value, b: value };
+      } else {
+        const concentration = Math.max(.68, 1 - .05 * (pureCount - 1));
+        result = {
+          r: Math.round(colorObj.r * concentration),
+          g: Math.round(colorObj.g * concentration),
+          b: Math.round(colorObj.b * concentration),
+        };
+      }
+    }
     // A real pigment may barely change when the new paint is close to the
     // existing mixture. Nudge only those near-identical results far enough for
     // a child to perceive the added paint, while preserving the mix direction.
