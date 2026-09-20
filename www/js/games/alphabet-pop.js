@@ -105,7 +105,7 @@ class AlphabetPop {
     this.timers.forEach(id => clearTimeout(id));
     this.timers.clear();
     this.container.innerHTML = '';
-    this.synth.cancel(); // Stop any reading
+    this.synth?.cancel(); // Stop any reading
   }
 
   updateLanguage(lang, T) {
@@ -120,6 +120,7 @@ class AlphabetPop {
     if (nextBtn) {
       nextBtn.textContent = this.score >= this.roundsPerLetter ? t.finishBtn : t.nextBtn;
     }
+    this.updateInspectLabels();
 
     if (this.container.querySelector('#alphabet-complete')) this.renderCompletion();
   }
@@ -150,12 +151,15 @@ class AlphabetPop {
       btn.className = 'ap-letter-btn';
       btn.textContent = letter;
       btn.addEventListener('click', () => {
+        if (this.selectingLetter) return;
+        this.selectingLetter = true;
         // Highlight logic and TTS
         this.speak(letter);
         // Add effect, then transition to Screen 2
         btn.classList.add('ap-selected');
         this._later(() => {
           this.selectedLetter = letter;
+          this.selectingLetter = false;
           this.startSession();
         }, 1000); // wait for voice and animation
       });
@@ -209,7 +213,9 @@ class AlphabetPop {
 
     for (let i = 0; i < objectsCount; i++) {
       const isCorrect = (i === correctIndex);
-      const objEl = document.createElement('div');
+      const objEl = document.createElement('button');
+      objEl.type = 'button';
+      objEl.setAttribute('aria-label', isCorrect ? this.selectedLetter : (this.lang === 'vi' ? 'Đồ chơi' : 'Toy'));
       objEl.className = 'ap-flying-object';
       
       // Random starting positions and animations
@@ -223,11 +229,13 @@ class AlphabetPop {
       const visualEl = document.createElement('div');
       visualEl.className = 'ap-object-visual';
       
-      const themeImg = document.createElement('img');
+      const themeImg = document.createElement('kid-model');
       const currentTheme = this.themes[this.currentThemeIndex];
-      themeImg.src = `img/themes/${currentTheme.replace('theme-', '')}.svg`;
-      themeImg.className = 'ap-theme-icon';
-      themeImg.onerror = () => { themeImg.style.display = 'none'; }; // fallback if theme SVG fails
+      const themeName = currentTheme.replace('theme-', '');
+      themeImg.setAttribute('model', themeName);
+      themeImg.setAttribute('color', ['#e4a68a', '#a595c7', '#87bbbc', '#dfbb75'][i % 4]);
+      themeImg.setAttribute('aria-label', themeName);
+      themeImg.innerHTML = `<img class="model-fallback" src="img/themes/${themeName}.svg" alt="">`;
       visualEl.appendChild(themeImg);
 
       objEl.appendChild(visualEl);
@@ -299,8 +307,12 @@ class AlphabetPop {
     // Instead of using missing images right away, use a fallback emoji or text if img fails
     resultEl.innerHTML = `
       <div class="ap-vocab-image-container">
-        <img src="${vocabItem.image}" alt="${vocabItem.word}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
-        <div class="ap-vocab-placeholder" style="display:none;">${this.selectedLetter}</div>
+        <kid-model model="${vocabItem.image.split('/').pop().replace('.svg', '')}" src="${vocabItem.image}" yaw="0" aria-label="${vocabItem.word}"><img class="model-fallback" src="${vocabItem.image}" alt="${vocabItem.word}"></kid-model>
+      </div>
+      <div class="ap-inspect-controls">
+        <button type="button" class="ap-rotate" data-turn="-45">↶</button>
+        <button type="button" class="ap-listen"></button>
+        <button type="button" class="ap-rotate" data-turn="45">↷</button>
       </div>
       <div class="ap-vocab-text">${vocabItem.word}</div>
       <button class="ap-next-btn">${isLastRound ? t.finishBtn : t.nextBtn}</button>
@@ -324,12 +336,29 @@ class AlphabetPop {
     });
 
     playArea.appendChild(resultEl);
+    this.updateInspectLabels();
+    resultEl.querySelectorAll('.ap-rotate').forEach(button => button.addEventListener('click', e => {
+      e.stopPropagation();
+      const model = resultEl.querySelector('kid-model');
+      const angle = (Number(model.getAttribute('yaw')) + Number(button.dataset.turn)) % 360;
+      model.setAttribute('yaw', String(angle));
+    }));
+    resultEl.querySelector('.ap-listen').addEventListener('click', e => { e.stopPropagation(); this.speak(vocabItem.word); });
 
     // Play voice and cheer
     this._later(() => {
       this.speak(vocabItem.word);
       if (typeof audio !== 'undefined' && audio.playCheer) audio.playCheer();
     }, 500);
+  }
+
+  updateInspectLabels() {
+    const vi = this.lang === 'vi';
+    const listen = this.container.querySelector('.ap-listen');
+    if (listen) listen.textContent = vi ? '♪ Nghe lại' : '♪ Listen';
+    this.container.querySelectorAll('.ap-rotate').forEach(button => {
+      button.setAttribute('aria-label', Number(button.dataset.turn) < 0 ? (vi ? 'Xoay sang trái' : 'Rotate left') : (vi ? 'Xoay sang phải' : 'Rotate right'));
+    });
   }
 
   showCompletion() {

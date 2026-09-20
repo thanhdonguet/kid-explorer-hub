@@ -24,25 +24,35 @@ class AppController {
     // ── State ──
     this.activeGame   = null;
     this.activeGameId = '';
-    this.lang         = 'vi';
-    this.stars        = parseInt(localStorage.getItem('kid_explorer_stars') || '0', 10);
+    this.lang         = localStorage.getItem('kid_explorer_lang') === 'en' ? 'en' : 'vi';
+    this.stars        = Math.max(0, parseInt(localStorage.getItem('kid_explorer_stars') || '0', 10) || 0);
 
     // ── i18n Translations ──
     this.T = {
       vi: {
         appTitle:     'Đảo Khám Phá',
         memoryName:   'Khu Rừng Trí Nhớ',
-        memoryDesc:   'Lật thẻ tìm cặp đôi',
+        memoryDesc:   'Lật thẻ tìm những người bạn',
         mathName:     'Chợ Trái Cây',
-        mathDesc:     'Đếm và học số',
+        mathDesc:     'Đếm quả ngon, đầy giỏ nhỏ',
         alphabetPopName: 'Bong Bóng Chữ Cái',
-        alphabetPopDesc: 'Học chữ vui nhộn',
+        alphabetPopDesc: 'Bắt chữ xinh, học từ mới',
         drawingName:  'Khủng Long Sắc Màu',
-        drawingDesc:  'Khủng long đổi màu vui nhộn',
-        colorName:    'Phòng Thí Nghiệm Màu',
-        colorDesc:    'Pha màu kỳ diệu',
+        drawingDesc:  'Cho Dino ăn, xem màu biến hóa',
+        colorName:    'Xưởng Pha Màu',
+        colorDesc:    'Một chút màu, một chút phép màu',
         vehicleParkingName: 'Bến Xe Thành Phố',
-        vehicleParkingDesc: 'Đưa xe về đúng bến',
+        vehicleParkingDesc: 'Tìm đúng bến cho từng chiếc xe',
+        brandTagline: 'HỌC MÀ CHƠI, CHƠI MÀ HỌC', starsLabel: 'sao',
+        welcome: 'CHÀO NHÀ THÁM HIỂM NHÍ!', heroLine1: 'Một thế giới nhỏ.', heroLine2: 'Ngàn điều hay.',
+        heroDesc: 'Chạm vào điều kỳ diệu, chơi cùng trí tưởng tượng. Mỗi hòn đảo là một khám phá mới của bé!',
+        explore: 'Cùng khám phá', heroNote: '6 trò chơi · Vô vàn niềm vui', islandNote: 'Cuộc phiêu lưu bắt đầu!',
+        pickIsland: 'CHƠI MỘT CHÚT, LỚN THÊM MỘT CHÚT', islandsTitle: 'Hôm nay, bé muốn khám phá gì?', islandsCount: '6 hòn đảo đang chờ bé',
+        memorySkill: 'TRÍ NHỚ', colorSkill: 'SÁNG TẠO', mathSkill: 'SỐ ĐẾM', alphabetPopSkill: 'TIẾNG ANH', drawingSkill: 'MÀU SẮC', vehicleParkingSkill: 'TƯ DUY',
+        footerMessage: 'Mỗi ngày một khám phá. Mỗi bước một niềm vui.', credits: 'Góc phụ huynh & nguồn tài nguyên',
+        memoryHint: 'Lật hai thẻ để tìm những người bạn giống nhau.', colorHint: 'Kéo bình màu vào bát, hoặc chọn màu rồi nhấn Enter.',
+        mathHint: 'Chạm vào trái cây để lấy đúng số quả bạn Gấu cần.', alphabetHint: 'Chọn một chữ cái, rồi tìm chữ ấy trong những món đồ chơi.',
+        drawingHint: 'Chạm vào trái cây và xem Dino đổi màu nhé!', vehicleHint: 'Kéo xe về đúng bến, hoặc chạm vào bến để chọn.',
         comingSoon:   '🔒 Sắp Ra Mắt',
         scoreLabel:   'Điểm',
         backTo:       'Đảo Khám Phá',
@@ -68,6 +78,16 @@ class AppController {
         colorDesc:    'Mix magical colors',
         vehicleParkingName: 'City Parking',
         vehicleParkingDesc: 'Park each vehicle!',
+        brandTagline: 'LITTLE PLAY, BIG DISCOVERIES', starsLabel: 'stars',
+        welcome: 'HELLO, LITTLE EXPLORER!', heroLine1: 'A little world.', heroLine2: 'A lot to discover.',
+        heroDesc: 'A spark of wonder. A little imagination. Every island brings a brand new discovery!',
+        explore: 'Let’s explore', heroNote: '6 games · Endless little adventures', islandNote: 'Adventure starts here!',
+        pickIsland: 'A LITTLE PLAY, A LITTLE GROWTH', islandsTitle: 'Where shall we explore today?', islandsCount: '6 islands waiting for you',
+        memorySkill: 'MEMORY', colorSkill: 'CREATIVITY', mathSkill: 'COUNTING', alphabetPopSkill: 'ENGLISH', drawingSkill: 'COLORS', vehicleParkingSkill: 'THINKING',
+        footerMessage: 'A new discovery every day. A little joy every step.', credits: 'For parents & asset credits',
+        memoryHint: 'Flip two cards to find matching friends.', colorHint: 'Drag a bottle into the bowl, or focus a color and press Enter.',
+        mathHint: 'Tap the fruit to collect the number Bear needs.', alphabetHint: 'Choose a letter, then find it among the toys.',
+        drawingHint: 'Tap a fruit and watch Dino change color!', vehicleHint: 'Drag the vehicle to its station, or tap a station to choose.',
         comingSoon:   '🔒 Coming Soon',
         scoreLabel:   'Score',
         backTo:       'Explorer Island',
@@ -89,6 +109,12 @@ class AppController {
     // 1. Init HUD values
     this.hud.starCount.textContent = this.stars;
     this.applyLang();
+    this.hud.langBtn.textContent = this.lang.toUpperCase();
+    document.getElementById('btn-explore').addEventListener('click', () => {
+      document.getElementById('explore-section').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+      document.querySelector('.island-card').focus({ preventScroll: true });
+    });
+    document.getElementById('brand-home').addEventListener('click', e => { e.preventDefault(); this.closeActiveGame(); });
 
     // 2. Island click listeners
     document.querySelectorAll('.island-card').forEach(card => {
@@ -117,12 +143,16 @@ class AppController {
       const isMuted = audio.toggleMute();
       this.hud.soundOnIcon.classList.toggle('hidden', isMuted);
       this.hud.soundOffIcon.classList.toggle('hidden', !isMuted);
+      this.hud.soundBtn.setAttribute('aria-pressed', String(isMuted));
+      this.hud.soundBtn.setAttribute('aria-label', this.lang === 'vi' ? (isMuted ? 'Bật âm thanh' : 'Tắt âm thanh') : (isMuted ? 'Enable sound' : 'Mute sound'));
+      if (isMuted) { window.TTS?.cancel(); this.activeGame?.currentAudio?.pause(); }
     });
 
     // 5. Language toggle
     this.hud.langBtn.addEventListener('click', () => {
       audio.playTap();
       this.lang = this.lang === 'vi' ? 'en' : 'vi';
+      localStorage.setItem('kid_explorer_lang', this.lang);
       this.hud.langBtn.textContent = this.lang.toUpperCase();
       document.documentElement.setAttribute('data-lang', this.lang);
       this.applyLang();
@@ -145,8 +175,7 @@ class AppController {
        has to get off the previous worker. Whoever is controlling the tab
        when it loads has already served the old HTML/JS, so a new worker
        taking over mid-load means the visible code is one build behind.
-       Reloading once on controllerchange makes a single manual refresh
-       enough to land on new code instead of two.
+       Adopt updates at the dashboard so a deployment cannot interrupt a game.
      ================================================================ */
   _initServiceWorker() {
     if (!('serviceWorker' in navigator)) return;
@@ -159,6 +188,7 @@ class AppController {
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       if (!hadController || reloading) return;
       reloading = true;
+      if (this.activeGameId) { this.pendingAppUpdate = true; return; }
       window.location.reload();
     });
 
@@ -178,6 +208,9 @@ class AppController {
      LANGUAGE
      ================================================================ */
   applyLang() {
+    document.documentElement.lang = this.lang;
+    document.documentElement.dataset.lang = this.lang;
+    this.hud.soundBtn.setAttribute('aria-label', this.lang === 'vi' ? (audio.muted ? 'Bật âm thanh' : 'Tắt âm thanh') : (audio.muted ? 'Enable sound' : 'Mute sound'));
     const t = this.T[this.lang];
     document.querySelectorAll('[data-i18n]').forEach(el => {
       const key = el.getAttribute('data-i18n');
@@ -198,6 +231,8 @@ class AppController {
     } else if (gameTitles[this.activeGameId]) {
       this.hud.title.textContent = gameTitles[this.activeGameId];
     }
+    const hints = { memory: 'memoryHint', color: 'colorHint', math: 'mathHint', 'alphabet-pop': 'alphabetHint', drawing: 'drawingHint', 'vehicle-parking': 'vehicleHint' };
+    document.getElementById('game-hint').textContent = t[hints[this.activeGameId]] || '';
   }
 
   /* ── Toast notification for locked islands ── */
@@ -228,6 +263,7 @@ class AppController {
   showScreen(name) {
     Object.keys(this.screens).forEach(key => {
       this.screens[key].classList.toggle('active', key === name);
+      this.screens[key].inert = key !== name;
     });
 
     const t = this.T[this.lang];
@@ -237,11 +273,14 @@ class AppController {
       this.hud.backBtn.classList.add('hidden');
       this.hud.title.textContent = t.appTitle;
     }
+    document.dispatchEvent(new Event('explorer-screen-change'));
   }
 
   /* ── Launch a game ── */
   launchGame(gameId) {
+    if (this.activeGame) this.activeGame.destroy();
     this.activeGameId = gameId;
+    document.body.dataset.game = gameId;
     this.showScreen('game');
 
     const stage = document.getElementById('game-stage');
@@ -295,16 +334,22 @@ class AppController {
     }
 
     this.activeGame.start();
+    this.applyLang();
+    this.hud.backBtn.focus({ preventScroll: true });
   }
 
   /* ── Close active game ── */
   closeActiveGame() {
+    const previousGame = this.activeGameId;
     if (this.activeGame) {
       this.activeGame.destroy();
       this.activeGame = null;
     }
     this.activeGameId = '';
+    delete document.body.dataset.game;
     this.showScreen('dashboard');
+    document.querySelector(`[data-game="${previousGame}"]`)?.focus({ preventScroll: true });
+    if (this.pendingAppUpdate) { this.pendingAppUpdate = false; window.location.reload(); }
   }
 
   /* ── (Legacy) Star reward – kept for future games ── */

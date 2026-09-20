@@ -11,3 +11,7 @@ Thumbs.db
 
 # Local logs
 *.log
+
+.asset-cache/
+test-results/
+playwright-report/

@@ -1,6 +1,6 @@
 {
-  "short_name": "KidHub",
-  "name": "Kid Explorer Hub",
+  "short_name": "Đảo Khám Phá",
+  "name": "Đảo Khám Phá · Explorer Island",
   "description": "Educational games and fun activities for kids.",
   "icons": [
     {
@@ -15,8 +15,8 @@
     }
   ],
   "start_url": "index.html",
-  "background_color": "#FFDEED",
-  "theme_color": "#FF8DA1",
+  "background_color": "#faf9f4",
+  "theme_color": "#eef4e8",
   "display": "standalone",
   "orientation": "any"
 }

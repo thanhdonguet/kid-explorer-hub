@@ -1,45 +1,15 @@
-/* Bump this on every release – the fetch handler is cache-first, so returning
-   visitors keep the old JS/CSS until the cache name changes. */
-const CACHE_NAME = 'kid-explorer-hub-v4';
-const ASSETS = [
-  'index.html',
-  'manifest.json',
-  'css/style.css',
-  'css/dashboard.css',
-  'css/games.css',
-  'js/audio.js',
-  'js/app.js',
-  'js/games/fruit-market.js',
-  'js/games/alphabet-pop.js',
-  'js/games/drawing.js',
-  'js/games/memory.js',
-  'js/games/color-mix.js',
-  'js/games/vehicle-parking.js',
-  'img/icon-192.png',
-  'img/icon-512.png',
-  'img/vocab/fire_truck.svg',
-  'img/treasure_map_bg.png',
-  'audio/dino/intro.wav',
-  'audio/dino/banana.wav',
-  'audio/dino/peach.wav',
-  'audio/dino/tomato.wav',
-  'audio/dino/cucumber.wav',
-  'audio/dino/grapes.wav',
-  'audio/dino/orange.wav',
-  'audio/dino/full.wav'
-];
+/* The build hashes all shipped assets to version each offline release. */
+importScripts('asset-list.js');
+const CACHE_PREFIX = 'kid-explorer-hub-';
+const CACHE_NAME = CACHE_PREFIX + self.KID_ASSET_VERSION;
+const ASSETS = self.KID_ASSETS;
 
-// Install event - Cache all core files.
-// Assets are added one by one: cache.addAll() rejects the whole install if a
-// single file 404s, which would silently disable offline support entirely.
+// Keep the previous release active if any asset of the new release is missing.
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return Promise.all(
-        ASSETS.map((url) =>
-          cache.add(url).catch((err) => console.warn('SW: skipped', url, err))
-        )
-      );
+      // A release activates only when every shipped asset is available offline.
+      return cache.addAll(ASSETS);
     }).then(() => self.skipWaiting())
   );
 });
@@ -50,7 +20,7 @@ self.addEventListener('activate', (e) => {
     caches.keys().then((keys) => {
       return Promise.all(
         keys.map((key) => {
-          if (key !== CACHE_NAME) {
+          if (key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME) {
             return caches.delete(key);
           }
         })

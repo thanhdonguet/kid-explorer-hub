@@ -1,220 +1,90 @@
 <!DOCTYPE html>
 <html lang="vi" data-lang="vi">
-
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Đảo Khám Phá - Học Mà Chơi</title>
-
-  <!-- SEO & PWA -->
-  <meta name="description" content="Đảo Khám Phá – ứng dụng học và chơi cho bé với các trò chơi trí tuệ vui nhộn!">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Đảo Khám Phá · Một thế giới nhỏ, ngàn điều hay</title>
+  <meta name="description" content="Cùng bé khám phá 6 trò chơi học tập trong thế giới đồ chơi 3D: trí nhớ, chữ cái, số đếm, màu sắc và phương tiện.">
+  <meta name="theme-color" content="#eef4e8">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#FF8DA1">
+  <link rel="icon" href="img/icon-192.png">
   <link rel="manifest" href="manifest.json">
-
-  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Quicksand:wght@500;700&display=swap"
-    rel="stylesheet">
-
-  <!-- Stylesheets -->
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Quicksand:wght@500;600;700&amp;display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/dashboard.css">
   <link rel="stylesheet" href="css/games.css">
-
-  <!-- Capacitor Bridge (optional) -->
-  <script src="capacitor.js" defer></script>
+  <link rel="stylesheet" href="css/explorer.css">
+  <script src="js/explorer-3d.bundle.js" defer></script>
 </head>
-
 <body>
-
-
-  <!-- ── Global HUD Bar ── -->
-  <div id="hud-bar">
-    <button id="btn-back" class="hud-btn hidden" aria-label="Quay lại màn hình chính">
-      <svg viewBox="0 0 24 24">
-        <path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" />
-      </svg>
-    </button>
-
-    <div id="star-counter" class="hud-item">
-      <span class="icon">⭐</span>
-      <span id="star-count">0</span>
-    </div>
-
+  <header id="hud-bar">
+    <button id="btn-back" class="hud-btn hidden" aria-label="Về đảo / Back to island"><svg viewBox="0 0 24 24"><path d="m14 5-7 7 7 7M7 12h14"/></svg></button>
+    <a class="brand" href="#" id="brand-home" aria-label="Đảo Khám Phá">
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40"><path d="M6 29c4-11 7-16 14-18 6 3 10 8 14 18Z" fill="#76ae83"/><path d="M14 28c0-8 3-12 7-15" fill="none" stroke="#f6dea6" stroke-width="5" stroke-linecap="round"/><path d="m26 7 1.2 3.7L31 12l-3.8 1.2L26 17l-1.2-3.8L21 12l3.8-1.3Z" fill="#e9b354"/></svg></span>
+      <span class="brand-copy"><strong data-i18n="appTitle">Đảo Khám Phá</strong><small data-i18n="brandTagline">HỌC MÀ CHƠI, CHƠI MÀ HỌC</small></span>
+    </a>
     <div id="app-title-hud" class="hud-item title" data-i18n="appTitle">Đảo Khám Phá</div>
-
-    <button id="btn-sound" class="hud-btn" aria-label="Bật/Tắt âm thanh">
-      <svg id="sound-on-icon" viewBox="0 0 24 24">
-        <path
-          d="M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.85 14,18.71V20.77C18,19.86 21,16.28 21,12C21,7.72 18,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16C15.5,15.29 16.5,13.77 16.5,12M3,9V15H7L12,20V4L7,9H3Z" />
-      </svg>
-      <svg id="sound-off-icon" class="hidden" viewBox="0 0 24 24">
-        <path
-          d="M12,4L9.91,6.09L12,8.18V4M16.5,12A4.5,4.5 0 0,0 14,7.97V10.18L16.45,12.63C16.48,12.43 16.5,12.22 16.5,12M19,12C19,12.9 18.82,13.75 18.48,14.53L20,16.05C20.64,14.83 21,13.46 21,12A9,9 0 0,0 14,3.23V5.29C16.89,6.15 19,8.83 19,12M4.27,3L3,4.27L7.73,9H3V15H7L12,20V13.27L16.25,17.53C15.58,18.04 14.83,18.44 14,18.71V20.77C15.38,20.44 16.63,19.79 17.7,18.9L20.73,21.93L22,20.66L4.27,3M12,9V11.18L9.82,9H12Z" />
-      </svg>
-    </button>
-
-    <button id="btn-lang" class="hud-btn lang-btn" aria-label="Đổi ngôn ngữ">VI</button>
-  </div>
-
-  <!-- ════════════════════════════════════════
-       Screen 1: Dashboard – Đảo Khám Phá
-       ════════════════════════════════════════ -->
-  <div id="dashboard-screen" class="screen active">
-
-    <!-- Animated Ocean Map Background -->
-    <div class="ocean-background">
-      <!-- Water ripples/waves -->
-      <div class="wave wave-1"></div>
-      <div class="wave wave-2"></div>
-      <div class="wave wave-3"></div>
-      <div class="wave wave-4"></div>
-      
-      <!-- Compass Rose -->
-      <div class="compass-rose">
-        <div class="compass-inner">
-          <div class="compass-point north">N</div>
-          <div class="compass-point south">S</div>
-          <div class="compass-point east">E</div>
-          <div class="compass-point west">W</div>
-        </div>
-      </div>
-      
-      <!-- Map Decorations -->
-      <div class="map-decor ship">⛵</div>
-      <div class="map-decor sea-monster">🐋</div>
-      <div class="map-decor palm-tree tree-1">🌴</div>
-      <div class="map-decor palm-tree tree-2">🌴</div>
-      <div class="map-decor rocks">🪨</div>
-      <div class="map-decor mountain mountain-1">⛰️</div>
-      <div class="map-decor mountain mountain-2">🏔️</div>
-      <div class="map-decor volcano">🌋</div>
-      <div class="map-decor forest forest-1">🌲🌲</div>
-      <div class="map-decor forest forest-2">🌲🌴</div>
+    <div class="hud-actions">
+      <div id="star-counter" class="hud-item" title="Sao khám phá / Explorer stars"><span class="star-icon" aria-hidden="true">★</span><span id="star-count">0</span><small data-i18n="starsLabel">sao</small></div>
+      <button id="btn-sound" class="hud-btn" aria-label="Tắt âm thanh" aria-pressed="false"><svg id="sound-on-icon" viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4ZM15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/></svg><svg id="sound-off-icon" class="hidden" viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4ZM16 9l6 6m0-6-6 6"/></svg></button>
+      <button id="btn-lang" class="hud-btn lang-btn" aria-label="Đổi ngôn ngữ / Change language">VI</button>
     </div>
-
-    <!-- Explorer Map -->
-    <div class="map-container">
-
-
-
-      <!-- Island 1: Memory Jungle (ACTIVE) -->
-      <div class="island-card" id="island-memory" data-game="memory">
-        <div class="island-view">
-          <div class="island-sprite memory-island">
-            <div class="card-illustration card-1">🦁</div>
-            <div class="card-illustration card-2">🐼</div>
-          </div>
-          <div class="island-shadow"></div>
+  </header>
+  <main id="dashboard-screen" class="screen active">
+    <div class="home-content">
+      <section class="explorer-hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <div class="eyebrow"><span class="status-dot"></span><span data-i18n="welcome">CHÀO NHÀ THÁM HIỂM NHÍ!</span></div>
+          <h1 id="hero-title"><span data-i18n="heroLine1">Một thế giới nhỏ.</span><br><em data-i18n="heroLine2">Ngàn điều hay.</em></h1>
+          <p data-i18n="heroDesc">Chạm vào điều kỳ diệu, chơi cùng trí tưởng tượng. Mỗi hòn đảo là một khám phá mới của bé!</p>
+          <button id="btn-explore" class="explore-button"><span data-i18n="explore">Cùng khám phá</span><span aria-hidden="true">↗</span></button>
+          <div class="hero-footnote"><span class="mini-stars" aria-hidden="true">✦ ✧ ✦</span><span data-i18n="heroNote">6 trò chơi · Vô vàn niềm vui</span></div>
         </div>
-        <div class="island-info">
-          <h2 data-i18n="memoryName">Khu Rừng Trí Nhớ</h2>
-          <p data-i18n="memoryDesc">Lật thẻ tìm cặp đôi</p>
+        <div class="hero-art">
+          <div class="hero-orbit orbit-one"></div><div class="hero-orbit orbit-two"></div>
+          <kid-model model="world" animate aria-label="Đảo đồ chơi 3D với khủng long, cây xanh, ngôi nhà và tên lửa"><img class="model-fallback" src="img/treasure_map_bg.png" alt="Đảo khám phá"></kid-model>
+          <div class="floating-note"><span class="note-sparkle">✦</span><span data-i18n="islandNote">Cuộc phiêu lưu bắt đầu!</span></div>
+          <span class="art-sparkle sparkle-one" aria-hidden="true">✧</span><span class="art-sparkle sparkle-two" aria-hidden="true">✦</span>
         </div>
-      </div>
-
-      <!-- Island 2: Color Mix Lab (ACTIVE) -->
-      <div class="island-card" id="island-color" data-game="color">
-        <div class="island-view">
-          <div class="island-sprite color-island">
-            <div class="color-bubble-1">🔴</div>
-            <div class="color-bubble-2">🔵</div>
-            <div class="color-result">🟣</div>
-          </div>
-          <div class="island-shadow"></div>
+      </section>
+      <section class="explore-section" id="explore-section" aria-labelledby="islands-title">
+        <div class="section-heading"><div><span class="eyebrow" data-i18n="pickIsland">CHƠI MỘT CHÚT, LỚN THÊM MỘT CHÚT</span><h2 id="islands-title" data-i18n="islandsTitle">Hôm nay, bé muốn khám phá gì?</h2></div><span class="section-count" data-i18n="islandsCount">6 hòn đảo đang chờ bé</span></div>
+        <div class="islands-grid">
+          <button class="island-card" id="island-memory" data-game="memory" style="--card-color:#e9f1de;--card-accent:#4e7952">
+            <span class="island-art"><span class="skill-tag" data-i18n="memorySkill">TRÍ NHỚ</span><kid-model model="island-memory" aria-label="Khu Rừng Trí Nhớ"><img class="model-fallback" src="img/vocab/lion.svg" alt=""></kid-model></span>
+            <span class="island-info"><span class="island-number">01</span><span class="island-text"><strong data-i18n="memoryName">Khu Rừng Trí Nhớ</strong><span data-i18n="memoryDesc">Lật thẻ tìm những người bạn</span></span><span class="card-arrow" aria-hidden="true">↗</span></span>
+          </button>
+          <button class="island-card" id="island-color" data-game="color" style="--card-color:#eee8f6;--card-accent:#8a6da4">
+            <span class="island-art"><span class="skill-tag" data-i18n="colorSkill">SÁNG TẠO</span><kid-model model="island-color" aria-label="Xưởng Pha Màu"><img class="model-fallback" src="img/vocab/art.svg" alt=""></kid-model></span>
+            <span class="island-info"><span class="island-number">02</span><span class="island-text"><strong data-i18n="colorName">Xưởng Pha Màu</strong><span data-i18n="colorDesc">Một chút màu, một chút phép màu</span></span><span class="card-arrow" aria-hidden="true">↗</span></span>
+          </button>
+          <button class="island-card" id="island-math" data-game="math" style="--card-color:#faecda;--card-accent:#aa7740">
+            <span class="island-art"><span class="skill-tag" data-i18n="mathSkill">SỐ ĐẾM</span><kid-model model="island-math" aria-label="Chợ Trái Cây"><img class="model-fallback" src="img/vocab/apple.svg" alt=""></kid-model></span>
+            <span class="island-info"><span class="island-number">03</span><span class="island-text"><strong data-i18n="mathName">Chợ Trái Cây</strong><span data-i18n="mathDesc">Đếm quả ngon, đầy giỏ nhỏ</span></span><span class="card-arrow" aria-hidden="true">↗</span></span>
+          </button>
+          <button class="island-card" id="island-alphabet-pop" data-game="alphabet-pop" style="--card-color:#e4eff7;--card-accent:#5884a0">
+            <span class="island-art"><span class="skill-tag" data-i18n="alphabetPopSkill">TIẾNG ANH</span><kid-model model="island-alphabet" aria-label="Bong Bóng Chữ Cái"><img class="model-fallback" src="img/vocab/balloon.svg" alt=""></kid-model><span class="letter-overlay" aria-hidden="true">Aa</span></span>
+            <span class="island-info"><span class="island-number">04</span><span class="island-text"><strong data-i18n="alphabetPopName">Bong Bóng Chữ Cái</strong><span data-i18n="alphabetPopDesc">Bắt chữ xinh, học từ mới</span></span><span class="card-arrow" aria-hidden="true">↗</span></span>
+          </button>
+          <button class="island-card" id="island-drawing" data-game="drawing" style="--card-color:#edf1d9;--card-accent:#758447">
+            <span class="island-art"><span class="skill-tag" data-i18n="drawingSkill">MÀU SẮC</span><kid-model model="island-drawing" aria-label="Khủng Long Sắc Màu"><img class="model-fallback" src="img/vocab/dinosaur.svg" alt=""></kid-model></span>
+            <span class="island-info"><span class="island-number">05</span><span class="island-text"><strong data-i18n="drawingName">Khủng Long Sắc Màu</strong><span data-i18n="drawingDesc">Cho Dino ăn, xem màu biến hóa</span></span><span class="card-arrow" aria-hidden="true">↗</span></span>
+          </button>
+          <button class="island-card" id="island-vehicle-parking" data-game="vehicle-parking" style="--card-color:#f8e7dc;--card-accent:#ac7b57">
+            <span class="island-art"><span class="skill-tag" data-i18n="vehicleParkingSkill">TƯ DUY</span><kid-model model="island-vehicles" aria-label="Bến Xe Thành Phố"><img class="model-fallback" src="img/vocab/bus.svg" alt=""></kid-model></span>
+            <span class="island-info"><span class="island-number">06</span><span class="island-text"><strong data-i18n="vehicleParkingName">Bến Xe Thành Phố</strong><span data-i18n="vehicleParkingDesc">Tìm đúng bến cho từng chiếc xe</span></span><span class="card-arrow" aria-hidden="true">↗</span></span>
+          </button>
         </div>
-        <div class="island-info">
-          <h2 data-i18n="colorName">Phòng Thí Nghiệm Màu</h2>
-          <p data-i18n="colorDesc">Pha màu kỳ diệu</p>
-        </div>
-      </div>
-
-      <!-- Island 3: Math Adventure -->
-      <div class="island-card" id="island-math" data-game="math">
-        <div class="island-view">
-          <div class="island-sprite math-island">
-            <span class="math-symbol plus">🍎</span>
-            <span class="math-symbol multiply">🍌</span>
-            <div class="balloon-illustration">🍊</div>
-          </div>
-          <div class="island-shadow"></div>
-        </div>
-        <div class="island-info">
-          <h2 data-i18n="mathName">Chợ Trái Cây</h2>
-          <p data-i18n="mathDesc">Đếm và học số</p>
-        </div>
-      </div>
-
-      <!-- Island 4: Alphabet Pop -->
-      <div class="island-card" id="island-alphabet-pop" data-game="alphabet-pop">
-        <div class="island-view">
-          <div class="island-sprite spelling-island">
-            <span class="spelling-letter l-a">A</span>
-            <span class="spelling-letter l-b">B</span>
-            <span class="spelling-letter l-c">C</span>
-            <div class="book-illustration">📖</div>
-          </div>
-          <div class="island-shadow"></div>
-        </div>
-        <div class="island-info">
-          <h2 data-i18n="alphabetPopName">Bong Bóng Chữ Cái</h2>
-          <p data-i18n="alphabetPopDesc">Học chữ vui nhộn</p>
-        </div>
-      </div>
-
-      <!-- Island 5: Magic Canvas -->
-      <div class="island-card" id="island-drawing" data-game="drawing">
-        <div class="island-view">
-          <div class="island-sprite drawing-island">
-            <div class="palette-illustration">🦕</div>
-            <div class="brush-illustration">🌈</div>
-          </div>
-          <div class="island-shadow"></div>
-        </div>
-        <div class="island-info">
-          <h2 data-i18n="drawingName">Khủng Long Sắc Màu</h2>
-          <p data-i18n="drawingDesc">Khủng long đổi màu vui nhộn</p>
-        </div>
-      </div>
-
-    <!-- Island 6: Vehicle Parking -->
-      <div class="island-card" id="island-vehicles" data-game="vehicle-parking">
-        <div class="island-view">
-          <div class="island-sprite vehicles-island">
-            <div class="card-illustration">🚗</div>
-            <div class="card-illustration">🚌</div>
-            <div class="card-illustration">✈️</div>
-          </div>
-          <div class="island-shadow"></div>
-        </div>
-        <div class="island-info">
-          <h2 data-i18n="vehicleParkingName">Bến Xe Thành Phố</h2>
-          <p data-i18n="vehicleParkingDesc">Đưa xe về đúng bến</p>
-        </div>
-      </div>
-
-    </div><!-- /.map-container -->
-  </div>
-
-  <!-- ════════════════════════════════════════
-       Screen 2: Game Screen
-       ════════════════════════════════════════ -->
-  <div id="game-screen" class="screen">
-    <!-- In-game HUD: timer & score -->
-    <div id="game-dashboard">
-      <div id="game-timer" class="game-hud-item hidden">⏱️ <span id="timer-val">00:00</span></div>
-      <div id="game-score" class="game-hud-item">🌟 <span id="score-label" data-i18n="scoreLabel">Điểm</span>: <span
-          id="score-val">0</span></div>
+      </section>
+      <footer class="home-footer"><span><span class="footer-flower" aria-hidden="true">✿</span><span data-i18n="footerMessage">Mỗi ngày một khám phá. Mỗi bước một niềm vui.</span></span><a href="credits.html" data-i18n="credits">Góc phụ huynh &amp; nguồn tài nguyên</a></footer>
     </div>
-    <!-- Dynamic game content injected here -->
+  </main>
+  <main id="game-screen" class="screen" inert>
+    <div class="game-heading"><p id="game-hint" aria-live="polite"></p><div id="game-dashboard"><div id="game-timer" class="game-hud-item hidden"><span aria-hidden="true">◷</span> <span id="timer-val">00:00</span></div><div id="game-score" class="game-hud-item"><span class="star-icon" aria-hidden="true">★</span> <span id="score-label" data-i18n="scoreLabel">Điểm</span>: <span id="score-val">0</span></div></div></div>
     <div id="game-stage"></div>
-  </div>
-
-  <!-- ── Scripts ── -->
+  </main>
   <script src="js/audio.js"></script>
   <script src="js/tts.js"></script>
   <script src="js/games/memory.js"></script>
@@ -225,5 +95,4 @@
   <script src="js/games/vehicle-parking.js"></script>
   <script src="js/app.js"></script>
 </body>
-
 </html>

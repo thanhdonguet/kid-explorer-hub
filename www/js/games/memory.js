@@ -50,6 +50,8 @@ class MemoryJungle {
     this.score        = 0;
     this.lockBoard    = false;
     this.active       = false;
+    this.timers = new Set();
+    this.destroyed = false;
 
     // ── Timer ──
     this.timerInterval  = null;
@@ -80,8 +82,17 @@ class MemoryJungle {
     ];
   }
 
-  /* ── SVG Card Face (vector, scales perfectly at any zoom) ── */
-  _makeCardFace(emoji, bg) {
+  /* 3D card face with the original vector fallback. */
+  _makeCardFace(emoji, bg, id) {
+    return `<kid-model model="${id}" aria-label="${id}" style="background:${bg}"><span class="model-fallback">${this._legacyCardFace(emoji, bg)}</span></kid-model>`;
+  }
+
+  _later(fn, delay) {
+    const timer = setTimeout(() => { this.timers.delete(timer); if (!this.destroyed) fn(); }, delay);
+    this.timers.add(timer);
+  }
+
+  _legacyCardFace(emoji, bg) {
     /* Using SVG <text> ensures the emoji is rendered by the browser's
        vector text engine – no pixelation at any zoom level.           */
     return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"
@@ -116,7 +127,7 @@ class MemoryJungle {
     this.container.innerHTML = `
       <div id="memory-mode-screen">
         <div class="mem-mode-header">
-          <div class="mem-mode-forest-emoji">🌳</div>
+          <div class="mem-mode-forest-emoji"><kid-model model="island-memory" aria-label="Khu rừng"><img class="model-fallback" src="img/vocab/tree.svg" alt=""></kid-model></div>
           <h2 class="mem-mode-title">${t.title}</h2>
           <p class="mem-mode-subtitle">${t.subtitle}</p>
         </div>
@@ -141,7 +152,7 @@ class MemoryJungle {
     const hsText = hs !== null ? `🏆 ${this.formatTime(hs)}` : '🏆 --:--';
     return `
       <button class="mem-mode-btn ${cssClass}" data-pairs="${pairs}">
-        <span class="mem-mode-icon">${icon}</span>
+        <span class="mem-mode-icon"><kid-model model="${pairs === 5 ? 'rabbit' : pairs === 10 ? 'fox' : 'lion'}" aria-label="${label}"><span class="model-fallback">${icon}</span></kid-model></span>
         <div class="mem-mode-info">
           <span class="mem-mode-label">${label}</span>
           <span class="mem-mode-count">${countText}</span>
@@ -156,6 +167,8 @@ class MemoryJungle {
      ================================================================ */
 
   startGame(pairsCount) {
+    this.timers.forEach(clearTimeout);
+    this.timers.clear();
     this.pairsCount     = pairsCount;
     this.matchedPairs   = 0;
     this.score          = 0;
@@ -192,7 +205,9 @@ class MemoryJungle {
     this.grid.innerHTML = '';
 
     deck.forEach((imgData, idx) => {
-      const card = document.createElement('div');
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.setAttribute('aria-label', `${this.lang === 'vi' ? 'Thẻ' : 'Card'} ${idx + 1}`);
       card.className        = 'mem-card';
       card.dataset.cardId   = imgData.id;
       card.dataset.idx      = idx;
@@ -204,7 +219,7 @@ class MemoryJungle {
             <div class="mem-card-front-deco"></div>
           </div>
           <div class="mem-card-back">
-            ${this._makeCardFace(imgData.emoji, imgData.bg)}
+            ${this._makeCardFace(imgData.emoji, imgData.bg, imgData.id)}
           </div>
         </div>
       `;
@@ -245,10 +260,12 @@ class MemoryJungle {
   }
 
   handleMatch(c1, c2) {
-    setTimeout(() => {
+    this._later(() => {
       audio.playMatch();
       c1.classList.add('mem-matched');
       c2.classList.add('mem-matched');
+      c1.disabled = true;
+      c2.disabled = true;
 
       this.score += 10;
       this.matchedPairs++;
@@ -258,7 +275,7 @@ class MemoryJungle {
       this.lockBoard    = false;
 
       if (this.matchedPairs === this.pairsCount) {
-        setTimeout(() => this.onGameComplete(), 600);
+        this._later(() => this.onGameComplete(), 600);
       }
     }, 300);
   }
@@ -268,12 +285,12 @@ class MemoryJungle {
     this.score = Math.max(0, this.score - 2);
     this.updateHUD();
 
-    setTimeout(() => {
+    this._later(() => {
       audio.playMismatch();
       c1.classList.add('mem-shake');
       c2.classList.add('mem-shake');
 
-      setTimeout(() => {
+      this._later(() => {
         c1.classList.remove('mem-flipped', 'mem-shake');
         c2.classList.remove('mem-flipped', 'mem-shake');
         this.flippedCards = [];
@@ -343,9 +360,11 @@ class MemoryJungle {
      ================================================================ */
 
   onGameComplete() {
+    if (!this.active || this.destroyed) return;
     this.active = false;
     this.stopTimer();
     audio.playLevelComplete();
+    this.app.addStars(Math.max(1, this.pairsCount / 5));
 
     const isNewRecord = this.saveHighScore(this.pairsCount, this.elapsedSeconds);
     const bestTime    = this.getHighScore(this.pairsCount); // always non-null now
@@ -368,7 +387,7 @@ class MemoryJungle {
       <div id="memory-complete-screen">
         <div class="comp-confetti-layer" id="comp-confetti"></div>
         <div class="comp-card">
-          <div class="comp-trophy-icon">${isNewRecord ? '🏆' : '🎉'}</div>
+          <div class="comp-trophy-icon"><kid-model model="star" animate aria-label="${t.excellent}"><span class="model-fallback">★</span></kid-model></div>
           <h2 class="comp-title">${isNewRecord ? t.newRecord : t.excellent}</h2>
           <p class="comp-subtitle">${t.completeSubtitle}</p>
 
@@ -445,6 +464,9 @@ class MemoryJungle {
 
   /* ── Cleanup ── */
   destroy() {
+    this.destroyed = true;
+    this.timers.forEach(clearTimeout);
+    this.timers.clear();
     this.active = false;
     this.stopTimer();
     this.cards        = [];

@@ -85,6 +85,11 @@ class DinosaurColors {
   }
 
   createDinoSVG() {
+    const color = getComputedStyle(document.documentElement).getPropertyValue('--dino-body-color').trim() || '#66bf86';
+    return `<kid-model class="dino-svg" model="dino" color="${color}" animate aria-label="Dino"><span class="model-fallback">${this.createLegacyDinoSVG()}</span></kid-model>`;
+  }
+
+  createLegacyDinoSVG() {
     return `
       <svg class="dino-svg" viewBox="0 0 200 200" width="100%" height="100%">
         <!-- Body Layer -->
@@ -138,6 +143,7 @@ class DinosaurColors {
   }
 
   showIntroScreen() {
+    this.isEating = false;
     this.wrapper.innerHTML = '';
     document.documentElement.style.setProperty('--dino-body-color', '#9E9E9E');
     
@@ -207,8 +213,10 @@ class DinosaurColors {
     const fruitDisplay = document.createElement('div');
     fruitDisplay.className = 'fruit-display';
     
-    const fruitImg = document.createElement('img');
-    fruitImg.src = `img/vocab/${roundInfo.fruit}.svg`;
+    const fruitImg = document.createElement('button');
+    fruitImg.type = 'button';
+    fruitImg.setAttribute('aria-label', `${this.lang === 'vi' ? 'Cho Dino ăn' : 'Feed Dino'} ${roundInfo.fruit}`);
+    fruitImg.innerHTML = `<kid-model model="${roundInfo.fruit}" aria-label="${roundInfo.fruit}"><img class="model-fallback" src="img/vocab/${roundInfo.fruit}.svg" alt=""></kid-model>`;
     fruitImg.className = 'fruit-item bounce-in';
     
     fruitDisplay.appendChild(fruitImg);
@@ -263,6 +271,7 @@ class DinosaurColors {
 
   changeDinoColor(hexColor) {
     document.documentElement.style.setProperty('--dino-body-color', hexColor);
+    this.wrapper.querySelector('kid-model[model="dino"]')?.setAttribute('color', hexColor);
   }
 
   speak(text, audioKey) {

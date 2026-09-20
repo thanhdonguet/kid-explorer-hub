@@ -77,7 +77,7 @@ class FruitMarket {
       <div id="fruit-market-container" class="fm-gameplay">
         <div class="fm-bear-area">
           <div class="fm-number-sign" id="fm-target-number">?</div>
-          <div class="fm-bear">🐻</div>
+          <div class="fm-bear"><kid-model model="bear" animate aria-label="Gấu / Bear"><img class="model-fallback" src="img/vocab/bear.svg" alt=""></kid-model></div>
           <div class="fm-basket-wrapper">
             <div class="fm-basket" id="fm-basket">
               <div class="fm-basket-back"></div>
@@ -95,6 +95,8 @@ class FruitMarket {
   }
 
   generateQuestion() {
+    this.roundLocked = false;
+    this.pendingFruits = 0;
     const config = this.levels[this.currentLevel];
     this.targetCount = Math.floor(Math.random() * (config.max - config.min + 1)) + config.min;
     this.currentCount = 0;
@@ -115,9 +117,11 @@ class FruitMarket {
     const config = this.levels[this.currentLevel];
     
     for (let i = 0; i < config.spawnCount; i++) {
-      const fruitEl = document.createElement('div');
+      const fruitEl = document.createElement('button');
+      fruitEl.type = 'button';
+      fruitEl.setAttribute('aria-label', `${this.lang === 'vi' ? 'Lấy quả' : 'Pick fruit'} ${i + 1}`);
       fruitEl.className = 'fm-fruit';
-      fruitEl.innerHTML = `<img src="img/vocab/${this.currentFruitType}.svg" alt="fruit" draggable="false">`;
+      fruitEl.innerHTML = `<kid-model model="${this.currentFruitType}" aria-label="${this.currentFruitType}"><img class="model-fallback" src="img/vocab/${this.currentFruitType}.svg" alt="" draggable="false"></kid-model>`;
       
       // Random position (avoid edges too tightly)
       const topPct = 10 + Math.random() * 70;
@@ -139,7 +143,11 @@ class FruitMarket {
   }
 
   handleFruitTap(fruitEl) {
-    if (fruitEl.classList.contains('fm-dropping')) return;
+    if (this.destroyed || this.roundLocked || fruitEl.classList.contains('fm-dropping')) return;
+    this.pendingFruits++;
+    // Reserve taps immediately; queued animations cannot overfill a completed basket.
+    if (this.currentCount + this.pendingFruits >= this.targetCount) this.roundLocked = true;
+    fruitEl.disabled = true;
     
     if (typeof audio !== 'undefined' && audio.playPop) audio.playPop();
     fruitEl.classList.add('fm-dropping');
@@ -158,15 +166,18 @@ class FruitMarket {
     }
     
     this._later(() => {
-      if (fruitEl.parentNode) fruitEl.parentNode.removeChild(fruitEl);
+      fruitEl.style.visibility = 'hidden';
+      this.pendingFruits--;
       this.currentCount++;
       this.speak(this.currentCount.toString());
       
       // Add mini fruit to basket content
       const basketContent = document.getElementById('fm-basket-content');
       if (basketContent) {
-        const mini = document.createElement('img');
-        mini.src = `img/vocab/${this.currentFruitType}.svg`;
+        const mini = document.createElement('kid-model');
+        mini.setAttribute('model', this.currentFruitType);
+        mini.setAttribute('aria-label', this.currentFruitType);
+        mini.innerHTML = `<img class="model-fallback" src="img/vocab/${this.currentFruitType}.svg" alt="">`;
         mini.className = 'fm-mini-fruit';
         basketContent.appendChild(mini);
       }

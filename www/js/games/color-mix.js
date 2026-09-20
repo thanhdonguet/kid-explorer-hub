@@ -81,6 +81,7 @@ class ColorMixLab {
     this.COLORS.forEach(c => {
       const el = this.container.querySelector(`[data-color-id="${c.id}"] .cmx-bubble-label`);
       if (el) el.textContent = lang === 'vi' ? c.vi : c.en;
+      this.container.querySelector(`#bubble-${c.id}`)?.setAttribute('aria-label', lang === 'vi' ? c.vi : c.en);
     });
     // Update UI text
     const ph = this.container.querySelector('.cmx-bowl-placeholder');
@@ -109,11 +110,12 @@ class ColorMixLab {
 
     const renderBubble = (c) => `
       <div class="cmx-bubble-wrap" data-color-id="${c.id}">
-        <div class="cmx-bubble"
+        <button type="button" class="cmx-bubble" aria-label="${this.lang === 'vi' ? c.vi : c.en}"
              id="bubble-${c.id}"
              data-color-id="${c.id}"
              style="background: radial-gradient(circle at 35% 30%, ${this._lighten(c.hex, 40)}, ${c.hex} 60%, ${this._darken(c.hex, 20)});">
-        </div>
+          <kid-model model="potion" color="${c.hex}" aria-label="${c.en}"><span class="model-fallback" style="background:${c.hex};border-radius:50%"></span></kid-model>
+        </button>
         <span class="cmx-bubble-label">${this.lang === 'vi' ? c.vi : c.en}</span>
       </div>
     `;
@@ -133,6 +135,7 @@ class ColorMixLab {
           <div class="cmx-center">
             <div class="cmx-bowl-area">
               <div class="cmx-bowl" id="cmx-bowl">
+                <kid-model id="cmx-bowl-model" model="bowl" color="#c1d5bf" aria-label="Bát pha màu"><span class="model-fallback" style="border:6px solid #bfcfb9;border-radius:50%"></span></kid-model>
                 <div class="cmx-bowl-liquid" id="cmx-liquid"></div>
                 <div class="cmx-bowl-chips" id="cmx-chips"></div>
                 <div class="cmx-bowl-placeholder" id="cmx-placeholder">${t.dragHint}</div>
@@ -146,7 +149,7 @@ class ColorMixLab {
           <!-- RIGHT: Result Display -->
           <div class="cmx-result" id="cmx-result">
             <div class="cmx-result-preview" id="cmx-result-preview">
-              <div class="cmx-result-empty-icon">🎨</div>
+              <kid-model model="potion" color="#d9c8df" aria-label="Màu kết quả"><span class="model-fallback">✦</span></kid-model>
             </div>
             <div class="cmx-result-info" id="cmx-result-info">
               <div class="cmx-result-label">${t.resultLabel}</div>
@@ -192,6 +195,11 @@ class ColorMixLab {
     this.COLORS.forEach(colorObj => {
       const el = document.getElementById(`bubble-${colorObj.id}`);
       if (!el) return;
+      el.addEventListener('click', (e) => {
+        if (e.detail !== 0 || this.mixedColors.length >= 5) return;
+        const rect = document.getElementById('cmx-bowl').getBoundingClientRect();
+        this._dropColorInBowl(colorObj, rect.left + rect.width / 2, rect.top + rect.height / 2);
+      });
 
       // ── Mouse ──
       el.addEventListener('mousedown', (e) => {
@@ -220,7 +228,9 @@ class ColorMixLab {
       this._moveDrag(t.clientX, t.clientY);
     };
     this._onTouchEnd  = (e) => {
+      if (e.type === 'touchcancel') { this._endDrag(NaN, NaN); return; }
       const t = e.changedTouches[0];
+      if (!t) return;
       this._endDrag(t.clientX, t.clientY);
     };
 
@@ -341,10 +351,7 @@ class ColorMixLab {
       return; // Skip API fetch
     }
 
-    // UI Loading state for API
-    nameEnEl.innerHTML = '<span style="font-size: 0.8em; color: #888;">⏳ Loading API...</span>';
-
-    // Fetch professional name
+    // Names are resolved locally so learning and speech work without a network.
     const result = this._computeMix();
     
     // Bypass API if it matched a known primary recipe (e.g., Red + Yellow = exact Orange)
@@ -361,38 +368,9 @@ class ColorMixLab {
       return; // Skip API fetch
     }
 
-    const hex = this._rgbToHex(result.r, result.g, result.b);
-    
-    try {
-      // Time-boxed: this is an offline-first PWA, a hanging request must not
-      // leave "⏳ Loading API..." on screen forever.
-      const controller = new AbortController();
-      const timeoutId  = setTimeout(() => controller.abort(), 4000);
-      const res = await fetch(`https://www.thecolorapi.com/id?hex=${hex.replace('#', '')}`, { signal: controller.signal });
-      clearTimeout(timeoutId);
-      if (!res.ok) throw new Error('API Error');
-      const data = await res.json();
-
-      // Prevent race condition if user dropped another color, reset, or left
-      if (this.active && this.mixedColors.length > 0) {
-        this.currentApiName = data.name.value;
-        nameEnEl.textContent = this.currentApiName;
-        
-        nameEnEl.classList.remove('cmx-name-anim');
-        void nameEnEl.offsetWidth;
-        nameEnEl.classList.add('cmx-name-anim');
-        
-        this._speakColorResult(this.currentApiName);
-      }
-    } catch (e) {
-      console.warn("Color API failed, using fallback");
-      const bestMatch = this._getColorObj(result);
-      if (this.active && this.mixedColors.length > 0) {
-        this.currentApiName = bestMatch.en;
-        nameEnEl.textContent = this.currentApiName;
-        this._speakColorResult(this.currentApiName);
-      }
-    }
+    this.currentApiName = this._getColorObj(result).en;
+    nameEnEl.textContent = this.currentApiName;
+    this._speakColorResult(this.currentApiName);
   }
 
   _updateBowl() {
@@ -406,11 +384,12 @@ class ColorMixLab {
     const rChips   = document.getElementById('cmx-result-chips');
 
     if (!this.mixedColors.length) {
+      document.getElementById('cmx-bowl-model')?.setAttribute('color', '#c1d5bf');
       liquid.style.height    = '0%';
       liquid.style.opacity   = '0';
       ph.style.display       = 'flex';
       chips.innerHTML        = '';
-      preview.innerHTML      = '<div class="cmx-result-empty-icon">🎨</div>';
+      preview.innerHTML      = '<kid-model model="potion" color="#d9c8df" aria-label="Color"><span class="model-fallback">✦</span></kid-model>';
       nameEnEl.textContent   = '—';
       nameViEl.textContent   = '—';
       hexEl.textContent      = '';
@@ -420,6 +399,7 @@ class ColorMixLab {
 
     const result = this._computeMix();
     const hex    = this._rgbToHex(result.r, result.g, result.b);
+    document.getElementById('cmx-bowl-model')?.setAttribute('color', hex);
     const bestObj = this._getColorObj(result);
 
     // Bowl liquid
@@ -435,7 +415,7 @@ class ColorMixLab {
 
     // Result panel
     preview.style.background = `radial-gradient(circle at 35% 30%, ${this._lighten(hex, 35)}, ${hex} 65%, ${this._darken(hex, 20)})`;
-    preview.innerHTML = '';
+    preview.innerHTML = `<kid-model model="potion" color="${hex}" aria-label="${bestObj.en}"><span class="model-fallback" style="background:${hex};border-radius:50%"></span></kid-model>`;
 
     nameEnEl.textContent = this.currentApiName || bestObj.en;
     nameViEl.textContent = bestObj.vi;

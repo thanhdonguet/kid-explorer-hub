@@ -125,6 +125,7 @@ class VehicleParking {
 
   generateRound() {
     if (this.destroyed) return;
+    this.roundLocked = false;
 
     // Pick a random vehicle to park – never the same one twice in a row
     const previousName = this.currentVehicle ? this.currentVehicle.name : null;
@@ -161,7 +162,7 @@ class VehicleParking {
     
     this.topSection.innerHTML = `
       <div class="vp-vehicle-display anim-drive-in" id="vp-vehicle-display">
-        <img src="img/vocab/${this.currentVehicle.img}" class="vp-vehicle-img" alt="${vName}" ${filterCss} draggable="false">
+        <kid-model model="vehicle-${this.currentVehicle.name}" color="${this.currentVehicle.color || '#e6b554'}" class="vp-vehicle-img" aria-label="${vName}"><img class="model-fallback" src="img/vocab/${this.currentVehicle.img}" alt="" draggable="false"></kid-model>
         <div class="vp-vehicle-name">${vName}</div>
       </div>
     `;
@@ -170,14 +171,20 @@ class VehicleParking {
     this.stationsGrid.innerHTML = '';
     this.stations.forEach(st => {
       const sName = this.lang === 'vi' ? st.stationVi : st.station;
-      const card = document.createElement('div');
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.setAttribute('aria-label', sName);
       card.className = 'vp-station-card';
       card.dataset.station = st.station;
       card.innerHTML = `
-        <div class="vp-station-emoji">${st.emoji}</div>
+        <div class="vp-station-emoji"><kid-model model="station-${st.station}" aria-label="${sName}"><span class="model-fallback" style="font-size:48px">${st.emoji}</span></kid-model></div>
+        <span class="vp-station-symbol" aria-hidden="true">${st.emoji}</span>
         <div class="vp-station-name">${sName}</div>
       `;
       this.stationsGrid.appendChild(card);
+      card.addEventListener('click', () => {
+        if (!this.roundLocked && !this.destroyed) this.handleDrop(document.getElementById('vp-vehicle-display'), card);
+      });
     });
     
     this.setupDragDrop();
@@ -201,20 +208,24 @@ class VehicleParking {
     let startX, startY;
 
     const onStart = (e) => {
+      if (this.roundLocked || this.destroyed) return;
       if (e.type === 'touchstart') e.preventDefault();
       isDragging = true;
       hasMoved = false;
       const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
       const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
       
-      startX = clientX;
-      startY = clientY;
-      
+      const before = vehicleEl.getBoundingClientRect();
       vehicleEl.style.zIndex = '100';
       vehicleEl.style.transition = 'none';
       vehicleEl.style.animation = 'none'; // Stop bounce
+      vehicleEl.style.transform = 'none';
+      const resting = vehicleEl.getBoundingClientRect();
+      // Preserve the grabbed position even during the entrance/return animation.
+      startX = clientX + resting.x + resting.width / 2 - before.x - before.width / 2;
+      startY = clientY + resting.y + resting.height / 2 - before.y - before.height / 2;
       // Pop up slightly when picked up
-      vehicleEl.style.transform = 'scale(1.15) rotate(-3deg)';
+      vehicleEl.style.transform = `translate(${clientX - startX}px, ${clientY - startY}px) scale(1.15) rotate(-3deg)`;
       
       stationsEls.forEach(s => s.style.animation = 'stationPulse 1.5s infinite');
     };
@@ -256,7 +267,7 @@ class VehicleParking {
 
       // A plain tap (no real drag) must never count as an answer
       const vRect = vehicleEl.getBoundingClientRect();
-      const droppedStation = hasMoved ? this.findDropTarget(vRect, stationsEls) : null;
+      const droppedStation = hasMoved && e.type !== 'touchcancel' ? this.findDropTarget(vRect, stationsEls) : null;
 
       if (droppedStation) {
         this.handleDrop(vehicleEl, droppedStation);
@@ -315,6 +326,8 @@ class VehicleParking {
   }
 
   handleDrop(vehicleEl, stationEl) {
+    if (this.roundLocked || this.destroyed) return;
+    this.roundLocked = true;
     const targetStation = stationEl.dataset.station;
     const isCorrect = targetStation === this.currentVehicle.station;
     
@@ -399,6 +412,7 @@ class VehicleParking {
       vehicleEl.style.transform = 'translate(0, 0) scale(1) rotate(0deg)';
       this._later(() => {
         if (this.currentVehicle) {
+          this.roundLocked = false;
           vehicleEl.style.transition = 'none';
           vehicleEl.style.animation = 'vehicleBounce 2s infinite ease-in-out';
         }
