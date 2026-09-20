@@ -575,9 +575,23 @@ async function loadModel(name) {
   const factor = 1.9 / Math.max(size.x, size.y, size.z);
   clone.position.copy(center).multiplyScalar(-factor); clone.scale.setScalar(factor);
   const normalized = new THREE.Group(); normalized.add(clone);
-  // A few source files include broad invisible rig bounds. Compensate only at
-  // presentation time so the recognizable animal fills its card.
-  normalized.scale.setScalar({ lion: 2.05, monkey: 1.55, fox: 1.9, bear: 1.45, cat: 1.15 }[name] || 1);
+  // Normalize imported models for a small card. Quadrupeds are shown in
+  // profile so their body, tail and legs remain recognizable at a glance.
+  // The frog is naturally much wider than the other animals; its camera zoom
+  // is reduced separately in render() so the full pose fits on a small card.
+  const presentation = {
+    lion:    { scale: 2.05, yaw: Math.PI / 2 - .18 },
+    panda:   { scale: 1,    yaw: Math.PI / 2 - .18 },
+    rabbit:  { scale: 1,    yaw: Math.PI / 2 - .18 },
+    fox:     { scale: 1.9,  yaw: Math.PI / 2 - .18 },
+    frog:    { scale: 1,    yaw: .18 },
+    elephant:{ scale: 1,    yaw: Math.PI / 2 - .18 },
+    bear:    { scale: 1.45, yaw: Math.PI / 2 - .18 },
+    cat:     { scale: 1.15, yaw: Math.PI / 2 - .18 },
+    monkey:  { scale: 1.55, yaw: 0 },
+  }[name];
+  normalized.scale.setScalar(presentation?.scale || 1);
+  normalized.rotation.y = presentation?.yaw || 0;
   return normalized;
 }
 const aliases = { car: 'sedan', fire_truck: 'firetruck', icecream: 'ice-cream', ice_cream: 'ice-cream', hamburger: 'burger', tent:'tent_smallOpen', jewel:'diamond' };
@@ -726,6 +740,7 @@ class KidModel extends HTMLElement {
     delete this.dataset.loadError;
     this.dataset.modelKind = 'mesh';
     const name = this.getAttribute('model') || 'star', color = this.getAttribute('color') || undefined;
+    this.modelName = name;
     this.isWorld = name === 'world';
     if (this.object) { this.scene.remove(this.object); disposeOwned(this.object); }
     const root = new THREE.Group(); this.object = root; this.scene.add(root);
@@ -782,7 +797,8 @@ class KidModel extends HTMLElement {
       if (rig?.userData.balloonRig) rig.userData.balloonRig.position.y = 2.5 + (moving ? Math.sin(time) * .1 : 0);
     } else {
       this.camera.position.set(.5, 1.35, 5.8); this.camera.lookAt(0, -.05, 0);
-      this.camera.zoom = Math.min(1, this.camera.aspect);
+      const presentationZoom = this.modelName === 'frog' ? .52 : 1;
+      this.camera.zoom = Math.min(1, this.camera.aspect) * presentationZoom;
       const yaw = Number(this.getAttribute('yaw')) || 0;
       this.object.rotation.y = .18 + yaw * Math.PI / 180 + (moving && !this.hasAttribute('yaw') ? Math.sin(time * .8) * .19 : 0);
       this.object.position.y = moving && this.hasAttribute('animate') ? Math.sin(time * 1.7) * .035 : 0;

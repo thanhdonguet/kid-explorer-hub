@@ -149,7 +149,11 @@ class FruitMarket {
     if (this.currentCount + this.pendingFruits >= this.targetCount) this.roundLocked = true;
     fruitEl.disabled = true;
     
-    if (typeof audio !== 'undefined' && audio.playPop) audio.playPop();
+    const noteStep = this.currentCount + this.pendingFruits - 1;
+    if (typeof audio !== 'undefined') {
+      if (audio.playFruitNote) audio.playFruitNote(noteStep);
+      else if (audio.playPop) audio.playPop();
+    }
     fruitEl.classList.add('fm-dropping');
     
     // Animate to basket

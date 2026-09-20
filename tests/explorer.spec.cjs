@@ -66,6 +66,14 @@ test('audio stays gesture-gated, mute covers music, and music remains lazy', asy
   await page.locator('#btn-music').click();
   expect(await page.evaluate(() => Boolean(audio.ctx) && audio.musicEnabled)).toBe(true);
   expect(await page.evaluate(() => window.__musicPlays)).toBe(1);
+  expect(await page.evaluate(() => {
+    const notes = [];
+    const original = audio._voice;
+    audio._voice = frequency => notes.push(frequency);
+    for (let step = 0; step < 10; step++) audio.playFruitNote(step);
+    audio._voice = original;
+    return notes.filter((_, index) => index % 2 === 0);
+  })).toEqual([523.25, 587.33, 659.25, 698.46, 783.99, 880, 987.77, 1046.5, 1174.66, 1318.51]);
 
   await page.locator('#btn-sound').click();
   expect(await page.evaluate(() => audio.muted)).toBe(true);
@@ -104,10 +112,17 @@ test('fruit fast taps complete one question exactly once and finish five rounds'
   await open(page); await launch(page, 'math');
   for (let round = 0; round < 5; round++) {
     await expect.poll(() => page.evaluate(() => app.activeGame.roundLocked)).toBe(false);
+    await page.evaluate(() => {
+      window.__fruitNotes = [];
+      audio.playFruitNote = step => window.__fruitNotes.push(step);
+    });
     // Dispatch a rapid burst as a child may do; all UI buttons receive the burst.
     await page.locator('.fm-fruit').evaluateAll(buttons => buttons.forEach(button => button.click()));
     await expect(page.locator('#score-val')).toHaveText(`${round + 1}/5`);
     expect(await page.evaluate(() => app.activeGame.currentCount)).toBe(await page.evaluate(() => app.activeGame.targetCount));
+    expect(await page.evaluate(() => window.__fruitNotes)).toEqual(
+      await page.evaluate(() => Array.from({ length: app.activeGame.targetCount }, (_, index) => index))
+    );
   }
   await expect(page.locator('.fm-win-overlay')).toBeVisible();
   expect(await page.evaluate(() => app.stars)).toBe(10);
@@ -171,6 +186,19 @@ test('every additional paint changes the mix and full-bowl feedback is localized
     return [game._deltaE(game._hexToRgb(before), red), game._deltaE(game._hexToRgb(after), red)];
   }, [orange, redder]);
   expect(distances[1]).toBeLessThan(distances[0]);
+
+  await page.locator('#cmx-reset-btn').click();
+  for (const id of ['red', 'yellow', 'navy']) await page.locator(`#bubble-${id}`).press('Enter');
+  const darkMix = await page.evaluate(() => {
+    const game = app.activeGame;
+    return {
+      rgb: game.currentMix,
+      name: game.currentApiName,
+      lightness: game._rgbToLab(game.currentMix).l,
+    };
+  });
+  expect(darkMix.name).toContain('Brown');
+  expect(darkMix.lightness).toBeGreaterThan(35);
 
   for (const id of ['red', 'white', 'black']) {
     await page.locator('#cmx-reset-btn').click();
@@ -271,6 +299,27 @@ test('animal friends have distinct models, silhouettes and surface colors', asyn
       expect(distance, `${names[i]} and ${names[j]} should not share one flat palette`).toBeGreaterThan(3);
     }
   }
+  for (const name of ['lion', 'panda', 'rabbit', 'fox', 'elephant', 'bear', 'cat']) {
+    const yaw = await page.locator(`kid-model[model="${name}"]`).evaluate(model => model.object.children[0].rotation.y);
+    expect(yaw, `${name} should start in profile`).toBeGreaterThan(1.2);
+  }
+  const frogBounds = await page.locator('kid-model[model="frog"] canvas').evaluate(canvas => {
+    const { width, height } = canvas;
+    const pixels = canvas.getContext('2d').getImageData(0, 0, width, height).data;
+    let minX = width, minY = height, maxX = -1, maxY = -1;
+    for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+      const index = (y * width + x) * 4;
+      const max = Math.max(pixels[index], pixels[index + 1], pixels[index + 2]);
+      const min = Math.min(pixels[index], pixels[index + 1], pixels[index + 2]);
+      // Ignore the neutral contact shadow and measure the colored animal only.
+      if (pixels[index + 3] < 128 || max - min < 15 || max < 40) continue;
+      minX = Math.min(minX, x); minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x); maxY = Math.max(maxY, y);
+    }
+    return { width: maxX - minX + 1, height: maxY - minY + 1, canvasWidth: width, canvasHeight: height };
+  });
+  expect(frogBounds.width / frogBounds.canvasWidth).toBeLessThan(.62);
+  expect(frogBounds.height / frogBounds.canvasHeight).toBeLessThan(.58);
   await page.screenshot({ path: 'test-results/animal-material-contact-sheet.png' });
 });
 

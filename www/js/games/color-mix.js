@@ -487,9 +487,12 @@ class ColorMixLab {
       }
     }
 
-    // Kubelka-Munk single-constant approximation. Convert display RGB to
-    // linear reflectance, average pigment K/S absorption (including repeated
-    // colors as real weights), then solve reflectance back to display RGB.
+    // Kubelka-Munk single-constant approximation. Screen swatches are not
+    // spectral pigment measurements: pure RGB colors contain zero channels,
+    // which would imply perfect absorption and incorrectly crush many mixes
+    // (for example red + yellow + navy) to black. A modest reflectance floor
+    // models the light scattered by real children's paint while preserving
+    // the subtractive character of the blend.
     const toLinear = v => {
       v /= 255;
       return v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4;
@@ -500,12 +503,22 @@ class ColorMixLab {
     };
     const channels = ['r', 'g', 'b'].map(channel => {
       const ks = this.mixedColors.reduce((sum, color) => {
-        const reflectance = Math.max(.02, Math.min(.98, toLinear(color[channel])));
+        const reflectance = Math.max(.08, Math.min(.98, toLinear(color[channel])));
         return sum + ((1 - reflectance) ** 2) / (2 * reflectance);
       }, 0) / this.mixedColors.length;
       return toSrgb(1 + ks - Math.sqrt(ks * ks + 2 * ks));
     });
-    return { r: channels[0], g: channels[1], b: channels[2] };
+    // Retain part of the swatches' visible hue centroid. This keeps a useful
+    // learning distinction between muddy browns, purples and greens instead
+    // of letting unrelated dark mixtures converge on the same gray-black.
+    const centroid = ['r', 'g', 'b'].map(channel =>
+      this.mixedColors.reduce((sum, color) => sum + color[channel], 0) / this.mixedColors.length
+    );
+    return {
+      r: Math.round(channels[0] * .65 + centroid[0] * .35),
+      g: Math.round(channels[1] * .65 + centroid[1] * .35),
+      b: Math.round(channels[2] * .65 + centroid[2] * .35),
+    };
   }
 
   _getColorObj({ r, g, b }) {

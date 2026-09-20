@@ -216,6 +216,21 @@ class SoundEngine {
     this._noise(.045, .08, 2600);
   }
 
+  playFruitNote(step = 0) {
+    if (!this._ready()) return;
+    // Ascending major scale for counts 1-10: Do-Re-Mi-Fa-Sol-La-Si-Do-Re-Mi.
+    const scale = [523.25, 587.33, 659.25, 698.46, 783.99, 880, 987.77, 1046.5, 1174.66, 1318.51];
+    const note = scale[Math.abs(Math.trunc(step)) % scale.length];
+    this._voice(note, {
+      duration: .11, release: .16, volume: .13, type: 'triangle',
+      filter: 4200, reverb: .2, partials: [1, .2, .06],
+    });
+    this._voice(note * 2, {
+      delay: .015, duration: .045, release: .09, volume: .035,
+      type: 'sine', filter: 5200, reverb: .24, partials: [1],
+    });
+  }
+
   playSuccess() {
     if (!this._ready()) return;
     this._sample('success', .2);
