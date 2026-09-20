@@ -2,7 +2,7 @@
    Color Mix Lab – Phòng Thí Nghiệm Màu Sắc  v1.0
    Features (Phase "Học"):
    - 9 draggable color bubbles (primary + secondary + white/black)
-   - Real-time RGB blend as bubbles enter mixing bowl
+   - Perceptual subtractive blend as bubbles enter mixing bowl
    - Web Speech API reads color name on mousedown, result on drop
    - Touch-first: touchstart/touchmove/touchend with preventDefault
    - Particle effects on drop
@@ -46,6 +46,8 @@ class ColorMixLab {
     this.speechEnabled = true;
     this.active        = false;
     this.currentApiName = null;
+    this.currentMix = null;
+    this.MAX_DROPS = 8;
 
     if (window.TTS) window.TTS.warm();
   }
@@ -90,6 +92,13 @@ class ColorMixLab {
     if (resetBtn) resetBtn.textContent = lang === 'vi' ? '🗑️ Đổ ra' : '🗑️ Clear';
     const bottomLabel = this.container.querySelector('.cmx-palette-bottom-label');
     if (bottomLabel) bottomLabel.textContent = lang === 'vi' ? '🎨 Thêm màu' : '🎨 More colors';
+  }
+
+  _text(key) {
+    const strings = {
+      bowlFull: { vi: `Bát đã đầy ${this.MAX_DROPS} màu rồi!`, en: `The bowl is full after ${this.MAX_DROPS} colors!` },
+    };
+    return strings[key]?.[this.lang] || strings[key]?.en || '';
   }
 
   /* ================================================================
@@ -196,7 +205,8 @@ class ColorMixLab {
       const el = document.getElementById(`bubble-${colorObj.id}`);
       if (!el) return;
       el.addEventListener('click', (e) => {
-        if (e.detail !== 0 || this.mixedColors.length >= 5) return;
+        if (e.detail !== 0) return;
+        if (this.mixedColors.length >= this.MAX_DROPS) { this._showBowlFull(); return; }
         const rect = document.getElementById('cmx-bowl').getBoundingClientRect();
         this._dropColorInBowl(colorObj, rect.left + rect.width / 2, rect.top + rect.height / 2);
       });
@@ -301,12 +311,10 @@ class ColorMixLab {
       const inside = clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom;
 
       if (inside) {
-        if (this.mixedColors.length < 5) {
+        if (this.mixedColors.length < this.MAX_DROPS) {
           this._dropColorInBowl(colorObj, clientX, clientY);
         } else {
-          bowl.classList.add('cmx-bowl-shake');
-          setTimeout(() => bowl.classList.remove('cmx-bowl-shake'), 400);
-          this._speak('Bowl is full');
+          this._showBowlFull();
         }
       }
       bowl.classList.remove('cmx-bowl-hover', 'cmx-bowl-ready');
@@ -326,54 +334,44 @@ class ColorMixLab {
      BOWL LOGIC
      ================================================================ */
   async _dropColorInBowl(colorObj, dropX, dropY) {
+    const previous = this.currentMix;
     this.mixedColors.push(colorObj);
-    this.currentApiName = null;
+    let result = this._computeMix();
+    // A real pigment may barely change when the new paint is close to the
+    // existing mixture. Nudge only those near-identical results far enough for
+    // a child to perceive the added paint, while preserving the mix direction.
+    if (previous && this._deltaE(previous, result) < 2.3 && this._deltaE(previous, colorObj) >= 2.3) {
+      for (let amount = .08; amount <= .4 && this._deltaE(previous, result) < 2.3; amount += .08) {
+        result = {
+          r: Math.round(result.r * (1 - amount) + colorObj.r * amount),
+          g: Math.round(result.g * (1 - amount) + colorObj.g * amount),
+          b: Math.round(result.b * (1 - amount) + colorObj.b * amount),
+          isRecipeMatch: result.isRecipeMatch,
+        };
+      }
+    }
+    this.currentMix = result;
+    const named = result.isRecipeMatch
+      ? this.COLORS.find(c => c.id === result.isRecipeMatch)
+      : this._getColorObj(result);
+    this.currentApiName = named.en;
 
     // Particles
     this._spawnParticles(dropX, dropY, colorObj.hex);
 
-    // Update liquid color
-    this._updateBowl();
-
-    const nameEnEl = document.getElementById('cmx-result-name-en');
-
-    // If the bowl contains only one base color (even if multiple of the same), bypass API
-    const isPureColor = this.mixedColors.every(c => c.id === this.mixedColors[0].id);
-    if (isPureColor) {
-      this.currentApiName = this.mixedColors[0].en;
-      nameEnEl.textContent = this.currentApiName;
-      
-      nameEnEl.classList.remove('cmx-name-anim');
-      void nameEnEl.offsetWidth;
-      nameEnEl.classList.add('cmx-name-anim');
-      
-      this._speakColorResult(this.currentApiName);
-      return; // Skip API fetch
-    }
-
-    // Names are resolved locally so learning and speech work without a network.
-    const result = this._computeMix();
-    
-    // Bypass API if it matched a known primary recipe (e.g., Red + Yellow = exact Orange)
-    if (result.isRecipeMatch) {
-      const targetColor = this.COLORS.find(c => c.id === result.isRecipeMatch);
-      this.currentApiName = targetColor.en;
-      nameEnEl.textContent = this.currentApiName;
-      
-      nameEnEl.classList.remove('cmx-name-anim');
-      void nameEnEl.offsetWidth;
-      nameEnEl.classList.add('cmx-name-anim');
-      
-      this._speakColorResult(this.currentApiName);
-      return; // Skip API fetch
-    }
-
-    this.currentApiName = this._getColorObj(result).en;
-    nameEnEl.textContent = this.currentApiName;
+    this._updateBowl(result);
     this._speakColorResult(this.currentApiName);
   }
 
-  _updateBowl() {
+  _showBowlFull() {
+    const bowl = document.getElementById('cmx-bowl');
+    bowl?.classList.add('cmx-bowl-shake');
+    setTimeout(() => bowl?.classList.remove('cmx-bowl-shake'), 400);
+    this.app?._showToast?.(this._text('bowlFull'));
+    this._speak(this._text('bowlFull'));
+  }
+
+  _updateBowl(result = this.currentMix || this._computeMix()) {
     const liquid   = document.getElementById('cmx-liquid');
     const chips    = document.getElementById('cmx-chips');
     const ph       = document.getElementById('cmx-placeholder');
@@ -397,7 +395,6 @@ class ColorMixLab {
       return;
     }
 
-    const result = this._computeMix();
     const hex    = this._rgbToHex(result.r, result.g, result.b);
     document.getElementById('cmx-bowl-model')?.setAttribute('color', hex);
     const bestObj = this._getColorObj(result);
@@ -436,6 +433,7 @@ class ColorMixLab {
   _resetBowl() {
     this.mixedColors = [];
     this.currentApiName = null;
+    this.currentMix = null;
     this._updateBowl();
     // Reset bowl animation
     const bowl = document.getElementById('cmx-bowl');
@@ -452,57 +450,44 @@ class ColorMixLab {
     if (!this.mixedColors.length) return { r: 200, g: 200, b: 200 };
     if (this.mixedColors.length === 1) return { r: this.mixedColors[0].r, g: this.mixedColors[0].g, b: this.mixedColors[0].b };
 
-    // Known child-friendly subtractive recipes
-    const uniqueIds = Array.from(new Set(this.mixedColors.map(c => c.id))).sort().join('+');
-    
-    const recipes = {
-      // 2-color mixes
+    // Snap only the five canonical two-paint lessons. Once a third drop is
+    // added, every individual drop contributes to the physical mix below.
+    const pair = this.mixedColors.length === 2
+      ? this.mixedColors.map(c => c.id).sort().join('+')
+      : '';
+    const lessons = {
       'red+yellow':       'orange',
       'blue+yellow':      'green',
       'blue+red':         'purple',
       'red+white':        'pink',
       'black+white':      'gray',
-      'blue+green':       'cyan',
-      'magenta+red':      'pink',
-      'blue+magenta':     'purple',
-      'green+yellow':     'lime',
-      'blue+cyan':        'navy',
-      'black+red':        'maroon',
-      'gold+yellow':      'gold',
-      'cyan+green':       'turquoise',
-      'orange+red':       'coral',
-      // 3-color mixes
-      'orange+red+yellow':     'orange',
-      'blue+green+yellow':     'green',
-      'blue+purple+red':       'purple',
-      'pink+red+white':        'pink',
-      'black+gray+white':      'gray',
-      'blue+green+white':      'turquoise',
-      'green+white+yellow':    'lime',
-      'black+blue+red':        'maroon',
-      'red+white+yellow':      'coral',
-      'orange+white+yellow':   'gold',
-      // 4-color mixes
-      'blue+green+white+yellow':  'turquoise',
-      'black+blue+red+white':     'gray',
-      'orange+red+white+yellow':  'coral',
-      'blue+green+red+yellow':    'brown',
-      // 5-color mixes
-      'black+blue+green+red+yellow': 'brown',
     };
-
-    if (recipes[uniqueIds]) {
-      const targetColor = this.COLORS.find(c => c.id === recipes[uniqueIds]);
+    if (lessons[pair]) {
+      const targetColor = this.COLORS.find(c => c.id === lessons[pair]);
       if (targetColor) {
         return { r: targetColor.r, g: targetColor.g, b: targetColor.b, isRecipeMatch: targetColor.id };
       }
     }
 
-    // Fallback: standard RGB average
-    const r = Math.round(this.mixedColors.reduce((s, c) => s + c.r, 0) / this.mixedColors.length);
-    const g = Math.round(this.mixedColors.reduce((s, c) => s + c.g, 0) / this.mixedColors.length);
-    const b = Math.round(this.mixedColors.reduce((s, c) => s + c.b, 0) / this.mixedColors.length);
-    return { r, g, b };
+    // Kubelka-Munk single-constant approximation. Convert display RGB to
+    // linear reflectance, average pigment K/S absorption (including repeated
+    // colors as real weights), then solve reflectance back to display RGB.
+    const toLinear = v => {
+      v /= 255;
+      return v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4;
+    };
+    const toSrgb = v => {
+      v = Math.max(0, Math.min(1, v));
+      return Math.round(255 * (v <= .0031308 ? 12.92 * v : 1.055 * v ** (1 / 2.4) - .055));
+    };
+    const channels = ['r', 'g', 'b'].map(channel => {
+      const ks = this.mixedColors.reduce((sum, color) => {
+        const reflectance = Math.max(.02, Math.min(.98, toLinear(color[channel])));
+        return sum + ((1 - reflectance) ** 2) / (2 * reflectance);
+      }, 0) / this.mixedColors.length;
+      return toSrgb(1 + ks - Math.sqrt(ks * ks + 2 * ks));
+    });
+    return { r: channels[0], g: channels[1], b: channels[2] };
   }
 
   _getColorObj({ r, g, b }) {
@@ -552,10 +537,29 @@ class ColorMixLab {
 
     let best = NAMED[0], bestDist = Infinity;
     NAMED.forEach(n => {
-      const d = (n.r - r) ** 2 + (n.g - g) ** 2 + (n.b - b) ** 2;
+      const d = this._deltaE(n, { r, g, b });
       if (d < bestDist) { bestDist = d; best = n; }
     });
     return best;
+  }
+
+  _rgbToLab({ r, g, b }) {
+    const linear = value => {
+      value /= 255;
+      return value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4;
+    };
+    r = linear(r); g = linear(g); b = linear(b);
+    let x = (r * .4124 + g * .3576 + b * .1805) / .95047;
+    let y = (r * .2126 + g * .7152 + b * .0722);
+    let z = (r * .0193 + g * .1192 + b * .9505) / 1.08883;
+    const pivot = value => value > .008856 ? Math.cbrt(value) : 7.787 * value + 16 / 116;
+    x = pivot(x); y = pivot(y); z = pivot(z);
+    return { l: 116 * y - 16, a: 500 * (x - y), b: 200 * (y - z) };
+  }
+
+  _deltaE(first, second) {
+    const a = this._rgbToLab(first), b = this._rgbToLab(second);
+    return Math.hypot(a.l - b.l, a.a - b.a, a.b - b.b);
   }
 
   _getColorName({ r, g, b }) {
