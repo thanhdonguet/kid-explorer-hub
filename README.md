@@ -34,7 +34,7 @@ Sau khi sửa mã nguồn hoặc tài nguyên trong `www/`, chạy lại `npm ru
 - **Vanilla JavaScript + Three.js 0.186.0 / WebGL2**: bổ sung đồ họa 3D vào các game hiện có, giữ DOM cho chữ, nút, bàn phím, kéo thả và cuộn. Không thêm framework UI hoặc engine game lớn.
 - **GLB/glTF**: mô hình low-poly tải từ cùng website, texture nhúng trong file; không phụ thuộc CDN lúc chơi.
 - **esbuild**: đóng gói renderer và manifest mô hình thành một bundle cục bộ.
-- **PWA + Web Audio + Web Speech**: chơi offline sau lần tải đầy đủ; hiệu ứng âm thanh tổng hợp và phần đọc từ dùng các API có sẵn. Không cần dịch vụ nhận diện màu bên ngoài.
+- **PWA + Web Audio + Web Speech**: chơi offline sau lần tải đầy đủ; hiệu ứng dùng oscillator nhiều lớp, ADSR, filter, reverb sinh bằng code và sample CC0 nhỏ. Nhạc nền tùy chọn mặc định tắt và chỉ tải khi bé bật. Không cần dịch vụ nhận diện màu bên ngoài.
 - **Capacitor 6**: giữ phụ thuộc và cấu hình hiện có cho hướng mobile sau này; đợt nâng cấp này chỉ xác minh web, chưa build ứng dụng native.
 
 `www/js/explorer-3d.js` đăng ký custom element `<kid-model>`. Một WebGL context dùng chung render các cảnh nhỏ sang canvas trong từng phần tử DOM. Mô hình và geometry được tái sử dụng; cảnh tĩnh chỉ vẽ lại khi cần, cảnh ngoài màn hình không render, tab ẩn dừng vòng vẽ, chuyển động tôn trọng `prefers-reduced-motion`. Độ phân giải và tần số vẽ được giới hạn để giảm tải.
@@ -43,9 +43,9 @@ Sau khi sửa mã nguồn hoặc tài nguyên trong `www/`, chạy lại `npm ru
 
 ## Nguồn tài nguyên
 
-Đã tuyển chọn **41 mô hình CC0**: 22 đồ ăn từ [Kenney Food Kit](https://kenney.nl/assets/food-kit), 11 xe từ [Kenney Car Kit](https://kenney.nl/assets/car-kit), 8 mô hình từ [Kenney Nature Kit](https://kenney.nl/assets/nature-kit). License gốc nằm trong `www/img/models/LICENSE-*.txt`.
+Đã tuyển chọn **42 mô hình CC0**: 22 đồ ăn từ [Kenney Food Kit](https://kenney.nl/assets/food-kit), 11 xe từ [Kenney Car Kit](https://kenney.nl/assets/car-kit), 8 mô hình từ [Kenney Nature Kit](https://kenney.nl/assets/nature-kit), và một mô hình ếch của Quaternius. License gốc nằm trong `www/img/models/LICENSE-*.txt`.
 
-Khủng long, thú, đảo, nhà bến và một số đồ chơi được dựng bằng code trong renderer. Ảnh từ vựng Twemoji giữ giấy phép CC BY 4.0. Xem [trang nguồn tài nguyên](www/credits.html) để biết đầy đủ giấy phép và thông tin cho phụ huynh.
+Khủng long, thú, đảo, nhà bến và một số đồ chơi được dựng bằng code trong renderer. Thú đồ chơi có silhouette, màu chính/phụ và texture nỉ procedural riêng thay cho một material phẳng dùng chung. Sample giao diện lấy từ Kenney Interface Sounds; nhạc nền tùy chọn là Short Plingy Loop của Fupi, đều CC0. Ảnh từ vựng Twemoji giữ giấy phép CC BY 4.0. Xem [trang nguồn tài nguyên](www/credits.html) để biết đầy đủ giấy phép và thông tin cho phụ huynh.
 
 Các GLB đã nhập sẵn vào repo: **build thông thường không cần tải lại asset**. Nếu muốn nhập lại, giải nén ba gói gốc vào `.asset-cache/food`, `.asset-cache/car`, `.asset-cache/nature` rồi chạy:
 
@@ -54,7 +54,7 @@ npm run assets:import
 npm run build
 ```
 
-Script tuyển chọn file, nhúng texture và sinh `manifest.json`. File nguồn quả bơ bổ đôi trong Food Kit có tên `advocado-half.glb`, được ánh xạ sang tên `avocado` trong app.
+Script tuyển chọn file, nhúng texture và sinh `manifest.json`. File nguồn quả bơ bổ đôi trong Food Kit có tên `advocado-half.glb`, được ánh xạ sang tên `avocado` trong app. Mô hình ếch đã tối ưu nằm ở `.asset-cache/animals-optimized/frog.glb` khi cần chạy lại bước import.
 
 ## Kiểm thử
 

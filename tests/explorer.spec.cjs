@@ -13,7 +13,7 @@ test('all referenced vocabulary and embedded GLB resources exist', () => {
   const vocab = fs.readFileSync('www/js/games/alphabet-pop.js', 'utf8');
   for (const match of vocab.matchAll(/i:'([^']+)'/g)) expect(fs.existsSync(`www/img/vocab/${match[1]}`), match[1]).toBeTruthy();
   const manifest = JSON.parse(fs.readFileSync('www/img/models/manifest.json'));
-  expect(Object.keys(manifest)).toHaveLength(41);
+  expect(Object.keys(manifest)).toHaveLength(42);
   for (const file of Object.values(manifest)) {
     const bytes = fs.readFileSync(`www/${file}`);
     expect(bytes.readUInt32LE(8)).toBe(bytes.length);
@@ -43,6 +43,40 @@ test('home, all six games, rendering cleanup, language and console', async ({ pa
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
   expect(errors).toEqual([]);
+});
+
+test('audio stays gesture-gated, mute covers music, and music remains lazy', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__musicPlays = 0;
+    window.__musicPauses = 0;
+    Object.defineProperty(HTMLMediaElement.prototype, 'play', {
+      configurable: true,
+      value() { window.__musicPlays++; return Promise.resolve(); },
+    });
+    Object.defineProperty(HTMLMediaElement.prototype, 'pause', {
+      configurable: true,
+      value() { window.__musicPauses++; },
+    });
+  });
+  await page.goto('/');
+  expect(await page.evaluate(() => audio.ctx === null && audio.music === null)).toBe(true);
+  expect(fs.readFileSync('www/asset-list.js', 'utf8')).not.toContain('audio/music/dashboard.ogg');
+
+  await page.locator('#btn-music').click();
+  expect(await page.evaluate(() => Boolean(audio.ctx) && audio.musicEnabled)).toBe(true);
+  expect(await page.evaluate(() => window.__musicPlays)).toBe(1);
+
+  await page.locator('#btn-sound').click();
+  expect(await page.evaluate(() => audio.muted)).toBe(true);
+  expect(await page.evaluate(() => window.__musicPauses)).toBeGreaterThan(0);
+  expect(await page.evaluate(() => {
+    let voices = 0;
+    const original = audio._voice;
+    audio._voice = () => voices++;
+    audio.playSuccess();
+    audio._voice = original;
+    return voices;
+  })).toBe(0);
 });
 
 test('memory completes and an abandoned match cannot change the next game', async ({ page }) => {
@@ -87,6 +121,55 @@ test('mix recipes update the 3D bowl, keyboard works, reset clears', async ({ pa
   await page.locator('#cmx-reset-btn').click();
   await expect(page.locator('#cmx-result-name-en')).toHaveText('—');
   await expect(page.locator('#cmx-bowl-model')).toHaveAttribute('color', '#c1d5bf');
+});
+
+test('every additional paint changes the mix and full-bowl feedback is localized', async ({ page }) => {
+  await open(page); await launch(page, 'color');
+  const sequence = ['red', 'yellow', 'red', 'blue', 'white', 'green', 'magenta', 'black'];
+  let previous = null;
+  for (const id of sequence) {
+    await page.locator(`#bubble-${id}`).press('Enter');
+    const hex = await page.locator('#cmx-result-hex').textContent();
+    await expect(page.locator('#cmx-bowl-model')).toHaveAttribute('color', hex.toLowerCase());
+    if (previous) {
+      const delta = await page.evaluate(([a, b]) => {
+        const game = app.activeGame;
+        return game._deltaE(game._hexToRgb(a), game._hexToRgb(b));
+      }, [previous, hex]);
+      expect(delta, `${id} should visibly change ${previous}`).toBeGreaterThanOrEqual(2.2);
+    }
+    previous = hex;
+  }
+  await page.locator('#bubble-cyan').press('Enter');
+  await expect(page.locator('#app-toast')).toContainText('Bát đã đầy 8 màu rồi!');
+  await page.locator('#btn-lang').click();
+  await page.locator('#bubble-cyan').press('Enter');
+  await expect(page.locator('#app-toast')).toContainText('The bowl is full after 8 colors!');
+
+  const lessons = [
+    ['red', 'yellow', 'Orange'],
+    ['blue', 'yellow', 'Green'],
+    ['red', 'blue', 'Purple'],
+    ['red', 'white', 'Pink'],
+    ['black', 'white', 'Gray'],
+  ];
+  for (const [first, second, name] of lessons) {
+    await page.locator('#cmx-reset-btn').click();
+    await page.locator(`#bubble-${first}`).press('Enter');
+    await page.locator(`#bubble-${second}`).press('Enter');
+    await expect(page.locator('#cmx-result-name-en')).toHaveText(name);
+  }
+  await page.locator('#cmx-reset-btn').click();
+  await page.locator('#bubble-yellow').press('Enter');
+  await page.locator('#bubble-red').press('Enter');
+  const orange = await page.locator('#cmx-result-hex').textContent();
+  await page.locator('#bubble-red').press('Enter');
+  const redder = await page.locator('#cmx-result-hex').textContent();
+  const distances = await page.evaluate(([before, after]) => {
+    const game = app.activeGame, red = game.COLORS.find(color => color.id === 'red');
+    return [game._deltaE(game._hexToRgb(before), red), game._deltaE(game._hexToRgb(after), red)];
+  }, [orange, redder]);
+  expect(distances[1]).toBeLessThan(distances[0]);
 });
 
 test('alphabet session learns five words and awards stars', async ({ page }) => {
@@ -143,6 +226,43 @@ test('mouse and touch drags reach the bowl and the correct vehicle station', asy
   await cdp.detach();
 });
 
+test('animal friends have distinct models, silhouettes and surface colors', async ({ page }) => {
+  const names = ['lion','monkey','panda','rabbit','fox','frog','elephant','penguin','bear','cat'];
+  await open(page); await launch(page, 'memory');
+  await page.evaluate(names => {
+    const stage = document.querySelector('#game-stage');
+    stage.style.cssText = 'display:grid;grid-template-columns:repeat(5,1fr);gap:12px;min-height:0;padding:16px';
+    stage.replaceChildren(...names.map(name => {
+      const cell = document.createElement('div');
+      cell.style.cssText = 'height:210px;text-align:center;font:700 14px sans-serif';
+      cell.innerHTML = `<kid-model model="${name}" style="display:block;height:180px"></kid-model><div>${name}</div>`;
+      return cell;
+    }));
+  }, names);
+  const averages = [];
+  for (const name of names) {
+    const model = page.locator(`kid-model[model="${name}"]`);
+    await expect(model).toHaveClass(/model-ready/);
+    await expect(model).toHaveAttribute('data-model-kind', 'mesh');
+    averages.push(await model.locator('canvas').evaluate(canvas => {
+      const pixels = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
+      let r = 0, g = 0, b = 0, count = 0;
+      for (let i = 0; i < pixels.length; i += 16) {
+        if (pixels[i + 3] < 32) continue;
+        r += pixels[i]; g += pixels[i + 1]; b += pixels[i + 2]; count++;
+      }
+      return [r / count, g / count, b / count];
+    }));
+  }
+  for (let i = 0; i < averages.length; i++) {
+    for (let j = i + 1; j < averages.length; j++) {
+      const distance = Math.hypot(...averages[i].map((value, channel) => value - averages[j][channel]));
+      expect(distance, `${names[i]} and ${names[j]} should not share one flat palette`).toBeGreaterThan(3);
+    }
+  }
+  await page.screenshot({ path: 'test-results/animal-material-contact-sheet.png' });
+});
+
 test('learning objects render as full meshes and can be inspected on a small screen', async ({ page }) => {
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
@@ -183,7 +303,7 @@ test('learning objects render as full meshes and can be inspected on a small scr
   await page.screenshot({path:'test-results/vocabulary-inspect-mobile.png'});
   await back(page); await launch(page,'alphabet-pop');
   await page.getByRole('button',{name:'X',exact:true}).click();
-  await page.locator('.ap-flying-object[aria-label="X"]').click();
+  await page.locator('.ap-flying-object[aria-label="X"]').click({ force: true });
   await expect(page.locator('.ap-vocab-result kid-model')).toHaveAttribute('data-model-kind','illustration');
   await expect(page.locator('.ap-rotate').first()).toBeHidden();
   await expect(page.locator('.ap-listen')).toBeVisible();
