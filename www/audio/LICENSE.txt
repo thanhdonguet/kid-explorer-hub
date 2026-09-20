@@ -1,0 +1,17 @@
+Audio sources
+=============
+
+UI sounds (www/audio/ui/*.ogg)
+--------------------------------
+Kenney Interface Sounds, CC0 1.0
+https://kenney.nl/assets/interface-sounds
+Downloaded from:
+https://opengameart.org/content/interface-sounds
+
+Dashboard music (www/audio/music/dashboard.ogg)
+------------------------------------------------
+"Short Plingy Loop" (plimplom.ogg) by Fupi, CC0 1.0
+https://opengameart.org/content/short-plingy-loop
+
+CC0 1.0:
+https://creativecommons.org/publicdomain/zero/1.0/

@@ -34,6 +34,9 @@ h1 em { font-style:normal; color:#779c68; }
 .explore-button { display:flex; align-items:center; gap:30px; margin-top:25px; padding:14px 22px; border-radius:15px; border:1px solid #57775a; background:#608263; color:white; font-size:14px; font-weight:700; box-shadow:0 4px 0 #416447,0 8px 18px #47634718; cursor:pointer; transition:transform .2s; }
 .explore-button:hover { transform:translateY(-2px); background:#507655; }
 .explore-button>span:last-child { font-size:22px; font-weight:500; }
+.music-toggle { display:inline-flex; align-items:center; gap:7px; margin-top:13px; padding:7px 11px; border:1px solid #dfe6d9; border-radius:999px; background:#fffdf7; color:#667566; font:700 10px/1 var(--font-body); box-shadow:0 2px 0 #e5e9df; cursor:pointer; }
+.music-toggle[aria-pressed="true"] { color:#3f704f; border-color:#b8d1b8; background:#edf7e9; }
+.music-toggle>span:first-child { font-size:15px; }
 .hero-footnote { display:flex; align-items:center; gap:10px; margin-top:21px; font-size:10px; color:#98a08e; }
 .mini-stars { font-size:15px; letter-spacing:2px; color:#c2a464; }
 .hero-art { position:relative; height:415px; isolation:isolate; overflow:clip; }

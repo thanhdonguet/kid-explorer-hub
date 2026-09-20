@@ -16,6 +16,7 @@ class AppController {
       soundBtn:     document.getElementById('btn-sound'),
       soundOnIcon:  document.getElementById('sound-on-icon'),
       soundOffIcon: document.getElementById('sound-off-icon'),
+      musicBtn:     document.getElementById('btn-music'),
       starCount:    document.getElementById('star-count'),
       title:        document.getElementById('app-title-hud'),
       langBtn:      document.getElementById('btn-lang'),
@@ -47,6 +48,7 @@ class AppController {
         welcome: 'CHÀO NHÀ THÁM HIỂM NHÍ!', heroLine1: 'Một thế giới nhỏ.', heroLine2: 'Ngàn điều hay.',
         heroDesc: 'Chạm vào điều kỳ diệu, chơi cùng trí tưởng tượng. Mỗi hòn đảo là một khám phá mới của bé!',
         explore: 'Cùng khám phá', heroNote: '6 trò chơi · Vô vàn niềm vui', islandNote: 'Cuộc phiêu lưu bắt đầu!',
+        musicOff: 'Nhạc nền: Tắt', musicOn: 'Nhạc nền: Bật',
         pickIsland: 'CHƠI MỘT CHÚT, LỚN THÊM MỘT CHÚT', islandsTitle: 'Hôm nay, bé muốn khám phá gì?', islandsCount: '6 hòn đảo đang chờ bé',
         memorySkill: 'TRÍ NHỚ', colorSkill: 'SÁNG TẠO', mathSkill: 'SỐ ĐẾM', alphabetPopSkill: 'TIẾNG ANH', drawingSkill: 'MÀU SẮC', vehicleParkingSkill: 'TƯ DUY',
         footerMessage: 'Mỗi ngày một khám phá. Mỗi bước một niềm vui.', credits: 'Góc phụ huynh & nguồn tài nguyên',
@@ -82,6 +84,7 @@ class AppController {
         welcome: 'HELLO, LITTLE EXPLORER!', heroLine1: 'A little world.', heroLine2: 'A lot to discover.',
         heroDesc: 'A spark of wonder. A little imagination. Every island brings a brand new discovery!',
         explore: 'Let’s explore', heroNote: '6 games · Endless little adventures', islandNote: 'Adventure starts here!',
+        musicOff: 'Music: Off', musicOn: 'Music: On',
         pickIsland: 'A LITTLE PLAY, A LITTLE GROWTH', islandsTitle: 'Where shall we explore today?', islandsCount: '6 islands waiting for you',
         memorySkill: 'MEMORY', colorSkill: 'CREATIVITY', mathSkill: 'COUNTING', alphabetPopSkill: 'ENGLISH', drawingSkill: 'COLORS', vehicleParkingSkill: 'THINKING',
         footerMessage: 'A new discovery every day. A little joy every step.', credits: 'For parents & asset credits',
@@ -147,6 +150,13 @@ class AppController {
       this.hud.soundBtn.setAttribute('aria-label', this.lang === 'vi' ? (isMuted ? 'Bật âm thanh' : 'Tắt âm thanh') : (isMuted ? 'Enable sound' : 'Mute sound'));
       if (isMuted) { window.TTS?.cancel(); this.activeGame?.currentAudio?.pause(); }
     });
+    this.hud.musicBtn.addEventListener('click', () => {
+      audio.playTap();
+      const enabled = audio.setMusicEnabled(!audio.musicEnabled);
+      this.hud.musicBtn.setAttribute('aria-pressed', String(enabled));
+      this.hud.musicBtn.querySelector('[data-i18n]').dataset.i18n = enabled ? 'musicOn' : 'musicOff';
+      this.hud.musicBtn.querySelector('[data-i18n]').textContent = this.T[this.lang][enabled ? 'musicOn' : 'musicOff'];
+    });
 
     // 5. Language toggle
     this.hud.langBtn.addEventListener('click', () => {
@@ -211,6 +221,8 @@ class AppController {
     document.documentElement.lang = this.lang;
     document.documentElement.dataset.lang = this.lang;
     this.hud.soundBtn.setAttribute('aria-label', this.lang === 'vi' ? (audio.muted ? 'Bật âm thanh' : 'Tắt âm thanh') : (audio.muted ? 'Enable sound' : 'Mute sound'));
+    const musicLabel = this.hud.musicBtn?.querySelector('[data-i18n]');
+    if (musicLabel) musicLabel.dataset.i18n = audio.musicEnabled ? 'musicOn' : 'musicOff';
     const t = this.T[this.lang];
     document.querySelectorAll('[data-i18n]').forEach(el => {
       const key = el.getAttribute('data-i18n');
@@ -279,6 +291,7 @@ class AppController {
   /* ── Launch a game ── */
   launchGame(gameId) {
     if (this.activeGame) this.activeGame.destroy();
+    audio.setDashboardActive(false);
     this.activeGameId = gameId;
     document.body.dataset.game = gameId;
     this.showScreen('game');
@@ -346,6 +359,7 @@ class AppController {
       this.activeGame = null;
     }
     this.activeGameId = '';
+    audio.setDashboardActive(true);
     delete document.body.dataset.game;
     this.showScreen('dashboard');
     document.querySelector(`[data-game="${previousGame}"]`)?.focus({ preventScroll: true });
