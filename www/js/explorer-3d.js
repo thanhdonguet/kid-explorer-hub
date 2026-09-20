@@ -314,18 +314,78 @@ function building(parent, name = 'School', color = '#edb96c') {
     }
     return g;
   }
+  if (name === 'Hospital') {
+    box(g,'#f7f3e5',[0,-.18,0],[1.8,1.25,1]);
+    box(g,'#e78478',[0,.55,0],[1.9,.18,1.08]);
+    box(g,'#71aeba',[0,-.46,.54],[.55,.7,.08]);
+    for(const x of [-.55,.55])for(const y of [-.18,.2])box(g,'#9ed3d7',[x,y,.54],[.3,.24,.06]);
+    box(g,'#e35f5a',[0,.82,.58],[.14,.42,.05]); box(g,'#e35f5a',[0,.82,.59],[.42,.14,.05]);
+    return g;
+  }
+  if (name === 'Fire Station') {
+    box(g,'#c95e4f',[0,-.25,0],[1.9,1.15,1]);
+    for(const x of [-.48,.48]) { box(g,'#fff1d4',[x,-.43,.54],[.72,.72,.08]); for(let y=0;y<3;y++)box(g,'#d98168',[x,-.65+y*.22,.6],[.66,.035,.03]); }
+    box(g,'#7e4c43',[-.72,.58,-.2],[.4,1.05,.55]); cone(g,'#f0b65f',[-.72,1.22,-.2],[.34,.5,.42]);
+    cylinder(g,'#f1c15c',[.72,.62,.1],[.12,.18,.12],true);
+    return g;
+  }
+  if (name === 'Police Station') {
+    box(g,'#dce8e8',[0,-.28,0],[1.8,1.05,1]);
+    box(g,'#668ebc',[-.64,.12,0],[.58,.72,1.12]); box(g,'#668ebc',[.64,.12,0],[.58,.72,1.12]);
+    box(g,'#4d718f',[0,-.48,.55],[.5,.65,.08]);
+    const badge=star(g,'#f0c45c'); badge.scale.setScalar(.27); badge.position.set(0,.3,.62);
+    for(const x of [-.25,.25])ball(g,x<0?'#dc6f68':'#6aa8d2',[x,.68,0],[.14,.09,.12],true);
+    return g;
+  }
+  if (name === 'Airport') {
+    box(g,'#d9e3df',[.18,-.42,0],[1.75,.75,1]);
+    box(g,'#72b3c1',[.18,-.28,.54],[1.45,.42,.07]);
+    box(g,'#7f9696',[-.78,.16,-.15],[.32,1.55,.42]); box(g,'#9bd1d4',[-.78,.98,-.15],[.55,.34,.58]);
+    box(g,'#83938e',[.25,-.79,.25],[2.35,.08,1.25]);
+    for(let i=-2;i<=2;i++)box(g,'#fff1b7',[i*.35,-.735,.73],[.2,.02,.06]);
+    return g;
+  }
+  if (name === 'School') {
+    box(g,'#f3d48a',[0,-.3,0],[1.65,1.05,1]);
+    const roof=cone(g,'#df785f',[0,.55,0],[1.22,.65,.82]); roof.rotation.y=Math.PI/4;
+    box(g,'#6e9b93',[0,-.5,.53],[.38,.62,.07]);
+    for(const x of [-.52,.52])box(g,'#93cbd0',[x,-.12,.53],[.3,.3,.07]);
+    box(g,'#f4e5b4',[0,.7,.22],[.46,.55,.42]); ball(g,'#fff8db',[0,.78,.46],[.16,.16,.04]); cylinder(g,'#8c7558',[.9,.52,0],[.035,1.15,.035]); box(g,'#e77768',[1.08,.95,0],[.36,.22,.04]);
+    return g;
+  }
+  if (name === 'Hotel') {
+    box(g,'#9b82bc',[0,.05,0],[1.25,1.85,.9]);
+    box(g,'#fff0d0',[0,-.64,.5],[.4,.58,.08]);
+    for(const y of [-.35,.1,.55])for(const x of [-.35,.35])box(g,'#a9d5d5',[x,y,.49],[.24,.23,.05]);
+    box(g,'#f2c76e',[0,1.05,.05],[1.35,.15,.95]);
+    for(const x of [-.24,0,.24])ball(g,'#fff3b8',[x,.78,.51],[.055,.055,.025],true);
+    return g;
+  }
+  if (name === 'Warehouse') {
+    box(g,'#aeb7a7',[0,-.42,0],[2,.75,1.1]);
+    for(const x of [-.66,0,.66]) { const roof=cone(g,'#788982',[x,.08,0],[.52,.5,.78]); roof.rotation.y=Math.PI/4; }
+    for(const x of [-.55,.55]) { box(g,'#71847e',[x,-.48,.59],[.65,.65,.06]); for(let y=0;y<3;y++)box(g,'#d7d7ba',[x,-.7+y*.2,.63],[.58,.025,.025]); }
+    box(g,'#c28f62',[0,-.7,.72],[.35,.3,.3]);
+    return g;
+  }
+  if (name === 'Garage') {
+    box(g,'#73a69c',[0,-.38,0],[1.85,.85,1]);
+    box(g,'#455f62',[0,-.46,.54],[1.15,.72,.07]); for(let y=0;y<4;y++)box(g,'#a8c3b8',[0,-.72+y*.18,.59],[1.05,.025,.025]);
+    const wheel=torus(g,'#f0c468',.22,.065,[.68,.28,.55]); wheel.scale.y=.75;
+    for(const a of [-.65,.65]) { const tool=box(g,'#f0c468',[a,.25,.58],[.08,.5,.05]); tool.rotation.z=a; }
+    return g;
+  }
+  if (name === 'Farm') {
+    box(g,'#bf654f',[0,-.35,0],[1.55,.95,1]);
+    const roof=cone(g,'#5f7f6a',[0,.48,0],[1.15,.8,.8]); roof.rotation.y=Math.PI/4;
+    box(g,'#fff0d1',[0,-.43,.54],[.62,.68,.07]); for(const a of [-1,1]){const brace=box(g,'#bf654f',[0,-.43,.6],[.08,.78,.04]);brace.rotation.z=a*.65;}
+    cylinder(g,'#d8c7a0',[.93,-.05,-.15],[.35,1.45,.35]); cone(g,'#8ea177',[.93,.82,-.15],[.38,.5,.38]);
+    return g;
+  }
   box(g, '#fff1ce', [0, -.1, 0], [1.65, 1.15, 1]);
   const roof = cone(g, color, [0, .71, 0], [1.3, .7, .9]); roof.rotation.y = Math.PI / 4;
   box(g, '#67a9b6', [0, -.39, .53], [.4, .65, .07]);
   for (const x of [-.55, .55]) box(g, '#88cad0', [x, .02, .53], [.28, .36, .07]);
-  if (/Hospital|Fire/.test(name)) { box(g, '#e78d80', [0, .43, .61], [.14, .38, .03]); box(g, '#e78d80', [0, .43, .62], [.38, .14, .03]); }
-  if (/Airport|Helipad|Launch/.test(name)) { cylinder(g, '#9cb1b6', [0, -.8, .1], [1.25, .1, 1]); torus(g, '#fff2ba', .82, .045, [0, -.73, .15], [Math.PI / 2, 0, 0]); }
-  if(name==='Airport') { box(g,'#d5dcc8',[-.8,.25,-.25],[.35,1.6,.4]); box(g,'#7bbacb',[-.8,1.04,-.25],[.6,.4,.6]); }
-  if(name==='Police Station') { const s=star(g,'#eac36e'); s.scale.setScalar(.24); s.position.set(0,.47,.64); }
-  if(name==='School') { cylinder(g,'#aa8a62',[.9,.5,0],[.03,1.2,.03]); box(g,'#e69a83',[1.08,.92,0],[.35,.23,.04]); }
-  if(name==='Hotel') { box(g,'#b099ca',[0,.35,.57],[.8,.22,.08]); for(const x of [-.27,0,.27])ball(g,'#fff4cc',[x,.35,.63],[.05,.05,.025]); }
-  if(name==='Garage'||name==='Warehouse') { box(g,'#8da49e',[0,-.18,.56],[1.1,.8,.06]); for(let i=0;i<4;i++)box(g,'#c8d2bb',[0,-.45+i*.19,.6],[1,.03,.025]); }
-  if(name==='Farm') { for(const x of [-.9,.9]) { cylinder(g,'#b1bf79',[x,-.25,.55],[.03,.9,.03]); for(let i=0;i<3;i++)ball(g,'#e3c576',[x,.02+i*.16,.55],[.12,.14,.07]); } }
   return g;
 }
 function vehicle(parent, name, color = '#e6b554') {
@@ -514,7 +574,11 @@ async function loadModel(name) {
   const center = bounds.getCenter(new THREE.Vector3());
   const factor = 1.9 / Math.max(size.x, size.y, size.z);
   clone.position.copy(center).multiplyScalar(-factor); clone.scale.setScalar(factor);
-  const normalized = new THREE.Group(); normalized.add(clone); return normalized;
+  const normalized = new THREE.Group(); normalized.add(clone);
+  // A few source files include broad invisible rig bounds. Compensate only at
+  // presentation time so the recognizable animal fills its card.
+  normalized.scale.setScalar({ lion: 2.05, monkey: 1.55, fox: 1.9, bear: 1.45, cat: 1.15 }[name] || 1);
+  return normalized;
 }
 const aliases = { car: 'sedan', fire_truck: 'firetruck', icecream: 'ice-cream', ice_cream: 'ice-cream', hamburger: 'burger', tent:'tent_smallOpen', jewel:'diamond' };
 const vehicleModels = { 'Fire Truck': 'firetruck', Ambulance: 'ambulance', 'Police Car': 'police', Taxi: 'taxi', 'Garbage Truck': 'garbage-truck', Excavator: 'tractor-shovel', Bulldozer: 'tractor-shovel', Tractor: 'tractor', Van: 'van', 'Race Car': 'race' };
@@ -553,11 +617,15 @@ function world(parent, invalidate) {
   g.userData.mascot = mascot; g.userData.balloonRig = balloonRig;
   return g;
 }
-function diorama(parent, kind) {
+function diorama(parent, kind, invalidate) {
   const g = group(parent);
   const p = platform(g, 0, 0, 1.2, { memory: '#9acaa7', color: '#c5b0df', math: '#e4c78c', alphabet: '#9acbdc', drawing: '#a3c994', vehicles: '#a9c6c5' }[kind]);
   p.position.y = -.85;
-  if (kind === 'memory') { animal(g, 'lion').scale.setScalar(.7); tree(g, [-.86, -.53, -.45], .8); }
+  if (kind === 'memory') {
+    const holder = group(g, [0, 0, 0], .62);
+    loadModel('lion').then(model => { holder.add(model); invalidate?.(); }).catch(() => animal(holder, 'lion'));
+    tree(g, [-.86, -.53, -.45], .8);
+  }
   if (kind === 'color') { potion(g, '#a792d6').position.x = .35; const b = potion(g, '#e7a16e'); b.scale.setScalar(.65); b.position.set(-.68, -.2, .15); }
   if (kind === 'math') { fruit(g, 'peach').position.set(.35, 0, 0); const a = fruit(g, 'cucumber'); a.scale.setScalar(.65); a.position.set(-.65, 0, .1); }
   if (kind === 'alphabet') { balloon(g, '#efb668').position.x = -.4; const b = balloon(g, '#9f93d1'); b.scale.setScalar(.7); b.position.set(.57, -.1, 0); }
@@ -665,7 +733,7 @@ class KidModel extends HTMLElement {
     try {
       const key = aliases[name] || name;
       if (name === 'world') world(root, invalidate);
-      else if (name.startsWith('island-')) diorama(root, name.slice(7));
+      else if (name.startsWith('island-')) diorama(root, name.slice(7), invalidate);
       else if (name.startsWith('station-')) building(root, name.slice(8), color);
       else if (name.startsWith('vehicle-')) {
         const vehicleName = name.slice(8);

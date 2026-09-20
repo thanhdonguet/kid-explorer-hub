@@ -40,5 +40,14 @@
   "flower_redA": "img/models/nature-flower_redA.glb",
   "mushroom_red": "img/models/nature-mushroom_red.glb",
   "tent_smallOpen": "img/models/nature-tent_smallOpen.glb",
-  "frog": "img/models/animal-frog.glb"
+  "lion": "img/models/animal-lion.glb",
+  "monkey": "img/models/animal-monkey.glb",
+  "panda": "img/models/animal-panda.glb",
+  "rabbit": "img/models/animal-rabbit.glb",
+  "fox": "img/models/animal-fox.glb",
+  "frog": "img/models/animal-frog.glb",
+  "elephant": "img/models/animal-elephant.glb",
+  "penguin": "img/models/animal-penguin.glb",
+  "bear": "img/models/animal-bear.glb",
+  "cat": "img/models/animal-cat.glb"
 }

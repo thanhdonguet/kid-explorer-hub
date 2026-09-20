@@ -1,13 +1,27 @@
 Animal model sources
 ====================
 
-The following optimized GLB file was downloaded from Poly Pizza. Geometry,
-textures and animations were reduced for this mobile web app.
+The following optimized GLB files were downloaded from Poly Pizza. Geometry
+and textures were reduced where needed for this mobile web app.
 
 Public Domain / CC0 1.0
 ----------------------
 - Frog by Quaternius
   https://poly.pizza/m/9Z2V8fpazF
 
+Creative Commons Attribution 3.0
+--------------------------------
+The following models are by Poly by Google:
+- Lion: https://poly.pizza/m/3XAJojWxSWz
+- Howler monkey: https://poly.pizza/m/epKkzx8yOH2
+- Panda: https://poly.pizza/m/2T6A0o4Kq2h
+- Rabbit: https://poly.pizza/m/9OBTRVYUSmt
+- Fox: https://poly.pizza/m/51WUJKGFW93
+- Elephant: https://poly.pizza/m/a27MA0rXyyj
+- Penguin: https://poly.pizza/m/fBXvsC6pe_V
+- Bear Cub: https://poly.pizza/m/dc_78YWzT_R
+- Kitten: https://poly.pizza/m/dBJgGEu5bHW
+
 License texts:
 - CC0 1.0: https://creativecommons.org/publicdomain/zero/1.0/
+- CC BY 3.0: https://creativecommons.org/licenses/by/3.0/

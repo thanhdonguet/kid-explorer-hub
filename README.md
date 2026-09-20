@@ -43,7 +43,7 @@ Sau khi sửa mã nguồn hoặc tài nguyên trong `www/`, chạy lại `npm ru
 
 ## Nguồn tài nguyên
 
-Đã tuyển chọn **42 mô hình CC0**: 22 đồ ăn từ [Kenney Food Kit](https://kenney.nl/assets/food-kit), 11 xe từ [Kenney Car Kit](https://kenney.nl/assets/car-kit), 8 mô hình từ [Kenney Nature Kit](https://kenney.nl/assets/nature-kit), và một mô hình ếch của Quaternius. License gốc nằm trong `www/img/models/LICENSE-*.txt`.
+Đã tuyển chọn **51 mô hình**: 41 mô hình CC0 từ các kit Food/Car/Nature của Kenney, một mô hình ếch CC0 của Quaternius, và 9 mô hình động vật CC BY 3.0 của Poly by Google. Mỗi con vật dùng mesh và silhouette riêng thay cho một mẫu gấu bông đổi màu. Nguồn và license nằm trong `www/img/models/LICENSE-*.txt`.
 
 Khủng long, thú, đảo, nhà bến và một số đồ chơi được dựng bằng code trong renderer. Thú đồ chơi có silhouette, màu chính/phụ và texture nỉ procedural riêng thay cho một material phẳng dùng chung. Sample giao diện lấy từ Kenney Interface Sounds; nhạc nền tùy chọn là Short Plingy Loop của Fupi, đều CC0. Ảnh từ vựng Twemoji giữ giấy phép CC BY 4.0. Xem [trang nguồn tài nguyên](www/credits.html) để biết đầy đủ giấy phép và thông tin cho phụ huynh.
 
@@ -54,7 +54,7 @@ npm run assets:import
 npm run build
 ```
 
-Script tuyển chọn file, nhúng texture và sinh `manifest.json`. File nguồn quả bơ bổ đôi trong Food Kit có tên `advocado-half.glb`, được ánh xạ sang tên `avocado` trong app. Mô hình ếch đã tối ưu nằm ở `.asset-cache/animals-optimized/frog.glb` khi cần chạy lại bước import.
+Script tuyển chọn file, nhúng texture và sinh `manifest.json`. File nguồn quả bơ bổ đôi trong Food Kit có tên `advocado-half.glb`, được ánh xạ sang tên `avocado` trong app. Các mô hình động vật đã tối ưu nằm ở `.asset-cache/proper-animals-optimized/` khi cần chạy lại bước import.
 
 ## Kiểm thử
 

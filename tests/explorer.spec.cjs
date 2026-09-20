@@ -13,7 +13,7 @@ test('all referenced vocabulary and embedded GLB resources exist', () => {
   const vocab = fs.readFileSync('www/js/games/alphabet-pop.js', 'utf8');
   for (const match of vocab.matchAll(/i:'([^']+)'/g)) expect(fs.existsSync(`www/img/vocab/${match[1]}`), match[1]).toBeTruthy();
   const manifest = JSON.parse(fs.readFileSync('www/img/models/manifest.json'));
-  expect(Object.keys(manifest)).toHaveLength(42);
+  expect(Object.keys(manifest)).toHaveLength(51);
   for (const file of Object.values(manifest)) {
     const bytes = fs.readFileSync(`www/${file}`);
     expect(bytes.readUInt32LE(8)).toBe(bytes.length);
@@ -272,6 +272,30 @@ test('animal friends have distinct models, silhouettes and surface colors', asyn
     }
   }
   await page.screenshot({ path: 'test-results/animal-material-contact-sheet.png' });
+});
+
+test('parking destinations have recognizable architecture instead of one template', async ({ page }) => {
+  const stations = ['Fire Station','Hospital','Police Station','Airport','Helipad','Launch Pad','Bus Stop','School','Hotel','Train Station','Dump','Construction','Road Work','Harbor','Warehouse','Garage','Race Track','Farm'];
+  await open(page); await launch(page, 'vehicle-parking');
+  await page.evaluate(stations => {
+    const stage = document.querySelector('#game-stage');
+    stage.style.cssText = 'display:grid;grid-template-columns:repeat(6,1fr);gap:8px;min-height:0;padding:12px';
+    stage.replaceChildren(...stations.map(name => {
+      const cell = document.createElement('div');
+      cell.style.cssText = 'height:170px;text-align:center;font:700 11px sans-serif';
+      cell.innerHTML = `<kid-model model="station-${name}" style="display:block;height:142px"></kid-model><div>${name}</div>`;
+      return cell;
+    }));
+  }, stations);
+  for (const name of stations) {
+    const model = page.locator(`kid-model[model="station-${name}"]`);
+    await expect(model).toHaveClass(/model-ready/);
+    expect(await model.locator('canvas').evaluate(canvas => {
+      const data = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
+      return data.some((value, index) => index % 4 === 3 && value > 0);
+    }), name).toBe(true);
+  }
+  await page.screenshot({ path: 'test-results/parking-stations-contact-sheet.png' });
 });
 
 test('learning objects render as full meshes and can be inspected on a small screen', async ({ page }) => {
