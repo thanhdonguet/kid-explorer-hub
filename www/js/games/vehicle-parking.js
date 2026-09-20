@@ -508,7 +508,7 @@ class VehicleParking {
     const osc = this.audioCtx.createOscillator();
     const gain = this.audioCtx.createGain();
     osc.connect(gain);
-    gain.connect(this.audioCtx.destination);
+    audio.connectSfx(gain);
     
     osc.type = 'sine';
     const now = this.audioCtx.currentTime;
@@ -531,7 +531,7 @@ class VehicleParking {
     const osc = this.audioCtx.createOscillator();
     const gain = this.audioCtx.createGain();
     osc.connect(gain);
-    gain.connect(this.audioCtx.destination);
+    audio.connectSfx(gain);
     
     osc.type = 'sawtooth';
     const now = this.audioCtx.currentTime;
@@ -567,7 +567,7 @@ class VehicleParking {
     
     noise.connect(filter);
     filter.connect(gain);
-    gain.connect(this.audioCtx.destination);
+    audio.connectSfx(gain);
     
     const now = this.audioCtx.currentTime;
     gain.gain.setValueAtTime(0, now);
@@ -583,7 +583,7 @@ class VehicleParking {
     const osc = this.audioCtx.createOscillator();
     const gain = this.audioCtx.createGain();
     osc.connect(gain);
-    gain.connect(this.audioCtx.destination);
+    audio.connectSfx(gain);
     
     osc.type = 'square';
     const now = this.audioCtx.currentTime;
@@ -603,7 +603,7 @@ class VehicleParking {
     const osc = this.audioCtx.createOscillator();
     const gain = this.audioCtx.createGain();
     osc.connect(gain);
-    gain.connect(this.audioCtx.destination);
+    audio.connectSfx(gain);
     
     osc.type = 'sine';
     const now = this.audioCtx.currentTime;
@@ -638,7 +638,7 @@ class VehicleParking {
     
     noise.connect(filter);
     filter.connect(gain);
-    gain.connect(this.audioCtx.destination);
+    audio.connectSfx(gain);
     
     const now = this.audioCtx.currentTime;
     gain.gain.setValueAtTime(0, now);
@@ -669,7 +669,7 @@ class VehicleParking {
     const gain = this.audioCtx.createGain();
     noise.connect(filter);
     filter.connect(gain);
-    gain.connect(this.audioCtx.destination);
+    audio.connectSfx(gain);
     
     gain.gain.setValueAtTime(1, now);
     gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
@@ -696,7 +696,7 @@ class VehicleParking {
     const gain = this.audioCtx.createGain();
     noise.connect(filter);
     filter.connect(gain);
-    gain.connect(this.audioCtx.destination);
+    audio.connectSfx(gain);
     
     const now = this.audioCtx.currentTime;
     gain.gain.setValueAtTime(0.8, now);

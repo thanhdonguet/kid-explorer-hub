@@ -129,6 +129,11 @@ class SoundEngine {
     }
   }
 
+  connectSfx(node, reverb = 0) {
+    if (!this.ctx || !node) return;
+    this._route(node, reverb);
+  }
+
   _sample(name, volume = .35) {
     const buffer = this.buffers.get(name);
     if (!buffer) return false;
