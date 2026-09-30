@@ -144,11 +144,7 @@ body[data-game] .brand-copy { display:none; }
 .ap-inspect-controls { display:flex; justify-content:center; align-items:center; gap:9px; margin:8px 0; }
 .ap-inspect-controls button { min-width:44px; min-height:44px; border:1px solid #d9e3cd; border-radius:13px; color:#587352; background:#eff4e7; cursor:pointer; }
 .ap-inspect-controls button:hover { background:#e1ebd5; }
-.ap-rotate { font-size:25px; }
 .ap-listen { padding:8px 12px; font-size:13px; font-weight:700; }
-.ap-vocab-result:has([data-model-kind="illustration"]) .ap-rotate,
-.ap-vocab-result:has([data-load-error]) .ap-rotate,
-html[data-graphics="fallback"] .ap-rotate { display:none; }
 .ap-next-btn { background:#739878; box-shadow:0 4px 0 #4f7055; border-radius:13px; }
 #fruit-market-container { background:linear-gradient(110deg,#f6ead6 0 34%,#f9f5e8 34%); flex-direction:row; min-height:470px; }
 .fm-bear-area { width:34%; flex:0 0 34%; max-width:none; justify-content:center; gap:5px; border:0; padding:20px 10px; }

@@ -1,9 +1,8 @@
 /* ================================================================
-   Color Mix Lab – Phòng Thí Nghiệm Màu Sắc  v1.0
-   Features (Phase "Học"):
-   - 9 draggable color bubbles (primary + secondary + white/black)
-   - Perceptual subtractive blend as bubbles enter mixing bowl
-   - Web Speech API reads color name on mousedown, result on drop
+   Color Mix Lab – Xưởng Pha Màu
+   - 20 color bottles, drag/drop or keyboard, up to eight paint drops
+   - Local paint mixing, canonical lessons and perceptual color naming
+   - Web Speech API reads selected colors and mixed results
    - Touch-first: touchstart/touchmove/touchend with preventDefault
    - Particle effects on drop
    - Reset button
@@ -27,7 +26,6 @@ class ColorMixLab {
       { id: 'pink',      hex: '#FFC0CB', r: 255, g: 192, b: 203, vi: 'Hồng',       en: 'Pink'      },
       { id: 'white',     hex: '#FFFFFF', r: 255, g: 255, b: 255, vi: 'Trắng',      en: 'White'     },
       { id: 'black',     hex: '#000000', r:   0, g:   0, b:   0, vi: 'Đen',        en: 'Black'     },
-      // 10 new colors
       { id: 'coral',     hex: '#FF7F50', r: 255, g: 127, b:  80, vi: 'San hô',     en: 'Coral'     },
       { id: 'gold',      hex: '#FFD700', r: 255, g: 215, b:   0, vi: 'Vàng kim',   en: 'Gold'      },
       { id: 'cyan',      hex: '#00FFFF', r:   0, g: 255, b: 255, vi: 'Xanh lơ',    en: 'Cyan'      },
@@ -45,7 +43,7 @@ class ColorMixLab {
     this.dragging      = null; // { colorObj, ghostEl, startX, startY, bowl }
     this.speechEnabled = true;
     this.active        = false;
-    this.currentApiName = null;
+    this.currentColorName = null;
     this.currentMix = null;
     this.MAX_DROPS = 8;
 
@@ -191,8 +189,8 @@ class ColorMixLab {
     });
 
     document.getElementById('cmx-result').addEventListener('click', () => {
-      if (this.mixedColors.length > 0 && this.currentApiName) {
-        this._speakColorResult(this.currentApiName);
+      if (this.mixedColors.length > 0 && this.currentColorName) {
+        this._speakColorResult(this.currentColorName);
       }
     });
   }
@@ -372,13 +370,13 @@ class ColorMixLab {
     const named = result.isRecipeMatch
       ? this.COLORS.find(c => c.id === result.isRecipeMatch)
       : this._getColorObj(result);
-    this.currentApiName = named.en;
+    this.currentColorName = named.en;
 
     // Particles
     this._spawnParticles(dropX, dropY, colorObj.hex);
 
     this._updateBowl(result);
-    this._speakColorResult(this.currentApiName);
+    this._speakColorResult(this.currentColorName);
   }
 
   _showBowlFull() {
@@ -432,7 +430,7 @@ class ColorMixLab {
     preview.style.background = `radial-gradient(circle at 35% 30%, ${this._lighten(hex, 35)}, ${hex} 65%, ${this._darken(hex, 20)})`;
     preview.innerHTML = `<kid-model model="potion" color="${hex}" aria-label="${bestObj.en}"><span class="model-fallback" style="background:${hex};border-radius:50%"></span></kid-model>`;
 
-    nameEnEl.textContent = this.currentApiName || bestObj.en;
+    nameEnEl.textContent = this.currentColorName || bestObj.en;
     nameViEl.textContent = bestObj.vi;
     
     nameEnEl.classList.remove('cmx-name-anim');
@@ -450,7 +448,7 @@ class ColorMixLab {
 
   _resetBowl() {
     this.mixedColors = [];
-    this.currentApiName = null;
+    this.currentColorName = null;
     this.currentMix = null;
     this._updateBowl();
     // Reset bowl animation

@@ -11,7 +11,7 @@ $lines = @{
   "full" = "I ate everything! I'm so full! Burp!"
 }
 
-$dir = "C:\Users\Dell\.gemini\antigravity\scratch\kid-explorer-hub\www\audio\dino"
+$dir = Join-Path $PSScriptRoot "www\audio\dino"
 if (-not (Test-Path $dir)) {
     New-Item -ItemType Directory -Force -Path $dir | Out-Null
 }

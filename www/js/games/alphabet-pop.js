@@ -304,15 +304,13 @@ class AlphabetPop {
     const resultEl = document.createElement('div');
     resultEl.className = 'ap-vocab-result';
 
-    // Instead of using missing images right away, use a fallback emoji or text if img fails
+    // Keep the original illustration visible until the 3D view is ready.
     resultEl.innerHTML = `
       <div class="ap-vocab-image-container">
-        <kid-model model="${vocabItem.image.split('/').pop().replace('.svg', '')}" src="${vocabItem.image}" yaw="0" aria-label="${vocabItem.word}"><img class="model-fallback" src="${vocabItem.image}" alt="${vocabItem.word}"></kid-model>
+        <kid-model model="${vocabItem.image.split('/').pop().replace('.svg', '')}" src="${vocabItem.image}" yaw="0" auto-rotate aria-label="${vocabItem.word}"><img class="model-fallback" src="${vocabItem.image}" alt="${vocabItem.word}"></kid-model>
       </div>
       <div class="ap-inspect-controls">
-        <button type="button" class="ap-rotate" data-turn="-45">↶</button>
         <button type="button" class="ap-listen"></button>
-        <button type="button" class="ap-rotate" data-turn="45">↷</button>
       </div>
       <div class="ap-vocab-text">${vocabItem.word}</div>
       <button class="ap-next-btn">${isLastRound ? t.finishBtn : t.nextBtn}</button>
@@ -337,12 +335,6 @@ class AlphabetPop {
 
     playArea.appendChild(resultEl);
     this.updateInspectLabels();
-    resultEl.querySelectorAll('.ap-rotate').forEach(button => button.addEventListener('click', e => {
-      e.stopPropagation();
-      const model = resultEl.querySelector('kid-model');
-      const angle = (Number(model.getAttribute('yaw')) + Number(button.dataset.turn)) % 360;
-      model.setAttribute('yaw', String(angle));
-    }));
     resultEl.querySelector('.ap-listen').addEventListener('click', e => { e.stopPropagation(); this.speak(vocabItem.word); });
 
     // Play voice and cheer
@@ -356,9 +348,6 @@ class AlphabetPop {
     const vi = this.lang === 'vi';
     const listen = this.container.querySelector('.ap-listen');
     if (listen) listen.textContent = vi ? '♪ Nghe lại' : '♪ Listen';
-    this.container.querySelectorAll('.ap-rotate').forEach(button => {
-      button.setAttribute('aria-label', Number(button.dataset.turn) < 0 ? (vi ? 'Xoay sang trái' : 'Rotate left') : (vi ? 'Xoay sang phải' : 'Rotate right'));
-    });
   }
 
   showCompletion() {

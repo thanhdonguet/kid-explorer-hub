@@ -1,6 +1,6 @@
 /* ================================================================
    Central Application Router & State Manager
-   – Dashboard: Đảo Khám Phá (4 islands, only Memory is active)
+   – Dashboard: Đảo Khám Phá (six playable activities)
    – Language toggle: VI ↔ EN
    ================================================================ */
 
@@ -38,8 +38,8 @@ class AppController {
         mathDesc:     'Đếm quả ngon, đầy giỏ nhỏ',
         alphabetPopName: 'Bong Bóng Chữ Cái',
         alphabetPopDesc: 'Bắt chữ xinh, học từ mới',
-        drawingName:  'Khủng Long Sắc Màu',
-        drawingDesc:  'Cho Dino ăn, xem màu biến hóa',
+        dinosaurColorsName: 'Khủng Long Sắc Màu',
+        dinosaurColorsDesc: 'Cho Dino ăn, xem màu biến hóa',
         colorName:    'Xưởng Pha Màu',
         colorDesc:    'Một chút màu, một chút phép màu',
         vehicleParkingName: 'Bến Xe Thành Phố',
@@ -50,21 +50,14 @@ class AppController {
         explore: 'Cùng khám phá', heroNote: '6 trò chơi · Vô vàn niềm vui', islandNote: 'Cuộc phiêu lưu bắt đầu!',
         musicOff: 'Nhạc nền: Tắt', musicOn: 'Nhạc nền: Bật',
         pickIsland: 'CHƠI MỘT CHÚT, LỚN THÊM MỘT CHÚT', islandsTitle: 'Hôm nay, bé muốn khám phá gì?', islandsCount: '6 hòn đảo đang chờ bé',
-        memorySkill: 'TRÍ NHỚ', colorSkill: 'SÁNG TẠO', mathSkill: 'SỐ ĐẾM', alphabetPopSkill: 'TIẾNG ANH', drawingSkill: 'MÀU SẮC', vehicleParkingSkill: 'TƯ DUY',
+        memorySkill: 'TRÍ NHỚ', colorSkill: 'SÁNG TẠO', mathSkill: 'SỐ ĐẾM', alphabetPopSkill: 'TIẾNG ANH', dinosaurColorsSkill: 'MÀU SẮC', vehicleParkingSkill: 'TƯ DUY',
         footerMessage: 'Mỗi ngày một khám phá. Mỗi bước một niềm vui.', credits: 'Góc phụ huynh & nguồn tài nguyên',
         memoryHint: 'Lật hai thẻ để tìm những người bạn giống nhau.', colorHint: 'Kéo bình màu vào bát, hoặc chọn màu rồi nhấn Enter.',
         mathHint: 'Chạm vào trái cây để lấy đúng số quả bạn Gấu cần.', alphabetHint: 'Chọn một chữ cái, rồi tìm chữ ấy trong những món đồ chơi.',
-        drawingHint: 'Chạm vào trái cây và xem Dino đổi màu nhé!', vehicleHint: 'Kéo xe về đúng bến, hoặc chạm vào bến để chọn.',
+        dinosaurColorsHint: 'Chạm vào trái cây và xem Dino đổi màu nhé!', vehicleHint: 'Kéo xe về đúng bến, hoặc chạm vào bến để chọn.',
         comingSoon:   '🔒 Sắp Ra Mắt',
         scoreLabel:   'Điểm',
         backTo:       'Đảo Khám Phá',
-        score_drawing: 'Điểm vẽ',
-        draw_color: 'Màu',
-        draw_size: 'Nét vẽ',
-        draw_stamp: 'Con dấu',
-        draw_rainbow: 'Cầu vồng',
-        draw_clear: 'Xóa',
-        draw_submit: 'Hoàn thành',
       },
       en: {
         appTitle:     'Explorer Island',
@@ -74,8 +67,8 @@ class AppController {
         mathDesc:     'Count & learn numbers',
         alphabetPopName: 'Alphabet Pop',
         alphabetPopDesc: 'Fun letters learning',
-        drawingName:  'Colorful Dinosaur',
-        drawingDesc:  'Watch dino change colors!',
+        dinosaurColorsName: 'Colorful Dinosaur',
+        dinosaurColorsDesc: 'Watch Dino change colors!',
         colorName:    'Color Mix Lab',
         colorDesc:    'Mix magical colors',
         vehicleParkingName: 'City Parking',
@@ -86,21 +79,14 @@ class AppController {
         explore: 'Let’s explore', heroNote: '6 games · Endless little adventures', islandNote: 'Adventure starts here!',
         musicOff: 'Music: Off', musicOn: 'Music: On',
         pickIsland: 'A LITTLE PLAY, A LITTLE GROWTH', islandsTitle: 'Where shall we explore today?', islandsCount: '6 islands waiting for you',
-        memorySkill: 'MEMORY', colorSkill: 'CREATIVITY', mathSkill: 'COUNTING', alphabetPopSkill: 'ENGLISH', drawingSkill: 'COLORS', vehicleParkingSkill: 'THINKING',
+        memorySkill: 'MEMORY', colorSkill: 'CREATIVITY', mathSkill: 'COUNTING', alphabetPopSkill: 'ENGLISH', dinosaurColorsSkill: 'COLORS', vehicleParkingSkill: 'THINKING',
         footerMessage: 'A new discovery every day. A little joy every step.', credits: 'For parents & asset credits',
         memoryHint: 'Flip two cards to find matching friends.', colorHint: 'Drag a bottle into the bowl, or focus a color and press Enter.',
         mathHint: 'Tap the fruit to collect the number Bear needs.', alphabetHint: 'Choose a letter, then find it among the toys.',
-        drawingHint: 'Tap a fruit and watch Dino change color!', vehicleHint: 'Drag the vehicle to its station, or tap a station to choose.',
+        dinosaurColorsHint: 'Tap a fruit and watch Dino change color!', vehicleHint: 'Drag the vehicle to its station, or tap a station to choose.',
         comingSoon:   '🔒 Coming Soon',
         scoreLabel:   'Score',
         backTo:       'Explorer Island',
-        score_drawing: 'Drawing Score',
-        draw_color: 'Color',
-        draw_size: 'Brush size',
-        draw_stamp: 'Stamp',
-        draw_rainbow: 'Rainbow',
-        draw_clear: 'Clear',
-        draw_submit: 'Submit',
       },
     };
   }
@@ -233,7 +219,7 @@ class AppController {
       'memory': t.memoryName,
       'color': t.colorName,
       'alphabet-pop': t.alphabetPopName,
-      'drawing': t.drawingName,
+      'dinosaur-colors': t.dinosaurColorsName,
       'math': t.mathName,
       'vehicle-parking': t.vehicleParkingName
     };
@@ -243,11 +229,11 @@ class AppController {
     } else if (gameTitles[this.activeGameId]) {
       this.hud.title.textContent = gameTitles[this.activeGameId];
     }
-    const hints = { memory: 'memoryHint', color: 'colorHint', math: 'mathHint', 'alphabet-pop': 'alphabetHint', drawing: 'drawingHint', 'vehicle-parking': 'vehicleHint' };
+    const hints = { memory: 'memoryHint', color: 'colorHint', math: 'mathHint', 'alphabet-pop': 'alphabetHint', 'dinosaur-colors': 'dinosaurColorsHint', 'vehicle-parking': 'vehicleHint' };
     document.getElementById('game-hint').textContent = t[hints[this.activeGameId]] || '';
   }
 
-  /* ── Toast notification for locked islands ── */
+  /* ── Shared toast notifications ── */
   _showToast(msg) {
     // Remove any existing toast
     const old = document.getElementById('app-toast');
@@ -306,7 +292,7 @@ class AppController {
     if (timerEl) timerEl.classList.add('hidden');
 
     // Games without a numeric score hide the in-game dashboard entirely
-    const SCORELESS_GAMES = ['color', 'drawing'];
+    const SCORELESS_GAMES = ['color', 'dinosaur-colors'];
     const dashboard = document.getElementById('game-dashboard');
     if (dashboard) {
       dashboard.style.display = SCORELESS_GAMES.includes(gameId) ? 'none' : 'flex';
@@ -327,8 +313,8 @@ class AppController {
         this.hud.title.textContent = t.alphabetPopName;
         this.activeGame = new AlphabetPop(stage, this);
         break;
-      case 'drawing':
-        this.hud.title.textContent = t.drawingName;
+      case 'dinosaur-colors':
+        this.hud.title.textContent = t.dinosaurColorsName;
         this.activeGame = new DinosaurColors(stage, this);
         break;
       case 'math':
@@ -366,7 +352,7 @@ class AppController {
     if (this.pendingAppUpdate) { this.pendingAppUpdate = false; window.location.reload(); }
   }
 
-  /* ── (Legacy) Star reward – kept for future games ── */
+  /* ── Persist game rewards and update the HUD ── */
   addStars(count) {
     this.stars += count;
     localStorage.setItem('kid_explorer_stars', this.stars);

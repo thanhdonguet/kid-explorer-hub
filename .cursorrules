@@ -22,9 +22,9 @@ To prevent unwanted changes and resource waste, the AI MUST adhere to these stri
 * **Vanilla & Pure Web APIs**:
   - CSS: Use CSS variables, Flexbox/Grid, and standard transitions. Do not add Tailwind or heavy CSS libraries unless requested.
   - JS: Use modern vanilla ES6+ JavaScript. Avoid importing heavy framework runtimes (React/Vue/Angular) unless requested.
-  - Audio: Synthesize sound effects programmatically using the **Web Audio API** (defined in `www/js/audio.js`) to keep the bundle small, fast, and offline-friendly.
-  - Graphics: Prefer clean inline SVGs for UI illustrations rather than heavy PNG/JPG assets.
-* **Mobile-First Responsiveness**: All layouts must scale gracefully to mobile devices in **both portrait and landscape** (`manifest.json` sets `orientation: "any"`). Do not reintroduce an orientation lock or a "please rotate your device" warning. Ensure touch events (`touchstart`, `touchmove`, `touchend`) are bound with `preventDefault()` on drawing elements to avoid viewport scrolling.
+  - Audio: Use the shared **Web Audio API** engine (`www/js/audio.js`), local samples and TTS helper. Keep optional music lazy-loaded and respect the global mute control.
+  - Graphics: Use the existing **Three.js / `<kid-model>`** renderer, local GLB models and SVG fallbacks. Edit `www/js/explorer-3d.js`, then rebuild; do not hand-edit its generated bundle or `www/asset-list.js`.
+* **Mobile-First Responsiveness**: All layouts must scale gracefully to mobile devices in **both portrait and landscape** (`manifest.json` sets `orientation: "any"`). Do not reintroduce an orientation lock or a "please rotate your device" warning. Prevent scrolling only while handling game drag gestures; preserve normal page scrolling and keyboard controls.
 
 ---
 

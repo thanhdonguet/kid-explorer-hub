@@ -27,7 +27,7 @@ test('home, all six games, rendering cleanup, language and console', async ({ pa
   page.on('pageerror', e => errors.push(e.message));
   await open(page);
   await page.screenshot({ path: 'test-results/home-desktop.png' });
-  for (const game of ['memory', 'color', 'math', 'alphabet-pop', 'drawing', 'vehicle-parking']) {
+  for (const game of ['memory', 'color', 'math', 'alphabet-pop', 'dinosaur-colors', 'vehicle-parking']) {
     await launch(page, game);
     await expect(page.locator('#game-screen')).toHaveClass(/active/);
     await expect(page.locator('#game-stage')).not.toBeEmpty();
@@ -193,7 +193,7 @@ test('every additional paint changes the mix and full-bowl feedback is localized
     const game = app.activeGame;
     return {
       rgb: game.currentMix,
-      name: game.currentApiName,
+      name: game.currentColorName,
       lightness: game._rgbToLab(game.currentMix).l,
     };
   });
@@ -215,7 +215,7 @@ test('alphabet session learns five words and awards stars', async ({ page }) => 
   await open(page); await launch(page, 'alphabet-pop');
   await page.getByRole('button', { name: 'A', exact: true }).click();
   for (let round = 0; round < 5; round++) {
-    await page.locator('.ap-flying-object[aria-label="A"]').click();
+    await page.locator('.ap-flying-object[aria-label="A"]').click({ force: true });
     await expect(page.locator('.ap-vocab-result')).toBeVisible();
     await expect(page.locator('.ap-vocab-result kid-model')).toHaveClass(/model-ready/);
     await page.locator('.ap-next-btn').click();
@@ -347,7 +347,7 @@ test('parking destinations have recognizable architecture instead of one templat
   await page.screenshot({ path: 'test-results/parking-stations-contact-sheet.png' });
 });
 
-test('learning objects render as full meshes and can be inspected on a small screen', async ({ page }) => {
+test('learning objects render and auto-rotate without rotation buttons on a small screen', async ({ page }) => {
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
   await open(page); await launch(page,'alphabet-pop');
@@ -373,25 +373,155 @@ test('learning objects render as full meshes and can be inspected on a small scr
   await launch(page,'alphabet-pop');
   await page.evaluate(() => { app.activeGame.VOCAB_DB.R=[{word:'Robot',image:'img/vocab/robot.svg'}]; });
   await page.getByRole('button',{name:'R',exact:true}).click();
-  await page.locator('.ap-flying-object[aria-label="R"]').click();
+  await page.locator('.ap-flying-object[aria-label="R"]').click({ force: true });
   const model=page.locator('.ap-vocab-result kid-model');
   await expect(model).toHaveClass(/model-ready/);
+  await expect(page.locator('.ap-rotate')).toHaveCount(0);
+  await expect(model).toHaveAttribute('auto-rotate', '');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await expect.poll(() => model.evaluate(element => element.object.rotation.y)).toBeCloseTo(.18);
+  const stillAngle = await model.evaluate(element => element.object.rotation.y);
+  await page.waitForTimeout(300);
+  expect(await model.evaluate(element => element.object.rotation.y)).toBe(stillAngle);
   const front=await model.locator('canvas').evaluate(c=>c.toDataURL());
-  await page.getByRole('button',{name:'Xoay sang phải',exact:true}).press('Enter');
-  await expect(model).toHaveAttribute('yaw','45');
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  const startAngle = await model.evaluate(element => element.object.rotation.y);
+  await expect.poll(() => model.evaluate(element => element.object.rotation.y)).toBeGreaterThan(startAngle + .15);
   await expect.poll(()=>model.locator('canvas').evaluate(c=>c.toDataURL())).not.toBe(front);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await expect.poll(() => model.evaluate(element => element.object.rotation.y)).toBeCloseTo(.18);
   await page.locator('#btn-lang').click();
-  await expect(page.getByRole('button',{name:'Rotate left',exact:true})).toBeVisible();
+  await expect(page.locator('.ap-rotate')).toHaveCount(0);
   await expect(page.getByRole('button',{name:'♪ Listen',exact:true})).toBeVisible();
+  await page.evaluate(() => { window.__spokenWords = []; app.activeGame.speak = word => window.__spokenWords.push(word); });
+  await page.getByRole('button',{name:'♪ Listen',exact:true}).press('Enter');
+  expect(await page.evaluate(() => window.__spokenWords)).toEqual(['Robot']);
   expect(await page.locator('.ap-vocab-result').evaluate(e=>e.scrollWidth<=e.clientWidth+2)).toBe(true);
   await page.screenshot({path:'test-results/vocabulary-inspect-mobile.png'});
   await back(page); await launch(page,'alphabet-pop');
   await page.getByRole('button',{name:'X',exact:true}).click();
   await page.locator('.ap-flying-object[aria-label="X"]').click({ force: true });
   await expect(page.locator('.ap-vocab-result kid-model')).toHaveAttribute('data-model-kind','illustration');
-  await expect(page.locator('.ap-rotate').first()).toBeHidden();
+  await expect(model).toHaveClass(/model-ready/);
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  const illustrationAngle = await model.evaluate(element => element.object.rotation.y);
+  await page.waitForTimeout(400);
+  expect(await model.evaluate(element => element.object.rotation.y)).toBe(illustrationAngle);
+  await expect(page.locator('.ap-rotate')).toHaveCount(0);
   await expect(page.locator('.ap-listen')).toBeVisible();
   expect(errors).toEqual([]);
+});
+
+test('alphabet SVG illustrations show actual artwork without WebGL upload errors', async ({ page }) => {
+  const errors = [];
+  page.on('pageerror', error => errors.push(error.message));
+  page.on('console', message => {
+    if (/texSubImage2D|GL_INVALID|Texture is immutable|Model unavailable/i.test(message.text())) errors.push(message.text());
+  });
+  await open(page);
+  await launch(page, 'alphabet-pop');
+  await page.getByRole('button', { name: 'X', exact: true }).click();
+  await page.locator('.ap-flying-object[aria-label="X"]').click({ force: true });
+  const model = page.locator('.ap-vocab-result kid-model');
+  await expect(model).toHaveClass(/model-ready/);
+  await expect(model).toHaveAttribute('data-model-kind', 'illustration');
+  await expect.poll(() => model.locator('canvas').evaluate(canvas => {
+    const pixels = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
+    let blue = 0;
+    for (let i = 0; i < pixels.length; i += 4) {
+      if (pixels[i + 3] > 128 && pixels[i + 2] > pixels[i] + 30) blue++;
+    }
+    return blue / (canvas.width * canvas.height);
+  }), { message: 'The blue X-ray artwork must be visible, not just the beige tile' }).toBeGreaterThan(.05);
+  await expect(page.locator('.ap-rotate')).toHaveCount(0);
+  await expect(page.locator('.ap-listen')).toBeVisible();
+  await page.screenshot({ path: 'test-results/alphabet-x-ray-illustration.png' });
+  expect(errors).toEqual([]);
+});
+
+test('every alphabet vocabulary image decodes and every illustration renders artwork', async ({ page }) => {
+  const errors = [];
+  page.on('pageerror', error => errors.push(error.message));
+  page.on('console', message => {
+    if (/texSubImage2D|GL_INVALID|Texture is immutable|Model unavailable/i.test(message.text())) errors.push(message.text());
+  });
+  await open(page);
+  await launch(page, 'alphabet-pop');
+  const vocabulary = await page.evaluate(() => Object.values(app.activeGame.VOCAB_DB).flat());
+  for (let start = 0; start < vocabulary.length; start += 12) {
+    const batch = vocabulary.slice(start, start + 12);
+    await page.evaluate(batch => {
+      const stage = document.querySelector('#game-stage');
+      stage.style.cssText = 'display:grid;grid-template-columns:repeat(4,1fr);gap:8px;min-height:0;flex:none;padding:8px';
+      stage.replaceChildren(...batch.map(item => {
+        const model = document.createElement('kid-model');
+        model.style.cssText = 'height:130px;display:block';
+        model.setAttribute('model', item.image.split('/').pop().replace('.svg', ''));
+        model.setAttribute('src', item.image);
+        model.setAttribute('yaw', '0');
+        const fallback = document.createElement('img');
+        fallback.className = 'model-fallback';
+        fallback.src = item.image;
+        fallback.alt = item.word;
+        model.append(fallback);
+        return model;
+      }));
+    }, batch);
+    for (const [index, item] of batch.entries()) {
+      const model = page.locator('#game-stage kid-model').nth(index);
+      await model.scrollIntoViewIfNeeded();
+      await expect(model, item.word).toHaveClass(/model-ready/);
+      expect(await model.locator('img').evaluate(async img => {
+        await img.decode();
+        return img.naturalWidth > 0 && img.naturalHeight > 0;
+      }), item.word).toBe(true);
+      if (await model.getAttribute('data-model-kind') !== 'illustration') continue;
+      expect(await model.evaluate(element => {
+        const face = element.object.children.find(child => child.material?.map?.image.width === 256);
+        if (!face) return false;
+        const image = face.material.map.image;
+        const data = image.getContext('2d').getImageData(0, 0, image.width, image.height).data;
+        return data.some((value, index) => index % 4 === 3 && value > 128);
+      }), `${item.word} texture contains artwork`).toBe(true);
+      const withArtwork = await model.locator('canvas').evaluate(canvas => canvas.toDataURL());
+      await model.evaluate(element => {
+        element.object.children.find(child => child.material?.map?.image.width === 256).visible = false;
+        element.render(0, false);
+      });
+      const withoutArtwork = await model.locator('canvas').evaluate(canvas => canvas.toDataURL());
+      expect(withArtwork, `${item.word} artwork reaches the rendered canvas`).not.toBe(withoutArtwork);
+    }
+  }
+  expect(errors).toEqual([]);
+});
+
+test('illustration fallback stays visible while loading and after a load failure', async ({ page }) => {
+  await open(page);
+  await launch(page, 'alphabet-pop');
+  const svg = fs.readFileSync('www/img/vocab/x-ray.svg', 'utf8');
+  let pendingRoute;
+  const intercepted = new Promise(resolve => { pendingRoute = resolve; });
+  await page.route('**/delayed-illustration.svg', route => pendingRoute(route));
+  await page.evaluate(() => {
+    document.querySelector('#game-stage').innerHTML = '<kid-model model="delayed-illustration" src="delayed-illustration.svg" style="width:200px;height:200px"><img class="model-fallback" src="img/vocab/x-ray.svg" alt="X-ray"></kid-model>';
+  });
+  const route = await intercepted;
+  const model = page.locator('#game-stage kid-model');
+  await page.waitForTimeout(200);
+  await expect(model).not.toHaveClass(/model-ready/);
+  await expect(model.locator('img')).toBeVisible();
+  await route.fulfill({ contentType: 'image/svg+xml', body: svg });
+  await expect(model).toHaveClass(/model-ready/);
+  await expect(model.locator('img')).toBeHidden();
+
+  const warnings = [];
+  page.on('console', message => { if (message.text().includes('Model unavailable:')) warnings.push(message.text()); });
+  await page.route('**/missing-illustration.svg', route => route.abort());
+  await model.evaluate(element => element.setAttribute('src', 'missing-illustration.svg'));
+  await expect(model).toHaveAttribute('data-load-error', 'true');
+  await expect(model).not.toHaveClass(/model-ready/);
+  await expect(model.locator('img')).toBeVisible();
+  await expect.poll(() => warnings.length).toBeGreaterThan(0);
 });
 
 test('a web update waits until the child leaves the current game', async ({ page }) => {
@@ -408,8 +538,48 @@ test('a web update waits until the child leaves the current game', async ({ page
   expect(await page.evaluate(()=>!!app.pendingAppUpdate)).toBe(false);
 });
 
+test('Dino route, translations, model and offline script use the current game name', async ({ page }) => {
+  const script = 'js/games/dinosaur-colors.js';
+  expect(fs.existsSync(`www/${script}`)).toBe(true);
+  expect(fs.existsSync('www/js/games/drawing.js')).toBe(false);
+  const manifest = fs.readFileSync('www/asset-list.js', 'utf8');
+  expect(manifest).toContain(`"${script}"`);
+  expect(manifest).not.toContain('"js/games/drawing.js"');
+  await page.addInitScript(() => {
+    localStorage.setItem('kid_explorer_stars', '12');
+    localStorage.setItem('mem_hs_5', '42');
+  });
+  await open(page);
+  const island = page.locator('#island-dinosaur-colors');
+  const model = island.locator('kid-model');
+  await expect(model).toHaveAttribute('model', 'island-dinosaur-colors');
+  await expect(model).toHaveClass(/model-ready/);
+  expect(await model.evaluate(element => {
+    let hasDino = false;
+    element.object.traverse(object => { if (object.userData.skin) hasDino = true; });
+    return hasDino;
+  })).toBe(true);
+  expect(await page.evaluate(() => [...document.querySelectorAll('[data-i18n]')].every(element =>
+    Object.values(app.T).every(translations => element.dataset.i18n in translations)
+  ))).toBe(true);
+  await launch(page, 'dinosaur-colors');
+  await expect(page.locator('body')).toHaveAttribute('data-game', 'dinosaur-colors');
+  await expect(page.locator('#app-title-hud')).toHaveText('Khủng Long Sắc Màu');
+  await expect(page.locator('#game-hint')).toHaveText('Chạm vào trái cây và xem Dino đổi màu nhé!');
+  await expect(page.locator('#game-dashboard')).toBeHidden();
+  await page.locator('#btn-lang').click();
+  await expect(page.locator('#app-title-hud')).toHaveText('Colorful Dinosaur');
+  await expect(page.locator('#game-hint')).toHaveText('Tap a fruit and watch Dino change color!');
+  await expect(page.locator('.dino-feed-btn')).toHaveText('Feed me! 🍽️');
+  await expect(page.locator('#game-dashboard')).toBeHidden();
+  await back(page);
+  await expect(island).toBeFocused();
+  await expect(page.locator('#star-count')).toHaveText('12');
+  expect(await page.evaluate(() => localStorage.getItem('mem_hs_5'))).toBe('42');
+});
+
 test('Dino changes the real mesh color and finishes all six foods', async ({ page }) => {
-  await open(page); await launch(page, 'drawing');
+  await open(page); await launch(page, 'dinosaur-colors');
   await page.locator('.dino-feed-btn').click();
   const colors = ['#FFD700','#FF8FAB','#E53935','#43A047','#7B1FA2','#FB8C00'];
   for (const [index, color] of colors.entries()) {
@@ -445,7 +615,7 @@ test('mobile portrait and landscape keep every activity reachable without horizo
   await open(page);
   for (const size of [{width:390,height:844},{width:320,height:640},{width:844,height:390}]) {
     await page.setViewportSize(size);
-    for (const game of ['memory','color','math','alphabet-pop','drawing','vehicle-parking']) {
+    for (const game of ['memory','color','math','alphabet-pop','dinosaur-colors','vehicle-parking']) {
       await launch(page, game);
       const overflow = await page.locator('#game-stage').evaluate(e => ({client:e.clientWidth,scroll:e.scrollWidth}));
       expect(overflow.scroll, `${game} at ${size.width}`).toBeLessThanOrEqual(overflow.client + 2);
@@ -464,7 +634,7 @@ test('a fully installed PWA can load every game and 3D model offline', async ({ 
   await context.setOffline(true);
   await page.reload();
   await expect(page.locator('kid-model[model="world"]')).toHaveClass(/model-ready/);
-  for (const game of ['memory','color','math','alphabet-pop','drawing','vehicle-parking']) {
+  for (const game of ['memory','color','math','alphabet-pop','dinosaur-colors','vehicle-parking']) {
     await launch(page, game);
     if (game !== 'alphabet-pop') await expect(page.locator('#game-stage kid-model.model-ready').first()).toBeVisible();
     await back(page);
@@ -479,10 +649,10 @@ test('without WebGL, fallback images and all game routes remain usable', async (
   await page.goto('/');
   await expect(page.locator('html')).toHaveAttribute('data-graphics','fallback');
   await expect(page.locator('.hero-art .model-fallback')).toBeVisible();
-  for (const game of ['memory','color','math','alphabet-pop','drawing','vehicle-parking']) {
+  for (const game of ['memory','color','math','alphabet-pop','dinosaur-colors','vehicle-parking']) {
     await launch(page,game); await expect(page.locator('#game-stage')).not.toBeEmpty(); await back(page);
   }
-  await launch(page,'drawing');
+  await launch(page,'dinosaur-colors');
   await page.locator('#btn-sound').click();
   await page.locator('.dino-feed-btn').click();
   await page.locator('.fruit-item').click();

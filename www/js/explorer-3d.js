@@ -633,7 +633,7 @@ function world(parent, invalidate) {
 }
 function diorama(parent, kind, invalidate) {
   const g = group(parent);
-  const p = platform(g, 0, 0, 1.2, { memory: '#9acaa7', color: '#c5b0df', math: '#e4c78c', alphabet: '#9acbdc', drawing: '#a3c994', vehicles: '#a9c6c5' }[kind]);
+  const p = platform(g, 0, 0, 1.2, { memory: '#9acaa7', color: '#c5b0df', math: '#e4c78c', alphabet: '#9acbdc', 'dinosaur-colors': '#a3c994', vehicles: '#a9c6c5' }[kind]);
   p.position.y = -.85;
   if (kind === 'memory') {
     const holder = group(g, [0, 0, 0], .62);
@@ -643,7 +643,7 @@ function diorama(parent, kind, invalidate) {
   if (kind === 'color') { potion(g, '#a792d6').position.x = .35; const b = potion(g, '#e7a16e'); b.scale.setScalar(.65); b.position.set(-.68, -.2, .15); }
   if (kind === 'math') { fruit(g, 'peach').position.set(.35, 0, 0); const a = fruit(g, 'cucumber'); a.scale.setScalar(.65); a.position.set(-.65, 0, .1); }
   if (kind === 'alphabet') { balloon(g, '#efb668').position.x = -.4; const b = balloon(g, '#9f93d1'); b.scale.setScalar(.7); b.position.set(.57, -.1, 0); }
-  if (kind === 'drawing') { dino(g).scale.setScalar(.74); tree(g, [-.8, -.55, -.45], .55, true); }
+  if (kind === 'dinosaur-colors') { dino(g).scale.setScalar(.74); tree(g, [-.8, -.55, -.45], .55, true); }
   if (kind === 'vehicles') { vehicle(g, 'Bus', '#edb55c').scale.setScalar(.85); }
   return g;
 }
@@ -691,7 +691,7 @@ function frame(now) {
   let draws = 0;
   for (const v of views) {
     if (!v.visible || !v.object || !v.isConnected || !v.offsetWidth || !v.closest('.screen.active')) continue;
-    const moving = !motionQuery.matches && (v.hasAttribute('animate') || v.hovering);
+    const moving = !motionQuery.matches && (v.hasAttribute('animate') || v.autoRotate || v.hovering);
     if ((v.dirty || moving) && draws < 8) { v.render(now / 1000, moving); draws++; }
     if (moving || v.dirty) animated = true;
   }
@@ -703,7 +703,10 @@ const visibility = new IntersectionObserver(entries => {
 const resize = new ResizeObserver(entries => { entries.forEach(e => { e.target.dirty = true; }); wake(); });
 
 class KidModel extends HTMLElement {
-  static observedAttributes = ['model', 'color', 'src', 'animate', 'yaw'];
+  static observedAttributes = ['model', 'color', 'src', 'animate', 'yaw', 'auto-rotate'];
+  get autoRotate() {
+    return this.hasAttribute('auto-rotate') && this.dataset.modelKind === 'mesh' && !this.loading && !this.dataset.loadError;
+  }
   connectedCallback() {
     if (this.canvas) { views.add(this); visibility.observe(this); resize.observe(this); this.dirty = true; wake(); return; }
     this.canvas = document.createElement('canvas'); this.canvas.setAttribute('aria-hidden', 'true');
@@ -729,7 +732,7 @@ class KidModel extends HTMLElement {
   }
   attributeChangedCallback(name, old, value) {
     if (old === value || !this.canvas) return;
-    if (name === 'yaw') { this.dirty = true; wake(); }
+    if (name === 'yaw' || name === 'auto-rotate') { this.rotationStartedAt = performance.now() / 1000; this.dirty = true; wake(); }
     else if (name === 'color' && this.object?.userData.skin) {
       this.object.userData.skin.color.set(value || '#66bf86'); this.dirty = true; wake();
     } else if (name === 'animate') { wake(); } else this.build();
@@ -737,6 +740,8 @@ class KidModel extends HTMLElement {
   showFallback() { this.classList.remove('model-ready'); }
   async build() {
     const generation = this.generation = (this.generation || 0) + 1;
+    this.loading = true;
+    this.showFallback();
     delete this.dataset.loadError;
     this.dataset.modelKind = 'mesh';
     const name = this.getAttribute('model') || 'star', color = this.getAttribute('color') || undefined;
@@ -764,9 +769,19 @@ class KidModel extends HTMLElement {
           box(root, '#fff4d5', [0, 0, -.1], [1.7, 1.7, .22]);
           const src = this.getAttribute('src');
           if (src) {
-            const texture = await new THREE.TextureLoader().loadAsync(src);
+            const image = await new THREE.ImageLoader().loadAsync(src);
+            if (!this.isConnected || generation !== this.generation) return;
+            if (!image.naturalWidth || !image.naturalHeight) throw new Error(`Invalid illustration dimensions: ${src}`);
+            // SVGs with only a viewBox can fail direct WebGL uploads in Chromium.
+            const canvas = document.createElement('canvas');
+            canvas.width = canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) throw new Error('Canvas 2D is unavailable for illustrations');
+            const scale = Math.min(canvas.width / image.naturalWidth, canvas.height / image.naturalHeight);
+            const width = image.naturalWidth * scale, height = image.naturalHeight * scale;
+            ctx.drawImage(image, (canvas.width - width) / 2, (canvas.height - height) / 2, width, height);
+            const texture = new THREE.CanvasTexture(canvas);
             texture.colorSpace = THREE.SRGBColorSpace;
-            if (!this.isConnected || generation !== this.generation) { texture.dispose(); return; }
             const m = new THREE.MeshBasicMaterial({ map: texture, transparent: true }); m.userData.owned = true;
             const p = new THREE.Mesh(geometry('tile-face', () => new THREE.PlaneGeometry(1.42, 1.42)), m); p.position.z = .025; root.add(p);
           } else star(root);
@@ -774,15 +789,18 @@ class KidModel extends HTMLElement {
       }
       if (!this.isConnected || generation !== this.generation) { disposeOwned(root); return; }
       if (!this.isWorld) shadow(root);
+      this.loading = false;
+      this.rotationStartedAt = performance.now() / 1000;
       this.dirty = true; wake();
     } catch (error) {
       if (!this.isConnected || generation !== this.generation) return;
+      this.loading = false;
       this.showFallback(); this.dataset.loadError = 'true';
-      console.warn('Model unavailable:', name, error.message);
+      console.warn('Model unavailable:', name, error);
     }
   }
   render(time, moving) {
-    if (!renderer || failed || !this.ctx || this.dataset.loadError) { this.dirty = false; return; }
+    if (!renderer || failed || !this.ctx || this.loading || this.dataset.loadError) { this.dirty = false; return; }
     const width = this.clientWidth, height = this.clientHeight;
     if (!width || !height) return;
     const ratio = Math.min(devicePixelRatio || 1, 1.5, 1024 / width, 768 / height);
@@ -800,7 +818,10 @@ class KidModel extends HTMLElement {
       const presentationZoom = this.modelName === 'frog' ? .52 : 1;
       this.camera.zoom = Math.min(1, this.camera.aspect) * presentationZoom;
       const yaw = Number(this.getAttribute('yaw')) || 0;
-      this.object.rotation.y = .18 + yaw * Math.PI / 180 + (moving && !this.hasAttribute('yaw') ? Math.sin(time * .8) * .19 : 0);
+      const rotation = moving && this.autoRotate
+        ? (time - this.rotationStartedAt) * .35
+        : (moving && !this.hasAttribute('yaw') ? Math.sin(time * .8) * .19 : 0);
+      this.object.rotation.y = .18 + yaw * Math.PI / 180 + rotation;
       this.object.position.y = moving && this.hasAttribute('animate') ? Math.sin(time * 1.7) * .035 : 0;
     }
     this.camera.updateProjectionMatrix();

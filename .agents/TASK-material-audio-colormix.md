@@ -1,5 +1,7 @@
 # LỆNH TRIỂN KHAI — Material động vật, Âm thanh, Bug Pha Màu
 
+> Tài liệu lịch sử mô tả yêu cầu và hiện trạng tại base commit `52bd6fb`, không phải danh sách việc còn phải làm. Các số dòng, số test, kích thước và chẩn đoán bên dưới thuộc phiên bản đó. Xem `README.md`, source và bộ test hiện tại để biết trạng thái đang dùng; không áp dụng lại các chỉ dẫn cũ một cách tự động.
+
 Repo: `kid-explorer-hub` · Base commit: `52bd6fb` · Nhánh: `main`
 Đọc `.agents/AGENTS.md` trước khi bắt đầu và tuân thủ toàn bộ rule trong đó (vanilla ES6+, không thêm framework UI, Web Audio, edit cục bộ không refactor tràn lan, tích hợp i18n vào `applyLang()`).
 

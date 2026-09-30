@@ -1,4 +1,4 @@
-/* The build hashes all shipped assets to version each offline release. */
+/* The build hashes the precache asset list to version each offline release. */
 importScripts('asset-list.js');
 const CACHE_PREFIX = 'kid-explorer-hub-';
 const CACHE_NAME = CACHE_PREFIX + self.KID_ASSET_VERSION;
@@ -8,7 +8,7 @@ const ASSETS = self.KID_ASSETS;
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      // A release activates only when every shipped asset is available offline.
+      // Optional music and external fonts are not part of the precache list.
       return cache.addAll(ASSETS);
     }).then(() => self.skipWaiting())
   );
@@ -33,14 +33,12 @@ self.addEventListener('activate', (e) => {
    Fetch strategy
    ----------------------------------------------------------------
    Code and markup (navigations, .html/.js/.css/.json) use NETWORK-FIRST
-   so a refresh always picks up a new build. Cache-first was serving stale
-   JS/CSS until CACHE_NAME was bumped by hand, which made testing on a phone
-   nearly impossible. The cache is still written on every successful fetch,
-   so going offline keeps working – it is just a fallback now, not the
-   first choice.
+   to check for updates online, falling back to cached responses on network
+   failure. Successful responses refresh the cache for subsequent offline use.
 
    Everything else (images, audio, fonts) stays CACHE-FIRST: those files are
-   large and effectively immutable, so there is nothing to go stale.
+   reused within a release. Rebuild after changing local assets so their
+   content hash creates a new precache release.
    ================================================================ */
 
 const CODE_PATTERN = /\.(?:html|js|css|json)$/i;

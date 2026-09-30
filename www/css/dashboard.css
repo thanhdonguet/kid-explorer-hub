@@ -238,7 +238,7 @@
   }
 }
 
-/* Map Layout – 4 islands */
+/* Base map layout; the current island grid is styled in explorer.css. */
 .map-container {
   width: 90%;
   max-width: 1050px;
@@ -341,7 +341,7 @@
   animation: float-island 5s ease-in-out infinite 0.7s;
 }
 
-#island-drawing .island-sprite {
+#island-dinosaur-colors .island-sprite {
   background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
   animation: float-island 4.8s ease-in-out infinite 1s;
 }
@@ -386,7 +386,7 @@
   animation: scale-shadow 5s ease-in-out infinite 0.7s;
 }
 
-#island-drawing .island-shadow {
+#island-dinosaur-colors .island-shadow {
   animation: scale-shadow 4.8s ease-in-out infinite 1s;
 }
 
