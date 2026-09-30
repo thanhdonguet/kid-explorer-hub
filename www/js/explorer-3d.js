@@ -633,7 +633,7 @@ function world(parent, invalidate) {
 }
 function diorama(parent, kind, invalidate) {
   const g = group(parent);
-  const p = platform(g, 0, 0, 1.2, { memory: '#9acaa7', color: '#c5b0df', math: '#e4c78c', alphabet: '#9acbdc', 'dinosaur-colors': '#a3c994', vehicles: '#a9c6c5' }[kind]);
+  const p = platform(g, 0, 0, 1.2, { memory: '#9acaa7', color: '#c5b0df', math: '#e4c78c', alphabet: '#9acbdc', 'dinosaur-colors': '#a3c994', vehicles: '#a9c6c5', shapes: '#e5c59b', patterns: '#a3c6df', garden: '#b3cc92' }[kind]);
   p.position.y = -.85;
   if (kind === 'memory') {
     const holder = group(g, [0, 0, 0], .62);
@@ -645,6 +645,20 @@ function diorama(parent, kind, invalidate) {
   if (kind === 'alphabet') { balloon(g, '#efb668').position.x = -.4; const b = balloon(g, '#9f93d1'); b.scale.setScalar(.7); b.position.set(.57, -.1, 0); }
   if (kind === 'dinosaur-colors') { dino(g).scale.setScalar(.74); tree(g, [-.8, -.55, -.45], .55, true); }
   if (kind === 'vehicles') { vehicle(g, 'Bus', '#edb55c').scale.setScalar(.85); }
+  if (kind === 'shapes') {
+    const house = toy(g, 'house'); house.scale.setScalar(.64); house.position.x = -.2;
+    box(g, '#91baba', [.74, -.28, .3], [.45, .45, .45]);
+    ball(g, '#e2ad69', [.73, .13, .3], [.23, .23, .23]);
+  }
+  if (kind === 'patterns') {
+    const train = vehicle(g, 'Train', '#739dc2'); train.scale.setScalar(.8);
+    const s = star(g); s.scale.setScalar(.3); s.position.set(.64, .8, 0);
+  }
+  if (kind === 'garden') {
+    tree(g, [-.5, -.55, -.3], .95);
+    const flower = toy(g, 'flower'); flower.scale.setScalar(.52); flower.position.set(.5, .2, .25);
+    cylinder(g, '#769a57', [.5, -.34, .25], [.06, .65, .06]);
+  }
   return g;
 }
 function disposeOwned(root) {
@@ -668,9 +682,11 @@ function initRenderer() {
     renderer.toneMappingExposure = 1.05;
     renderer.domElement.addEventListener('webglcontextlost', e => {
       e.preventDefault(); failed = true;
+      document.documentElement.dataset.graphics = 'fallback';
       views.forEach(v => v.showFallback());
     });
     renderer.domElement.addEventListener('webglcontextrestored', () => {
+      document.documentElement.dataset.graphics = '3d';
       failed = false; views.forEach(v => { v.dirty = true; }); wake();
     });
     document.documentElement.dataset.graphics = '3d';

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Đảo Khám Phá · Một thế giới nhỏ, ngàn điều hay</title>
-  <meta name="description" content="Cùng bé khám phá 6 trò chơi học tập trong thế giới đồ chơi 3D: trí nhớ, chữ cái, số đếm, màu sắc và phương tiện.">
+  <meta name="description" content="Cùng bé khám phá 9 trò chơi học tập: trí nhớ, chữ cái, số đếm, màu sắc, phương tiện, lắp ghép, quy luật và trình tự câu chuyện.">
   <meta name="theme-color" content="#eef4e8">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <link rel="icon" href="img/icon-192.png">
@@ -16,6 +16,10 @@
   <link rel="stylesheet" href="css/dashboard.css">
   <link rel="stylesheet" href="css/games.css">
   <link rel="stylesheet" href="css/explorer.css">
+  <link rel="stylesheet" href="css/activities.css">
+  <link rel="stylesheet" href="css/shape-workshop.css">
+  <link rel="stylesheet" href="css/pattern-train.css">
+  <link rel="stylesheet" href="css/story-garden.css">
   <script src="js/explorer-3d.bundle.js" defer></script>
 </head>
 <body>
@@ -41,7 +45,7 @@
           <p data-i18n="heroDesc">Chạm vào điều kỳ diệu, chơi cùng trí tưởng tượng. Mỗi hòn đảo là một khám phá mới của bé!</p>
           <button id="btn-explore" class="explore-button"><span data-i18n="explore">Cùng khám phá</span><span aria-hidden="true">↗</span></button>
           <button id="btn-music" class="music-toggle" aria-pressed="false"><span aria-hidden="true">♪</span><span data-i18n="musicOff">Nhạc nền: Tắt</span></button>
-          <div class="hero-footnote"><span class="mini-stars" aria-hidden="true">✦ ✧ ✦</span><span data-i18n="heroNote">6 trò chơi · Vô vàn niềm vui</span></div>
+          <div class="hero-footnote"><span class="mini-stars" aria-hidden="true">✦ ✧ ✦</span><span data-i18n="heroNote">9 trò chơi · Vô vàn niềm vui</span></div>
         </div>
         <div class="hero-art">
           <div class="hero-orbit orbit-one"></div><div class="hero-orbit orbit-two"></div>
@@ -51,7 +55,7 @@
         </div>
       </section>
       <section class="explore-section" id="explore-section" aria-labelledby="islands-title">
-        <div class="section-heading"><div><span class="eyebrow" data-i18n="pickIsland">CHƠI MỘT CHÚT, LỚN THÊM MỘT CHÚT</span><h2 id="islands-title" data-i18n="islandsTitle">Hôm nay, bé muốn khám phá gì?</h2></div><span class="section-count" data-i18n="islandsCount">6 hòn đảo đang chờ bé</span></div>
+        <div class="section-heading"><div><span class="eyebrow" data-i18n="pickIsland">CHƠI MỘT CHÚT, LỚN THÊM MỘT CHÚT</span><h2 id="islands-title" data-i18n="islandsTitle">Hôm nay, bé muốn khám phá gì?</h2></div><span class="section-count" data-i18n="islandsCount">9 hòn đảo đang chờ bé</span></div>
         <div class="islands-grid">
           <button class="island-card" id="island-memory" data-game="memory" style="--card-color:#e9f1de;--card-accent:#4e7952">
             <span class="island-art"><span class="skill-tag" data-i18n="memorySkill">TRÍ NHỚ</span><kid-model model="island-memory" aria-label="Khu Rừng Trí Nhớ"><img class="model-fallback" src="img/vocab/lion.svg" alt=""></kid-model></span>
@@ -62,8 +66,8 @@
             <span class="island-info"><span class="island-number">02</span><span class="island-text"><strong data-i18n="colorName">Xưởng Pha Màu</strong><span data-i18n="colorDesc">Một chút màu, một chút phép màu</span></span><span class="card-arrow" aria-hidden="true">↗</span></span>
           </button>
           <button class="island-card" id="island-math" data-game="math" style="--card-color:#faecda;--card-accent:#aa7740">
-            <span class="island-art"><span class="skill-tag" data-i18n="mathSkill">SỐ ĐẾM</span><kid-model model="island-math" aria-label="Chợ Trái Cây"><img class="model-fallback" src="img/vocab/apple.svg" alt=""></kid-model></span>
-            <span class="island-info"><span class="island-number">03</span><span class="island-text"><strong data-i18n="mathName">Chợ Trái Cây</strong><span data-i18n="mathDesc">Đếm quả ngon, đầy giỏ nhỏ</span></span><span class="card-arrow" aria-hidden="true">↗</span></span>
+            <span class="island-art"><span class="skill-tag" data-i18n="mathSkill">PHÉP CỘNG</span><kid-model model="island-math" data-i18n-label="mathName" aria-label="Bé Học Cộng"><img class="model-fallback" src="img/vocab/apple.svg" alt=""></kid-model></span>
+            <span class="island-info"><span class="island-number">03</span><span class="island-text"><strong data-i18n="mathName">Bé Học Cộng</strong><span data-i18n="mathDesc">Cộng hai số, vui mỗi ngày</span></span><span class="card-arrow" aria-hidden="true">↗</span></span>
           </button>
           <button class="island-card" id="island-alphabet-pop" data-game="alphabet-pop" style="--card-color:#e4eff7;--card-accent:#5884a0">
             <span class="island-art"><span class="skill-tag" data-i18n="alphabetPopSkill">TIẾNG ANH</span><kid-model model="island-alphabet" aria-label="Bong Bóng Chữ Cái"><img class="model-fallback" src="img/vocab/balloon.svg" alt=""></kid-model><span class="letter-overlay" aria-hidden="true">Aa</span></span>
@@ -76,6 +80,18 @@
           <button class="island-card" id="island-vehicle-parking" data-game="vehicle-parking" style="--card-color:#f8e7dc;--card-accent:#ac7b57">
             <span class="island-art"><span class="skill-tag" data-i18n="vehicleParkingSkill">TƯ DUY</span><kid-model model="island-vehicles" aria-label="Bến Xe Thành Phố"><img class="model-fallback" src="img/vocab/bus.svg" alt=""></kid-model></span>
             <span class="island-info"><span class="island-number">06</span><span class="island-text"><strong data-i18n="vehicleParkingName">Bến Xe Thành Phố</strong><span data-i18n="vehicleParkingDesc">Tìm đúng bến cho từng chiếc xe</span></span><span class="card-arrow" aria-hidden="true">↗</span></span>
+          </button>
+          <button class="island-card" id="island-shape-workshop" data-game="shape-workshop" style="--card-color:#f6e9da;--card-accent:#a87642">
+            <span class="island-art"><span class="skill-tag" data-i18n="shapeWorkshopSkill">HÌNH KHỐI</span><kid-model model="island-shapes" data-i18n-label="shapeWorkshopName" aria-label="Xưởng Lắp Ghép"><img class="model-fallback" src="img/vocab/house.svg" alt=""></kid-model></span>
+            <span class="island-info"><span class="island-number">07</span><span class="island-text"><strong data-i18n="shapeWorkshopName">Xưởng Lắp Ghép</strong><span data-i18n="shapeWorkshopDesc">Ghép hình nhỏ, tạo đồ chơi xinh</span></span><span class="card-arrow" aria-hidden="true">↗</span></span>
+          </button>
+          <button class="island-card" id="island-pattern-train" data-game="pattern-train" style="--card-color:#e4eef7;--card-accent:#5f83a1">
+            <span class="island-art"><span class="skill-tag" data-i18n="patternTrainSkill">LOGIC</span><kid-model model="island-patterns" data-i18n-label="patternTrainName" aria-label="Đoàn Tàu Quy Luật"><img class="model-fallback" src="img/vocab/train.svg" alt=""></kid-model></span>
+            <span class="island-info"><span class="island-number">08</span><span class="island-text"><strong data-i18n="patternTrainName">Đoàn Tàu Quy Luật</strong><span data-i18n="patternTrainDesc">Tìm món còn thiếu, đưa tàu về ga</span></span><span class="card-arrow" aria-hidden="true">↗</span></span>
+          </button>
+          <button class="island-card" id="island-story-garden" data-game="story-garden" style="--card-color:#e7efda;--card-accent:#698547">
+            <span class="island-art"><span class="skill-tag" data-i18n="storyGardenSkill">TRÌNH TỰ</span><kid-model model="island-garden" data-i18n-label="storyGardenName" aria-label="Khu Vườn Diệu Kỳ"><img class="model-fallback" src="img/vocab/flower.svg" alt=""></kid-model></span>
+            <span class="island-info"><span class="island-number">09</span><span class="island-text"><strong data-i18n="storyGardenName">Khu Vườn Diệu Kỳ</strong><span data-i18n="storyGardenDesc">Xếp chuyện nhỏ, nuôi vườn xanh</span></span><span class="card-arrow" aria-hidden="true">↗</span></span>
           </button>
         </div>
       </section>
@@ -94,6 +110,10 @@
   <script src="js/games/alphabet-pop.js"></script>
   <script src="js/games/dinosaur-colors.js"></script>
   <script src="js/games/vehicle-parking.js"></script>
+  <script src="js/activity-base.js"></script>
+  <script src="js/games/shape-workshop.js"></script>
+  <script src="js/games/pattern-train.js"></script>
+  <script src="js/games/story-garden.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

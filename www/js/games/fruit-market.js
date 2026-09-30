@@ -1,290 +1,168 @@
-/* Fruit Market Game */
+/* Addition game; keep the existing math route and script path for saved installs. */
 class FruitMarket {
   constructor(container, app) {
     this.container = container;
     this.app = app;
     this.lang = app.lang || 'vi';
-    this.T = app.T[this.lang];
-    
     this.score = 0;
     this.targetScore = 5;
-    
-    this.targetCount = 0;
-    this.currentCount = 0;
-    
+    this.phase = 'menu';
     this.currentLevel = null;
-    this.activeFruits = [];
     this.destroyed = false;
     this.timers = new Set();
-
-    this.fruitTypes = [
-      'apple', 'banana', 'orange', 'lemon', 'grapes', 
-      'watermelon', 'peach', 'pear', 'avocado', 'pineapple'
-    ];
-    
-    // Level config
-    this.levels = {
-      easy: { min: 1, max: 3, spawnCount: 5 },
-      medium: { min: 1, max: 5, spawnCount: 7 },
-      hard: { min: 1, max: 10, spawnCount: 10 }
-    };
+    this.levels = { easy: { min: 1, max: 10 }, medium: { min: 11, max: 20 }, hard: { min: 21, max: 100 } };
   }
 
-  start() {
-    this.score = 0;
-    this.startLevel('hard');
-  }
-
-  /** setTimeout wrapper so every pending callback dies with the game. */
-  _later(fn, delay) {
-    const id = setTimeout(() => {
-      this.timers.delete(id);
-      if (this.destroyed) return;
-      fn();
+  text(vi, en) { return this.lang === 'en' ? en : vi; }
+  start() { this.showMenu(); }
+  clearTimers() { this.timers.forEach(clearTimeout); this.timers.clear(); }
+  later(fn, delay) {
+    const timer = setTimeout(() => {
+      this.timers.delete(timer);
+      if (!this.destroyed) fn();
     }, delay);
-    this.timers.add(id);
-    return id;
+    this.timers.add(timer);
   }
-
   updateHUD() {
-    const scoreVal = document.getElementById('score-val');
-    if (scoreVal) {
-      scoreVal.textContent = `${this.score}/${this.targetScore}`;
-    }
+    const score = document.getElementById('score-val');
+    if (score) score.textContent = `${this.score}/${this.targetScore}`;
   }
-
-  updateLanguage(lang, T) {
-    this.lang = lang;
-    this.T = T;
-  }
-
-  speak(text) {
+  updateLanguage(lang) {
     if (this.destroyed) return;
-    if (!window.TTS) return;
-    window.TTS.speak(text, { lang: this.lang === 'vi' ? 'vi-VN' : 'en-US', rate: 0.9 });
+    this.lang = lang;
+    window.TTS?.cancel();
+    this.render();
   }
-
-  renderLevelSelect() {
-    // Removed level select
+  speak() {
+    if (this.destroyed || !this.question) return;
+    const { a, b, sum } = this.question;
+    const message = this.phase === 'correct'
+      ? this.text(`${a} cộng ${b} bằng ${sum}.`, `${a} plus ${b} equals ${sum}.`)
+      : this.text(`${a} cộng ${b} bằng bao nhiêu?`, `What is ${a} plus ${b}?`);
+    window.TTS?.speak(message, { lang: this.lang === 'en' ? 'en-US' : 'vi-VN', rate: .85 });
   }
-
-  startLevel(level) {
-    this.currentLevel = level;
+  shuffle(values) {
+    const result = [...values];
+    for (let i = result.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [result[i], result[j]] = [result[j], result[i]];
+    }
+    return result;
+  }
+  makeQuestion(level) {
+    const { min, max } = this.levels[level];
+    const sum = min + Math.floor(Math.random() * (max - min + 1));
+    const a = Math.floor(Math.random() * (sum + 1));
+    const candidates = [...new Set([sum - 1, sum + 1, sum - 2, sum + 2, sum - 10, sum + 10])]
+      .filter(value => value >= 0 && value <= max && value !== sum);
+    return { a, b: sum - a, sum, choices: this.shuffle([sum, ...this.shuffle(candidates).slice(0, 2)]) };
+  }
+  showMenu() {
+    if (this.destroyed) return;
+    this.clearTimers();
+    window.TTS?.cancel();
+    this.phase = 'menu';
+    this.question = null;
     this.score = 0;
     this.updateHUD();
-    
-    this.container.innerHTML = `
-      <div id="fruit-market-container" class="fm-gameplay">
-        <div class="fm-bear-area">
-          <div class="fm-number-sign" id="fm-target-number">?</div>
-          <div class="fm-bear"><kid-model model="bear" animate aria-label="Gấu / Bear"><img class="model-fallback" src="img/vocab/bear.svg" alt=""></kid-model></div>
-          <div class="fm-basket-wrapper">
-            <div class="fm-basket" id="fm-basket">
-              <div class="fm-basket-back"></div>
-              <div class="fm-basket-content" id="fm-basket-content"></div>
-              <div class="fm-basket-front"></div>
-            </div>
-            <div class="fm-basket-dropzone" id="fm-basket-dropzone"></div>
-          </div>
-        </div>
-        <div class="fm-fruit-area" id="fm-fruit-area"></div>
-      </div>
-    `;
-
-    this.generateQuestion();
+    this.render();
   }
-
-  generateQuestion() {
-    this.roundLocked = false;
-    this.pendingFruits = 0;
-    const config = this.levels[this.currentLevel];
-    this.targetCount = Math.floor(Math.random() * (config.max - config.min + 1)) + config.min;
-    this.currentCount = 0;
-    this.currentFruitType = this.fruitTypes[Math.floor(Math.random() * this.fruitTypes.length)];
-    
-    document.getElementById('fm-target-number').textContent = this.targetCount;
-    document.getElementById('fm-basket-content').innerHTML = '';
-    
-    this.renderFruits();
+  startLevel(level) {
+    if (this.destroyed || !Object.hasOwn(this.levels, level)) return;
+    this.clearTimers();
+    window.TTS?.cancel();
+    this.currentLevel = level;
+    this.score = 0;
+    this.rewarded = false;
+    this.nextQuestion();
   }
-
-  renderFruits() {
-    const fruitArea = document.getElementById('fm-fruit-area');
-    if (!fruitArea) return;
-    fruitArea.innerHTML = '';
-    this.activeFruits = [];
-
-    const config = this.levels[this.currentLevel];
-    
-    for (let i = 0; i < config.spawnCount; i++) {
-      const fruitEl = document.createElement('button');
-      fruitEl.type = 'button';
-      fruitEl.setAttribute('aria-label', `${this.lang === 'vi' ? 'Lấy quả' : 'Pick fruit'} ${i + 1}`);
-      fruitEl.className = 'fm-fruit';
-      fruitEl.innerHTML = `<kid-model model="${this.currentFruitType}" aria-label="${this.currentFruitType}"><img class="model-fallback" src="img/vocab/${this.currentFruitType}.svg" alt="" draggable="false"></kid-model>`;
-      
-      // Random position (avoid edges too tightly)
-      const topPct = 10 + Math.random() * 70;
-      const leftPct = 10 + Math.random() * 70;
-      fruitEl.style.top = topPct + '%';
-      fruitEl.style.left = leftPct + '%';
-      
-      // Random float delay
-      fruitEl.style.animationDelay = (Math.random() * 2) + 's';
-
-      fruitEl.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.handleFruitTap(fruitEl);
-      });
-
-      fruitArea.appendChild(fruitEl);
-      this.activeFruits.push(fruitEl);
-    }
+  nextQuestion() {
+    if (this.destroyed) return;
+    this.question = this.makeQuestion(this.currentLevel);
+    this.phase = 'playing';
+    this.wrongAnswer = null;
+    this.hint = this.currentLevel === 'easy';
+    this.updateHUD();
+    this.render();
   }
-
-  handleFruitTap(fruitEl) {
-    if (this.destroyed || this.roundLocked || fruitEl.classList.contains('fm-dropping')) return;
-    this.pendingFruits++;
-    // Reserve taps immediately; queued animations cannot overfill a completed basket.
-    if (this.currentCount + this.pendingFruits >= this.targetCount) this.roundLocked = true;
-    fruitEl.disabled = true;
-    
-    const noteStep = this.currentCount + this.pendingFruits - 1;
-    if (typeof audio !== 'undefined') {
-      if (audio.playFruitNote) audio.playFruitNote(noteStep);
-      else if (audio.playPop) audio.playPop();
+  choose(value) {
+    if (this.destroyed || this.phase !== 'playing' || !this.question.choices.includes(value)) return;
+    if (value !== this.question.sum) {
+      this.wrongAnswer = value;
+      this.hint = true;
+      this.render();
+      this.container.querySelector(`[data-answer="${value}"]`)?.focus({ preventScroll: true });
+      return;
     }
-    fruitEl.classList.add('fm-dropping');
-    
-    // Animate to basket
-    const dropzone = document.getElementById('fm-basket-dropzone');
-    if (dropzone) {
-      const dzRect = dropzone.getBoundingClientRect();
-      const fRect = fruitEl.getBoundingClientRect();
-      
-      const dx = dzRect.left + dzRect.width/2 - (fRect.left + fRect.width/2);
-      const dy = dzRect.top + dzRect.height/2 - (fRect.top + fRect.height/2);
-      
-      fruitEl.style.transform = `translate(${dx}px, ${dy}px) scale(0.4)`;
-      fruitEl.style.opacity = '0';
-    }
-    
-    this._later(() => {
-      fruitEl.style.visibility = 'hidden';
-      this.pendingFruits--;
-      this.currentCount++;
-      this.speak(this.currentCount.toString());
-      
-      // Add mini fruit to basket content
-      const basketContent = document.getElementById('fm-basket-content');
-      if (basketContent) {
-        const mini = document.createElement('kid-model');
-        mini.setAttribute('model', this.currentFruitType);
-        mini.setAttribute('aria-label', this.currentFruitType);
-        mini.innerHTML = `<img class="model-fallback" src="img/vocab/${this.currentFruitType}.svg" alt="">`;
-        mini.className = 'fm-mini-fruit';
-        basketContent.appendChild(mini);
+    // Lock synchronously so fast taps cannot count a question twice.
+    this.phase = 'correct';
+    this.wrongAnswer = null;
+    this.score++;
+    this.updateHUD();
+    this.render();
+    if (typeof audio !== 'undefined') audio.playSuccess?.();
+    this.later(() => {
+      if (this.score < this.targetScore) {
+        this.nextQuestion();
+        this.container.querySelector('[data-answer]')?.focus({ preventScroll: true });
+      } else {
+        this.phase = 'complete';
+        if (!this.rewarded) { this.rewarded = true; this.app.addStars(5); }
+        this.render();
+        this.container.querySelector('[data-action="replay"]')?.focus({ preventScroll: true });
       }
-      
-      this.checkWin();
-    }, 400); // sync with css drop animation
+    }, 1200);
   }
-
-  checkWin() {
-    if (this.currentCount === this.targetCount) {
-      // Correct!
-      if (typeof audio !== 'undefined' && audio.playSuccess) audio.playSuccess();
-      const bear = document.querySelector('.fm-bear');
-      if (bear) bear.classList.add('fm-bear-jump');
-      
-      this.score++;
-      this.updateHUD();
-      
-      this._later(() => {
-        if (bear) bear.classList.remove('fm-bear-jump');
-
-        if (this.score >= this.targetScore) {
-          this.showWinScreen();
-        } else {
-          this.showNextQuestion();
-        }
-      }, 1500);
-
-    } else if (this.currentCount > this.targetCount) {
-      // Over count
-      const msg = this.lang === 'vi' ? 'Nhiều quá rồi!' : 'Too many!';
-      this.speak(msg);
-      if (typeof audio !== 'undefined' && audio.playFail) audio.playFail();
-      
-      const basket = document.getElementById('fm-basket');
-      if (basket) {
-        basket.classList.add('fm-basket-shake');
-        this._later(() => basket.classList.remove('fm-basket-shake'), 500);
-      }
-
-      this.resetBasket();
+  quantity(value) {
+    if (value === 0) return '<span class="fm-zero" aria-hidden="true">0</span>';
+    if (this.currentLevel === 'easy') {
+      return `<div class="fm-apples" aria-hidden="true">${Array.from({ length: value }, () => '<img src="img/vocab/apple.svg" alt="" draggable="false">').join('')}</div>`;
     }
+    return `<div class="fm-blocks" aria-hidden="true">${Array.from({ length: Math.floor(value / 10) }, () =>
+      '<span class="fm-ten">' + '<i></i>'.repeat(10) + '</span>').join('')}${'<span class="fm-one"></span>'.repeat(value % 10)}</div>`;
   }
-
-  resetBasket() {
-    this._later(() => {
-      this.currentCount = 0;
-      const basketContent = document.getElementById('fm-basket-content');
-      if (basketContent) basketContent.innerHTML = '';
-      this.renderFruits(); // Respawn fruits
-    }, 800);
-  }
-
-  showNextQuestion() {
-    const area = document.getElementById('fm-fruit-area');
-    if (area) {
-      area.style.opacity = '0';
-      this._later(() => {
-        area.style.opacity = '1';
-        this.generateQuestion();
-      }, 400);
+  render() {
+    if (this.destroyed) return;
+    const title = this.text('Bé Học Cộng', 'Addition Adventure');
+    const labels = this.lang === 'en' ? ['Easy', 'Medium', 'Hard'] : ['Dễ', 'Vừa', 'Khó'];
+    const menuLabel = this.text('Chọn mức', 'Choose level');
+    const icon = (action, symbol, label, extra = '') => `<button type="button" class="fm-icon" data-action="${action}" aria-label="${label}" ${extra}><span aria-hidden="true">${symbol}</span></button>`;
+    let content;
+    if (this.phase === 'menu') {
+      content = `<div class="fm-mascot"><kid-model model="bear" aria-label="${this.text('Bạn Gấu', 'Bear friend')}"><img class="model-fallback" src="img/vocab/bear.svg" alt=""></kid-model></div>
+        <div class="fm-demo" aria-hidden="true">2 + 3 = 5</div>
+        <div class="fm-levels" role="group" aria-label="${menuLabel}">${Object.entries(this.levels).map(([level, config], i) =>
+          `<button type="button" class="fm-level" data-level="${level}"><span aria-hidden="true">${'★'.repeat(i + 1)}</span><strong>${labels[i]}</strong><small>${this.text('Tổng đến', 'Sums up to')} ${config.max}</small></button>`).join('')}</div>`;
+    } else if (this.phase === 'complete') {
+      content = `<div class="fm-complete" role="status"><div class="fm-stars" aria-label="${this.text('Nhận 5 sao', 'Five stars earned')}">★ ★ ★ ★ ★</div><h2>${this.text('Giỏi lắm!', 'Well done!')}</h2></div>
+        <div class="fm-actions">${icon('replay', '↻', this.text('Chơi lại', 'Play again'))}${icon('menu', '⌂', menuLabel)}</div>`;
+    } else {
+      const { a, b, sum, choices } = this.question;
+      const locked = this.phase === 'correct';
+      content = `<div class="fm-toolbar"><span class="fm-progress" aria-label="${this.score}/5">${Array.from({ length: 5 }, (_, i) => i < this.score ? '★' : '☆').join(' ')}</span>
+        <div class="fm-actions">${icon('menu', '⌂', menuLabel)}${icon('hint', '💡', this.text('Gợi ý bằng hình', 'Picture hint'), `aria-pressed="${this.hint}"`)}${icon('listen', '🔊', this.text('Nghe phép tính', 'Hear the sum'))}</div></div>
+        <div class="fm-equation" role="group" aria-label="${a} + ${b} = ${locked ? sum : '?'}"><span class="fm-a">${a}</span><span>+</span><span class="fm-b">${b}</span><span>=</span><strong class="fm-result">${locked ? sum : '?'}</strong></div>
+        <div class="fm-hint" ${this.hint ? '' : 'hidden'}><div class="fm-quantities"><div aria-label="${a}">${this.quantity(a)}</div><span class="fm-plus" aria-hidden="true">+</span><div aria-label="${b}">${this.quantity(b)}</div></div>
+        ${this.currentLevel !== 'easy' ? '<div class="fm-legend" aria-hidden="true"><span class="fm-ten">' + '<i></i>'.repeat(10) + '</span> = 10 <span class="fm-one"></span> = 1</div>' : ''}</div>
+        <div class="fm-feedback" role="status" aria-live="polite">${locked ? this.text('Đúng rồi! 🌟', 'Correct! 🌟') : this.wrongAnswer !== null ? this.text('Thử lại nhé 👀', 'Try again 👀') : this.text('Chọn đáp án', 'Choose an answer')}</div>
+        <div class="fm-answers" role="group" aria-label="${this.text('Đáp án', 'Answers')}">${choices.map(value => `<button type="button" class="fm-answer ${this.wrongAnswer === value ? 'fm-wrong' : ''} ${locked && value === sum ? 'fm-right' : ''}" data-answer="${value}" ${locked ? 'disabled' : ''}>${value}</button>`).join('')}</div>`;
     }
-  }
-
-  showWinScreen() {
-    if (typeof audio !== 'undefined' && audio.playCheer) audio.playCheer();
-    this.app.winGame(10);
-    
-    const overlay = document.createElement('div');
-    overlay.className = 'fm-win-overlay';
-    
-    const winMsg = this.lang === 'vi' ? '🎉 Tuyệt vời!' : '🎉 Great Job!';
-    const btnReplay = this.lang === 'vi' ? 'Chơi Lại' : 'Play Again';
-    const btnBack = this.lang === 'vi' ? 'Về Đảo' : 'Back to Island';
-    
-    overlay.innerHTML = `
-      <div class="fm-win-box">
-        <h2>${winMsg}</h2>
-        <div class="comp-actions">
-          <button class="btn-primary" id="fm-btn-replay">${btnReplay}</button>
-          <button class="btn-secondary" id="fm-btn-back">${btnBack}</button>
-        </div>
-      </div>
-    `;
-    
-    this.container.appendChild(overlay);
-    
-    document.getElementById('fm-btn-replay').addEventListener('click', () => {
-      overlay.remove();
-      this.currentLevel = null;
-      this.start();
+    this.container.innerHTML = `<section class="fm-addition" data-phase="${this.phase}" lang="${this.lang}" aria-label="${title}">${content}</section>`;
+    this.container.querySelectorAll('[data-level]').forEach(button => button.addEventListener('click', () => this.startLevel(button.dataset.level)));
+    this.container.querySelectorAll('[data-answer]').forEach(button => button.addEventListener('click', () => this.choose(Number(button.dataset.answer))));
+    this.container.querySelector('[data-action="listen"]')?.addEventListener('click', () => this.speak());
+    this.container.querySelector('[data-action="hint"]')?.addEventListener('click', () => {
+      this.hint = !this.hint;
+      this.render();
+      this.container.querySelector('[data-action="hint"]')?.focus({ preventScroll: true });
     });
-    
-    document.getElementById('fm-btn-back').addEventListener('click', () => {
-      this.app.closeActiveGame();
-    });
+    this.container.querySelector('[data-action="menu"]')?.addEventListener('click', () => this.showMenu());
+    this.container.querySelector('[data-action="replay"]')?.addEventListener('click', () => this.startLevel(this.currentLevel));
   }
-
   destroy() {
     this.destroyed = true;
-    this.timers.forEach(id => clearTimeout(id));
-    this.timers.clear();
-    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    this.clearTimers();
+    window.TTS?.cancel();
     this.container.innerHTML = '';
   }
 }

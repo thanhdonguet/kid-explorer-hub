@@ -1,5 +1,5 @@
 /* ================================================================
-   Shared Game Container & Six Activity Styles
+   Shared Game Container & Original Activity Styles
    ================================================================ */
 
 /* ── Game Screen Container ── */
@@ -2041,294 +2041,59 @@
   }
 }
 
-/* ==========================================================================
-   FRUIT MARKET (MATH GAME REPLACEMENT)
-   ========================================================================== */
-
-#fruit-market-container {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  background: linear-gradient(135deg, #FFDEE9 0%, #B5FFFC 100%);
-  position: relative;
-  overflow: hidden;
-  font-family: var(--font-kids);
-  border-radius: 20px;
-}
-
-/* -- Level Select -- */
-.fm-level-select {
-  justify-content: center;
-  align-items: center;
-  gap: 30px;
-}
-
-.fm-title {
-  font-size: 2.8rem;
-  color: #ff4757;
-  text-shadow: 2px 2px 0px #fff, 4px 4px 0px rgba(0, 0, 0, 0.1);
-  margin: 0 0 20px 0;
-}
-
-.fm-levels {
-  display: flex;
-  gap: 20px;
-}
-
-.fm-level-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  padding: 20px;
-  border-radius: 20px;
-  border: 4px solid #fff;
-  background: #fff;
-  cursor: pointer;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s, box-shadow 0.2s;
-  width: 160px;
-}
-
-.fm-level-easy {
-  border-color: #2ed573;
-}
-
-.fm-level-medium {
-  border-color: #1e90ff;
-}
-
-.fm-level-hard {
-  border-color: #ff4757;
-}
-
-.fm-level-icon {
-  font-size: 3rem;
-}
-
-.fm-level-name {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #2f3542;
-}
-
-.fm-level-desc {
-  font-size: 1rem;
-  color: #747d8c;
-}
-
-.fm-btn-bounce {
-  animation: bearJump 0.3s;
-}
-
-/* -- Gameplay -- */
-.fm-gameplay {
-  flex-direction: row;
-}
-
-.fm-bear-area {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  padding-bottom: 20px;
-  position: relative;
-  max-width: 350px;
-  border-right: 2px dashed rgba(0, 0, 0, 0.1);
-}
-
-.fm-number-sign {
-  background: #fff;
-  border: 4px solid #ffa502;
-  border-radius: 15px;
-  padding: 10px 30px;
-  font-size: 4rem;
-  font-weight: bold;
-  color: #ff4757;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  margin-bottom: 20px;
-  animation: fruitFloat 3s infinite ease-in-out;
-}
-
-.fm-bear {
-  font-size: 8rem;
-  line-height: 1;
-  margin-bottom: -10px;
-  z-index: 2;
-}
-
-.fm-bear-jump {
-  animation: bearJump 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.fm-basket-wrapper {
-  position: relative;
-  width: 180px;
-  height: 100px;
-  z-index: 3;
-}
-
-.fm-basket {
-  position: relative;
-  width: 100%;
-  height: 100%;
-}
-
-.fm-basket-back {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 60px;
-  background: #d35400;
-  border-radius: 10px 10px 30px 30px;
-}
-
-.fm-basket-front {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 50px;
-  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><path d="M0,0 L10,10 L20,0 L20,20 L0,20 Z" fill="%23e67e22"/></svg>');
-  border-radius: 0 0 30px 30px;
-  z-index: 5;
-}
-
-.fm-basket-content {
-  position: absolute;
-  bottom: 20px;
-  left: 10px;
-  right: 10px;
-  height: 80px;
-  display: flex;
-  flex-wrap: wrap-reverse;
-  justify-content: center;
-  align-items: flex-end;
-  gap: -10px;
-  z-index: 4;
-}
-
-.fm-mini-fruit {
-  width: 40px;
-  height: 40px;
-  margin: -5px;
-}
-
-.fm-basket-dropzone {
-  position: absolute;
-  inset: 0;
-  border: 4px dashed #ffa502;
-  border-radius: 20px;
-  z-index: 6;
-  opacity: 0.5;
-}
-
-.fm-basket-shake {
-  animation: basketShake 0.4s;
-}
-
-.fm-fruit-area {
-  flex: 2;
-  position: relative;
-}
-
-.fm-fruit {
-  position: absolute;
-  width: 80px;
-  height: 80px;
-  cursor: pointer;
-  animation: fruitFloat 4s infinite ease-in-out;
-  transition: transform 0.4s, opacity 0.4s;
-  z-index: 10;
-  filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.15));
-}
-
-.fm-fruit:hover {
-  transform: scale(1.1);
-}
-
-.fm-fruit img {
-  width: 100%;
-  height: 100%;
-}
-
-.fm-dropping {
-  pointer-events: none;
-}
-
-/* -- Win Overlay -- */
-.fm-win-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(5px);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 100;
-}
-
-.fm-win-box {
-  background: #fff;
-  padding: 40px;
-  border-radius: 30px;
-  text-align: center;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-  border: 5px solid #2ed573;
-  animation: bearJump 0.5s;
-}
-
-.fm-win-box h2 {
-  font-size: 3rem;
-  color: #2ed573;
-  margin-top: 0;
-  margin-bottom: 30px;
-}
-
-/* -- Animations -- */
-@keyframes fruitFloat {
-
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-15px);
-  }
-}
-
-@keyframes basketShake {
-
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-
-  25% {
-    transform: translateX(-10px) rotate(-5deg);
-  }
-
-  75% {
-    transform: translateX(10px) rotate(5deg);
-  }
-}
-
-@keyframes bearJump {
-  0% {
-    transform: scale(1) translateY(0);
-  }
-
-  50% {
-    transform: scale(1.1) translateY(-20px);
-  }
-
-  100% {
-    transform: scale(1) translateY(0);
-  }
+/* Addition learning game */
+.fm-addition { width: min(100%, 860px); margin: auto; padding: clamp(10px, 2vw, 24px); color: #315444; text-align: center; box-sizing: border-box; }
+.fm-addition * { box-sizing: border-box; }
+.fm-addition [hidden] { display: none !important; }
+.fm-addition button { min-width: 48px; min-height: 48px; border: 2px solid #87aa98; border-radius: 18px; background: #fffdf5; color: #315444; cursor: pointer; font: inherit; touch-action: manipulation; }
+.fm-addition button:focus-visible { outline: 4px solid #6e59b4; outline-offset: 3px; }
+.fm-addition button:hover:not(:disabled) { background: #eaf6dd; border-color: #417b5b; }
+.fm-addition button:disabled { cursor: default; }
+.fm-mascot { width: 120px; height: 110px; margin: 0 auto; }
+.fm-mascot kid-model { display: block; width: 100%; height: 100%; }
+.fm-demo { font-size: clamp(2rem, 7vw, 3.5rem); font-weight: 800; margin: 10px 0 24px; }
+.fm-levels { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.fm-addition .fm-level { padding: 22px 10px; min-height: 145px; }
+.fm-level strong, .fm-level small { display: block; margin-top: 10px; }
+.fm-level strong { font-size: 1.4rem; }
+.fm-level > span, .fm-stars, .fm-progress { color: #97651b; }
+.fm-toolbar { display: flex; justify-content: space-between; gap: 10px; align-items: center; flex-wrap: wrap; }
+.fm-progress { font-size: clamp(1.25rem, 4vw, 1.7rem); white-space: nowrap; }
+.fm-actions { display: flex; gap: 10px; justify-content: center; }
+.fm-addition .fm-icon { font-size: 1.45rem; padding: 7px; }
+.fm-equation { display: grid; grid-template-columns: 1fr .5fr 1fr .5fr 1.2fr; align-items: center; gap: 6px; font-weight: 800; font-size: clamp(2rem, 7vw, 4rem); margin: 22px 0; }
+.fm-equation .fm-a, .fm-equation .fm-b, .fm-result { border-radius: 18px; padding: 12px 4px; }
+.fm-a { background: #fbe3b6; }
+.fm-b { background: #d9edf2; }
+.fm-result { background: #e9e0f6; }
+.fm-hint { padding: 10px; border-radius: 18px; background: #f3f6e9; }
+.fm-quantities { display: grid; grid-template-columns: 1fr 30px 1fr; align-items: center; gap: 8px; }
+.fm-quantities > div { min-width: 0; }
+.fm-plus, .fm-zero { font-size: 1.8rem; font-weight: 700; }
+.fm-apples { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
+.fm-apples img { width: clamp(20px, 5vw, 34px); height: clamp(20px, 5vw, 34px); }
+.fm-blocks { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; justify-content: center; }
+.fm-ten { display: inline-flex; flex-shrink: 0; width: 80px; height: 14px; border: 1px solid #b07521; border-radius: 3px; background: #efc05c; overflow: hidden; }
+.fm-ten i { flex: 1; border-right: 1px solid #b07521; }
+.fm-ten i:last-child { border: 0; }
+.fm-one { display: inline-block; width: 14px; height: 14px; border: 1px solid #387f92; border-radius: 3px; background: #93cedb; flex-shrink: 0; }
+.fm-legend { display: flex; align-items: center; justify-content: center; gap: 7px; font-size: .85rem; margin-top: 14px; }
+.fm-feedback { min-height: 32px; line-height: 1.5; margin: 16px 0 10px; font-weight: 700; }
+.fm-answers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; max-width: 560px; margin: auto; }
+.fm-addition .fm-answer { min-height: 76px; font-size: clamp(1.7rem, 6vw, 2.5rem); font-weight: 800; }
+.fm-addition .fm-wrong { border-style: dashed; background: #fff0d9; }
+.fm-addition .fm-right { border-color: #367b4c; background: #dcefc7; box-shadow: inset 0 0 0 2px #367b4c; }
+.fm-complete { padding: 24px 0; }
+.fm-stars { font-size: clamp(1.5rem, 5vw, 2.5rem); }
+@media (max-width: 480px) {
+  .fm-levels { grid-template-columns: 1fr; gap: 9px; }
+  .fm-addition .fm-level { min-height: 78px; padding: 10px; display: grid; grid-template-columns: 70px 1fr; align-items: center; }
+  .fm-level > span { grid-row: span 2; }
+  .fm-level strong, .fm-level small { margin: 0; }
+  .fm-toolbar { gap: 6px; }
+  .fm-actions { gap: 6px; }
+  .fm-equation { gap: 3px; }
+  .fm-answers { gap: 8px; }
 }
 
 /* ================================================================

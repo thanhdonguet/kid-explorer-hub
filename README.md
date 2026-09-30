@@ -1,6 +1,6 @@
 # Đảo Khám Phá · Kid Explorer Hub
 
-Web app học mà chơi dành cho trẻ em, gồm sáu trò chơi tiếng Việt / tiếng Anh. Giao diện dùng đảo đồ chơi 3D, mô hình low-poly và màu sắc nhẹ nhàng trên nền SPA.
+Web app học mà chơi dành cho trẻ em, gồm chín trò chơi tiếng Việt / tiếng Anh. Giao diện dùng đảo đồ chơi 3D, mô hình low-poly và màu sắc nhẹ nhàng trên nền SPA.
 
 ## Chạy tại máy
 
@@ -18,16 +18,25 @@ Mở **http://localhost:4173/**. Server lắng nghe trên mạng nội bộ; có
 
 Sau khi sửa mã nguồn hoặc tài nguyên trong `www/`, chạy lại `npm run build` rồi tải lại trang. Không chỉnh trực tiếp `www/js/explorer-3d.bundle.js` hoặc `www/asset-list.js` vì chúng được tạo tự động.
 
-## Sáu trò chơi
+## Chín trò chơi
 
 | Trò chơi | Nội dung học | Đồ họa và tương tác |
 | --- | --- | --- |
 | Khu Rừng Trí Nhớ | Ghép cặp, ghi nhớ; 5/10/15 cặp | Thẻ lật với thú và đồ vật 3D, kỷ lục thời gian theo độ khó |
 | Xưởng Pha Màu | Nhận biết và pha màu tự do | 20 chai màu, tối đa 8 lượt thêm màu mỗi bát; kéo thả hoặc bàn phím, đổ bát để chơi tiếp |
-| Chợ Trái Cây | Đếm từ 1 đến 10, năm lượt | Gấu 3D, trái cây GLB, chạm để cho vào giỏ |
+| Bé Học Cộng | Cộng hai số nguyên không âm, tổng tối đa 100 | Ba mức tổng đến 10, 20, 100; năm câu mỗi lượt, chọn đáp án số, gợi ý bằng quả hoặc thanh chục–ô đơn vị; tổng và đáp án không vượt phạm vi của mức chơi |
 | Bong Bóng Chữ Cái | 26 chữ cái và từ vựng tiếng Anh | Đồ chơi nổi, mô hình hoặc thẻ minh họa 3D; năm từ mỗi phiên |
 | Khủng Long Sắc Màu | Sáu màu qua thức ăn | Dino đổi màu trực tiếp trên vật liệu 3D, giọng đọc có sẵn |
 | Bến Xe Thành Phố | Phân loại 20 phương tiện; chọn trong bốn bến mỗi lượt | Xe và nhà bến 3D, kéo thả hoặc chạm bến; năm lượt |
+| Xưởng Lắp Ghép | Nhận biết hình, kích thước và hướng | Kéo chính hình mảnh ghép theo con trỏ/ngón tay, giữ màu, kích thước và hướng; hoặc chọn mảnh rồi chọn ô; năm đồ chơi mỗi phiên |
+| Đoàn Tàu Quy Luật | Hai đồ chơi thay phiên nhau | Bốn toa A–B–A–?, hai đáp án bằng hình; chọn sai có gợi ý trực quan; tự chuyển ga và nhận sao sau năm ga; có nút nghe hướng dẫn |
+| Khu Vườn Diệu Kỳ | Ghép hình và làm quen trình tự | Ba hình mỗi câu chuyện, ô có hình mẫu mờ; kéo ảnh hoặc chạm để ghép, tự phát khi ghép đủ; phần chơi dùng hình và biểu tượng, có nút nghe hướng dẫn |
+
+Ba trò mới có độ khó Dễ / Vừa / Khó, hướng dẫn VI/EN và nút nghe lại. Không giới hạn thời gian, không trừ điểm khi thử sai; mỗi phiên hoàn thành nhận 5 sao một lần. Có thể chơi bằng chuột, cảm ứng hoặc Tab + Enter/Space. Đổi ngôn ngữ giữ nguyên tiến độ; rời game hủy timer và thao tác kéo thả. Phần trình tự dùng SVG tạo riêng; các mô hình thưởng tận dụng tài nguyên cục bộ.
+
+Đoàn Tàu Quy Luật giữ nguyên các mô hình đã render khi chọn đáp án hoặc đổi ngôn ngữ, chỉ điền toa còn thiếu. Vùng phản hồi được chừa đủ chỗ để không đẩy đáp án lên xuống; bài mới xuất hiện nhẹ, không lóe ảnh SVG trong lúc mô hình 3D đang tải. Khi không có WebGL hoặc tải mô hình thất bại, ảnh dự phòng vẫn được hiển thị.
+
+`www/js/activity-base.js` dùng chung vòng đời, TTS và thao tác kéo thả cho ba game mới. Mỗi trò giữ logic và stylesheet riêng; không thêm dependency hoặc gọi API khi chơi.
 
 Điểm sao, ngôn ngữ và kỷ lục trí nhớ lưu trên trình duyệt. Không cần tài khoản hay backend. Giọng đọc hệ thống phụ thuộc trình duyệt và các giọng đã cài.
 
@@ -74,7 +83,7 @@ npm test
 
 Playwright dùng Chrome đã cài (`channel: chrome`). Nếu máy chưa có Chrome, cài Chrome trước hoặc đổi cấu hình sang Chromium của Playwright. Test tự bật server nếu cổng 4173 chưa được dùng. Có thể chạy `npm run dev` trước và để test dùng lại server.
 
-Bộ test kiểm tra tham chiếu tài nguyên, texture GLB, vào được cả sáu game, hoàn thành các game có lượt chơi và pha/reset màu ở chế độ chơi tự do, chống tính điểm lặp khi chạm nhanh, hủy timer lúc đổi game, VI/EN, thao tác chuột và touch, bố cục 320/390px và ngang 844px, cache offline và fallback không có WebGL. Screenshot nằm trong `test-results/` sau khi chạy.
+Bộ test kiểm tra tham chiếu tài nguyên, texture GLB, vào được cả chín game, hoàn thành các game có lượt chơi và pha/reset màu ở chế độ chơi tự do, chống tính điểm lặp khi chạm nhanh, hủy timer lúc đổi game, VI/EN, thao tác chuột và touch, bố cục 320/390px và ngang 844px, cache offline và fallback không có WebGL. Ba game mới có các file test riêng theo tên game. Screenshot nằm trong `test-results/` sau khi chạy.
 
 Vẫn cần thử trên thiết bị iOS/Android thực tế để đánh giá GPU, bộ nhớ, phát âm và pin; giả lập kích thước màn hình không thay thế kiểm thử phần cứng.
 

@@ -1,5 +1,6 @@
 const { test, expect } = require('@playwright/test');
 const fs = require('node:fs');
+const games = ['memory', 'color', 'math', 'alphabet-pop', 'dinosaur-colors', 'vehicle-parking', 'shape-workshop', 'pattern-train', 'story-garden'];
 
 async function open(page) {
   await page.goto('/');
@@ -22,12 +23,13 @@ test('all referenced vocabulary and embedded GLB resources exist', () => {
   }
 });
 
-test('home, all six games, rendering cleanup, language and console', async ({ page }) => {
+test('home, all nine games, rendering cleanup, language and console', async ({ page }) => {
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
   await open(page);
   await page.screenshot({ path: 'test-results/home-desktop.png' });
-  for (const game of ['memory', 'color', 'math', 'alphabet-pop', 'dinosaur-colors', 'vehicle-parking']) {
+  await expect(page.locator('.island-card')).toHaveCount(9);
+  for (const game of games) {
     await launch(page, game);
     await expect(page.locator('#game-screen')).toHaveClass(/active/);
     await expect(page.locator('#game-stage')).not.toBeEmpty();
@@ -37,7 +39,7 @@ test('home, all six games, rendering cleanup, language and console', async ({ pa
     await page.screenshot({ path: `test-results/game-${game}.png` });
     await page.locator('#btn-lang').click();
     await back(page);
-    expect(await page.evaluate(() => window.Explorer3D.viewCount)).toBe(7);
+    expect(await page.evaluate(() => window.Explorer3D.viewCount)).toBe(10);
   }
   await page.locator('#btn-lang').click();
   await page.reload();
@@ -106,26 +108,6 @@ test('memory completes and an abandoned match cannot change the next game', asyn
   await back(page); await launch(page, 'math');
   await page.waitForTimeout(1200);
   await expect(page.locator('#score-val')).toHaveText('0/5');
-});
-
-test('fruit fast taps complete one question exactly once and finish five rounds', async ({ page }) => {
-  await open(page); await launch(page, 'math');
-  for (let round = 0; round < 5; round++) {
-    await expect.poll(() => page.evaluate(() => app.activeGame.roundLocked)).toBe(false);
-    await page.evaluate(() => {
-      window.__fruitNotes = [];
-      audio.playFruitNote = step => window.__fruitNotes.push(step);
-    });
-    // Dispatch a rapid burst as a child may do; all UI buttons receive the burst.
-    await page.locator('.fm-fruit').evaluateAll(buttons => buttons.forEach(button => button.click()));
-    await expect(page.locator('#score-val')).toHaveText(`${round + 1}/5`);
-    expect(await page.evaluate(() => app.activeGame.currentCount)).toBe(await page.evaluate(() => app.activeGame.targetCount));
-    expect(await page.evaluate(() => window.__fruitNotes)).toEqual(
-      await page.evaluate(() => Array.from({ length: app.activeGame.targetCount }, (_, index) => index))
-    );
-  }
-  await expect(page.locator('.fm-win-overlay')).toBeVisible();
-  expect(await page.evaluate(() => app.stars)).toBe(10);
 });
 
 test('mix recipes update the 3D bowl, keyboard works, reset clears', async ({ page }) => {
@@ -615,7 +597,7 @@ test('mobile portrait and landscape keep every activity reachable without horizo
   await open(page);
   for (const size of [{width:390,height:844},{width:320,height:640},{width:844,height:390}]) {
     await page.setViewportSize(size);
-    for (const game of ['memory','color','math','alphabet-pop','dinosaur-colors','vehicle-parking']) {
+    for (const game of games) {
       await launch(page, game);
       const overflow = await page.locator('#game-stage').evaluate(e => ({client:e.clientWidth,scroll:e.scrollWidth}));
       expect(overflow.scroll, `${game} at ${size.width}`).toBeLessThanOrEqual(overflow.client + 2);
@@ -634,7 +616,7 @@ test('a fully installed PWA can load every game and 3D model offline', async ({ 
   await context.setOffline(true);
   await page.reload();
   await expect(page.locator('kid-model[model="world"]')).toHaveClass(/model-ready/);
-  for (const game of ['memory','color','math','alphabet-pop','dinosaur-colors','vehicle-parking']) {
+  for (const game of games) {
     await launch(page, game);
     if (game !== 'alphabet-pop') await expect(page.locator('#game-stage kid-model.model-ready').first()).toBeVisible();
     await back(page);
@@ -649,7 +631,7 @@ test('without WebGL, fallback images and all game routes remain usable', async (
   await page.goto('/');
   await expect(page.locator('html')).toHaveAttribute('data-graphics','fallback');
   await expect(page.locator('.hero-art .model-fallback')).toBeVisible();
-  for (const game of ['memory','color','math','alphabet-pop','dinosaur-colors','vehicle-parking']) {
+  for (const game of games) {
     await launch(page,game); await expect(page.locator('#game-stage')).not.toBeEmpty(); await back(page);
   }
   await launch(page,'dinosaur-colors');

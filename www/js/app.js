@@ -1,6 +1,6 @@
 /* ================================================================
    Central Application Router & State Manager
-   – Dashboard: Đảo Khám Phá (six playable activities)
+   – Dashboard: Đảo Khám Phá (nine playable activities)
    – Language toggle: VI ↔ EN
    ================================================================ */
 
@@ -34,8 +34,8 @@ class AppController {
         appTitle:     'Đảo Khám Phá',
         memoryName:   'Khu Rừng Trí Nhớ',
         memoryDesc:   'Lật thẻ tìm những người bạn',
-        mathName:     'Chợ Trái Cây',
-        mathDesc:     'Đếm quả ngon, đầy giỏ nhỏ',
+        mathName:     'Bé Học Cộng',
+        mathDesc:     'Cộng hai số, vui mỗi ngày',
         alphabetPopName: 'Bong Bóng Chữ Cái',
         alphabetPopDesc: 'Bắt chữ xinh, học từ mới',
         dinosaurColorsName: 'Khủng Long Sắc Màu',
@@ -44,17 +44,23 @@ class AppController {
         colorDesc:    'Một chút màu, một chút phép màu',
         vehicleParkingName: 'Bến Xe Thành Phố',
         vehicleParkingDesc: 'Tìm đúng bến cho từng chiếc xe',
+        shapeWorkshopName: 'Xưởng Lắp Ghép', shapeWorkshopDesc: 'Ghép hình nhỏ, tạo đồ chơi xinh', shapeWorkshopSkill: 'HÌNH KHỐI',
+        patternTrainName: 'Đoàn Tàu Quy Luật', patternTrainDesc: 'Tìm món còn thiếu, đưa tàu về ga', patternTrainSkill: 'LOGIC',
+        storyGardenName: 'Khu Vườn Diệu Kỳ', storyGardenDesc: 'Xếp chuyện nhỏ, nuôi vườn xanh', storyGardenSkill: 'TRÌNH TỰ',
         brandTagline: 'HỌC MÀ CHƠI, CHƠI MÀ HỌC', starsLabel: 'sao',
         welcome: 'CHÀO NHÀ THÁM HIỂM NHÍ!', heroLine1: 'Một thế giới nhỏ.', heroLine2: 'Ngàn điều hay.',
         heroDesc: 'Chạm vào điều kỳ diệu, chơi cùng trí tưởng tượng. Mỗi hòn đảo là một khám phá mới của bé!',
-        explore: 'Cùng khám phá', heroNote: '6 trò chơi · Vô vàn niềm vui', islandNote: 'Cuộc phiêu lưu bắt đầu!',
+        explore: 'Cùng khám phá', heroNote: '9 trò chơi · Vô vàn niềm vui', islandNote: 'Cuộc phiêu lưu bắt đầu!',
         musicOff: 'Nhạc nền: Tắt', musicOn: 'Nhạc nền: Bật',
-        pickIsland: 'CHƠI MỘT CHÚT, LỚN THÊM MỘT CHÚT', islandsTitle: 'Hôm nay, bé muốn khám phá gì?', islandsCount: '6 hòn đảo đang chờ bé',
-        memorySkill: 'TRÍ NHỚ', colorSkill: 'SÁNG TẠO', mathSkill: 'SỐ ĐẾM', alphabetPopSkill: 'TIẾNG ANH', dinosaurColorsSkill: 'MÀU SẮC', vehicleParkingSkill: 'TƯ DUY',
+        pickIsland: 'CHƠI MỘT CHÚT, LỚN THÊM MỘT CHÚT', islandsTitle: 'Hôm nay, bé muốn khám phá gì?', islandsCount: '9 hòn đảo đang chờ bé',
+        memorySkill: 'TRÍ NHỚ', colorSkill: 'SÁNG TẠO', mathSkill: 'PHÉP CỘNG', alphabetPopSkill: 'TIẾNG ANH', dinosaurColorsSkill: 'MÀU SẮC', vehicleParkingSkill: 'TƯ DUY',
         footerMessage: 'Mỗi ngày một khám phá. Mỗi bước một niềm vui.', credits: 'Góc phụ huynh & nguồn tài nguyên',
         memoryHint: 'Lật hai thẻ để tìm những người bạn giống nhau.', colorHint: 'Kéo bình màu vào bát, hoặc chọn màu rồi nhấn Enter.',
-        mathHint: 'Chạm vào trái cây để lấy đúng số quả bạn Gấu cần.', alphabetHint: 'Chọn một chữ cái, rồi tìm chữ ấy trong những món đồ chơi.',
+        mathHint: 'Cộng hai số rồi chọn đáp án. Chạm bóng đèn để xem gợi ý.', alphabetHint: 'Chọn một chữ cái, rồi tìm chữ ấy trong những món đồ chơi.',
         dinosaurColorsHint: 'Chạm vào trái cây và xem Dino đổi màu nhé!', vehicleHint: 'Kéo xe về đúng bến, hoặc chạm vào bến để chọn.',
+        shapeWorkshopHint: 'Chọn mảnh rồi chọn chỗ đặt, hoặc kéo mảnh vào hình mẫu.',
+        patternTrainHint: 'Quan sát các toa tàu và tìm món đồ còn thiếu trong quy luật.',
+        storyGardenHint: 'Chọn thẻ rồi chọn vị trí, hoặc kéo thả để xếp câu chuyện theo thứ tự.',
         comingSoon:   '🔒 Sắp Ra Mắt',
         scoreLabel:   'Điểm',
         backTo:       'Đảo Khám Phá',
@@ -63,8 +69,8 @@ class AppController {
         appTitle:     'Explorer Island',
         memoryName:   'Memory Jungle',
         memoryDesc:   'Flip cards, find pairs!',
-        mathName:     'Fruit Market',
-        mathDesc:     'Count & learn numbers',
+        mathName:     'Addition Adventure',
+        mathDesc:     'Add two numbers, grow your skills',
         alphabetPopName: 'Alphabet Pop',
         alphabetPopDesc: 'Fun letters learning',
         dinosaurColorsName: 'Colorful Dinosaur',
@@ -73,17 +79,23 @@ class AppController {
         colorDesc:    'Mix magical colors',
         vehicleParkingName: 'City Parking',
         vehicleParkingDesc: 'Park each vehicle!',
+        shapeWorkshopName: 'Shape Workshop', shapeWorkshopDesc: 'Little shapes, wonderful toys', shapeWorkshopSkill: 'SHAPES',
+        patternTrainName: 'Pattern Train', patternTrainDesc: 'Find the pattern, send the train home', patternTrainSkill: 'LOGIC',
+        storyGardenName: 'Story Garden', storyGardenDesc: 'Put stories in order, grow a garden', storyGardenSkill: 'SEQUENCING',
         brandTagline: 'LITTLE PLAY, BIG DISCOVERIES', starsLabel: 'stars',
         welcome: 'HELLO, LITTLE EXPLORER!', heroLine1: 'A little world.', heroLine2: 'A lot to discover.',
         heroDesc: 'A spark of wonder. A little imagination. Every island brings a brand new discovery!',
-        explore: 'Let’s explore', heroNote: '6 games · Endless little adventures', islandNote: 'Adventure starts here!',
+        explore: 'Let’s explore', heroNote: '9 games · Endless little adventures', islandNote: 'Adventure starts here!',
         musicOff: 'Music: Off', musicOn: 'Music: On',
-        pickIsland: 'A LITTLE PLAY, A LITTLE GROWTH', islandsTitle: 'Where shall we explore today?', islandsCount: '6 islands waiting for you',
-        memorySkill: 'MEMORY', colorSkill: 'CREATIVITY', mathSkill: 'COUNTING', alphabetPopSkill: 'ENGLISH', dinosaurColorsSkill: 'COLORS', vehicleParkingSkill: 'THINKING',
+        pickIsland: 'A LITTLE PLAY, A LITTLE GROWTH', islandsTitle: 'Where shall we explore today?', islandsCount: '9 islands waiting for you',
+        memorySkill: 'MEMORY', colorSkill: 'CREATIVITY', mathSkill: 'ADDITION', alphabetPopSkill: 'ENGLISH', dinosaurColorsSkill: 'COLORS', vehicleParkingSkill: 'THINKING',
         footerMessage: 'A new discovery every day. A little joy every step.', credits: 'For parents & asset credits',
         memoryHint: 'Flip two cards to find matching friends.', colorHint: 'Drag a bottle into the bowl, or focus a color and press Enter.',
-        mathHint: 'Tap the fruit to collect the number Bear needs.', alphabetHint: 'Choose a letter, then find it among the toys.',
+        mathHint: 'Add the two numbers and choose the answer. Tap the bulb for a picture hint.', alphabetHint: 'Choose a letter, then find it among the toys.',
         dinosaurColorsHint: 'Tap a fruit and watch Dino change color!', vehicleHint: 'Drag the vehicle to its station, or tap a station to choose.',
+        shapeWorkshopHint: 'Choose a piece and a space, or drag the piece onto the outline.',
+        patternTrainHint: 'Look at the train and find the missing item in the pattern.',
+        storyGardenHint: 'Choose a card and a space, or drag cards to put the story in order.',
         comingSoon:   '🔒 Coming Soon',
         scoreLabel:   'Score',
         backTo:       'Explorer Island',
@@ -214,6 +226,10 @@ class AppController {
       const key = el.getAttribute('data-i18n');
       if (t[key] !== undefined) el.textContent = t[key];
     });
+    document.querySelectorAll('[data-i18n-label]').forEach(el => {
+      const label = t[el.dataset.i18nLabel];
+      if (label !== undefined) el.setAttribute('aria-label', label);
+    });
     // Sync HUD title with current screen
     const gameTitles = {
       'memory': t.memoryName,
@@ -221,7 +237,10 @@ class AppController {
       'alphabet-pop': t.alphabetPopName,
       'dinosaur-colors': t.dinosaurColorsName,
       'math': t.mathName,
-      'vehicle-parking': t.vehicleParkingName
+      'vehicle-parking': t.vehicleParkingName,
+      'shape-workshop': t.shapeWorkshopName,
+      'pattern-train': t.patternTrainName,
+      'story-garden': t.storyGardenName,
     };
 
     if (!this.activeGameId) {
@@ -229,7 +248,7 @@ class AppController {
     } else if (gameTitles[this.activeGameId]) {
       this.hud.title.textContent = gameTitles[this.activeGameId];
     }
-    const hints = { memory: 'memoryHint', color: 'colorHint', math: 'mathHint', 'alphabet-pop': 'alphabetHint', 'dinosaur-colors': 'dinosaurColorsHint', 'vehicle-parking': 'vehicleHint' };
+    const hints = { memory: 'memoryHint', color: 'colorHint', math: 'mathHint', 'alphabet-pop': 'alphabetHint', 'dinosaur-colors': 'dinosaurColorsHint', 'vehicle-parking': 'vehicleHint', 'shape-workshop': 'shapeWorkshopHint', 'pattern-train': 'patternTrainHint', 'story-garden': 'storyGardenHint' };
     document.getElementById('game-hint').textContent = t[hints[this.activeGameId]] || '';
   }
 
@@ -324,6 +343,18 @@ class AppController {
       case 'vehicle-parking':
         this.hud.title.textContent = t.vehicleParkingName;
         this.activeGame = new VehicleParking(stage, this);
+        break;
+      case 'shape-workshop':
+        this.hud.title.textContent = t.shapeWorkshopName;
+        this.activeGame = new ShapeWorkshop(stage, this);
+        break;
+      case 'pattern-train':
+        this.hud.title.textContent = t.patternTrainName;
+        this.activeGame = new PatternTrain(stage, this);
+        break;
+      case 'story-garden':
+        this.hud.title.textContent = t.storyGardenName;
+        this.activeGame = new StoryGarden(stage, this);
         break;
       default:
         // Unknown / unimplemented game – go back to dashboard
