@@ -55,7 +55,7 @@ class PatternTrain extends ExplorerActivity {
 
   start() {
     if (this.destroyed) return;
-    this.showMenu();
+    this.startMode('easy');
   }
 
   updateLanguage(lang) {
@@ -78,7 +78,7 @@ class PatternTrain extends ExplorerActivity {
     const models = this.shuffle(['apple', 'cat', 'dog', 'star', 'moon']);
     const a = { model: models[0], size: 'normal' };
     const b = { model: models[1], size: 'normal' };
-    return { pattern: [a, b], sequence: [a, b, a, b], missingIndex: 3, choices: this.shuffle([a, b]) };
+    return { pattern: [a, b], sequence: [a, b, a, b, a], missingIndex: 4, choices: this.shuffle([a, b]) };
   }
 
   startMode(mode) {
@@ -93,11 +93,7 @@ class PatternTrain extends ExplorerActivity {
   }
 
   showMenu() {
-    this.clearTimers();
-    this.phase = 'menu';
-    this.answers = [];
-    this.render();
-    this.updateHUD();
+    this.startMode('easy');
   }
 
   beginRound() {
@@ -236,6 +232,7 @@ class PatternTrain extends ExplorerActivity {
       this.phase = 'explaining';
       this.answers.push({ ...selected });
       this.updateHUD();
+      if (typeof audio !== 'undefined') audio.playSuccess?.();
     }
     this.refreshRound();
     this.explain(correct);

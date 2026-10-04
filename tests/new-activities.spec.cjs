@@ -14,6 +14,7 @@ test('new game scripts and styles are in the offline release', () => {
   const assets = release.self.KID_ASSETS;
   for (const file of [
     'js/activity-base.js', 'css/activities.css',
+    'js/story-scenes.js',
     ...activities.flatMap(game => [`js/games/${game.id}.js`, `css/${game.id}.css`]),
   ]) {
     expect(fs.existsSync(`www/${file}`), file).toBe(true);
@@ -40,7 +41,11 @@ for (const fallback of [false, true]) {
     for (const game of activities) {
       await page.locator(`[data-game="${game.id}"]`).click();
       await expect(page.locator('#app-title-hud')).toHaveText(game.vi);
-      await page.locator('#game-stage [data-level="easy"]').click();
+      if (game.id === 'shape-workshop') {
+        await page.locator('#game-stage [data-level="easy"]').click();
+      } else {
+        await expect(page.locator('#game-stage [data-level]')).toHaveCount(0);
+      }
       await expect(page.locator('#game-stage')).not.toBeEmpty();
       const oldGame = await page.evaluateHandle(() => app.activeGame);
       await page.locator('#btn-lang').click();

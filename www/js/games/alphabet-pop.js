@@ -263,7 +263,6 @@ class AlphabetPop {
     if (element.classList.contains('ap-popped')) return;
 
     element.classList.add('ap-popped'); // Trigger disappear animation
-    if (typeof audio !== 'undefined' && audio.playPop) audio.playPop();
 
     if (isCorrect) {
       this.speakLetter(this.selectedLetter);
@@ -280,9 +279,6 @@ class AlphabetPop {
       this._later(() => {
         this.showVocabResult();
       }, 600);
-    } else {
-      // Just empty, it disappears.
-      if (typeof audio !== 'undefined' && audio.playMiss) audio.playMiss();
     }
   }
 
@@ -330,7 +326,6 @@ class AlphabetPop {
 
     resultEl.querySelector('.ap-next-btn').addEventListener('click', (e) => {
       e.stopPropagation();
-      if (typeof audio !== 'undefined') audio.playTap();
       if (isLastRound) {
         this.showCompletion();
       } else {
@@ -342,10 +337,9 @@ class AlphabetPop {
     this.updateInspectLabels();
     resultEl.querySelector('.ap-listen').addEventListener('click', e => { e.stopPropagation(); this.speak(vocabItem.word); });
 
-    // Play voice and cheer
+    // Let children hear the word clearly without music or reward effects.
     this._later(() => {
       this.speak(vocabItem.word);
-      if (typeof audio !== 'undefined' && audio.playCheer) audio.playCheer();
     }, 500);
   }
 
@@ -358,7 +352,6 @@ class AlphabetPop {
   showCompletion() {
     this.currentScreen = 3;
     this.appCtrl.addStars(5); // NOTE: this game names the controller appCtrl, not app
-    if (typeof audio !== 'undefined' && audio.playLevelComplete) audio.playLevelComplete();
     this.renderCompletion();
   }
 
@@ -383,11 +376,9 @@ class AlphabetPop {
     `;
 
     this.container.querySelector('#ap-btn-replay').addEventListener('click', () => {
-      if (typeof audio !== 'undefined') audio.playTap();
       this.startSession();
     });
     this.container.querySelector('#ap-btn-menu').addEventListener('click', () => {
-      if (typeof audio !== 'undefined') audio.playTap();
       this.renderScreen1();
     });
   }

@@ -33,7 +33,8 @@ test('home, all nine games, rendering cleanup, language and console', async ({ p
     await launch(page, game);
     await expect(page.locator('#game-screen')).toHaveClass(/active/);
     await expect(page.locator('#game-stage')).not.toBeEmpty();
-    if (game !== 'alphabet-pop') await expect(page.locator('#game-stage kid-model.model-ready').first()).toBeVisible();
+    if (game === 'story-garden') await expect(page.locator('#game-stage .sgr-card svg').first()).toBeVisible();
+    else if (game !== 'alphabet-pop') await expect(page.locator('#game-stage kid-model.model-ready').first()).toBeVisible();
     await page.locator('#btn-lang').click();
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
     await page.screenshot({ path: `test-results/game-${game}.png` });
@@ -618,7 +619,8 @@ test('a fully installed PWA can load every game and 3D model offline', async ({ 
   await expect(page.locator('kid-model[model="world"]')).toHaveClass(/model-ready/);
   for (const game of games) {
     await launch(page, game);
-    if (game !== 'alphabet-pop') await expect(page.locator('#game-stage kid-model.model-ready').first()).toBeVisible();
+    if (game === 'story-garden') await expect(page.locator('#game-stage .sgr-card svg').first()).toBeVisible();
+    else if (game !== 'alphabet-pop') await expect(page.locator('#game-stage kid-model.model-ready').first()).toBeVisible();
     await back(page);
   }
 });

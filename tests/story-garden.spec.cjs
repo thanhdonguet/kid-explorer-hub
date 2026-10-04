@@ -13,8 +13,8 @@ async function openGarden(page) {
   });
   await page.goto('/');
   await page.locator('[data-game="story-garden"]').click();
-  await expect(page.locator('[data-mode]')).toHaveCount(1);
-  await page.locator('[data-mode="easy"]').click();
+  await expect(page.locator('.sgr-game')).toHaveAttribute('data-phase', 'arrange');
+  await expect(page.locator('.sgr-menu, [data-mode]')).toHaveCount(0);
 }
 async function arrange(page, sequence) {
   for (const [index, id] of sequence.entries()) {
@@ -28,11 +28,16 @@ test('picture-only guided stories auto-play and reward exactly once', async ({ p
   await openGarden(page);
   await page.clock.install();
   await page.clock.pauseAt(new Date());
+  await page.evaluate(() => {
+    window.__storySuccess = 0;
+    audio.playSuccess = () => window.__storySuccess++;
+  });
   for (let story = 0; story < 3; story++) {
     await expect(page.locator('.sgr-placeholder svg')).toHaveCount(3);
     await expect(page.locator('.sgr-card svg')).toHaveCount(3);
     expect(await page.locator('.sgr-game').innerText()).not.toMatch(/[\p{L}\p{N}]/u);
     await arrange(page, sequences[story]);
+    expect(await page.evaluate(() => window.__storySuccess)).toBe(story + 1);
     await expect(page.locator('.sgr-game')).toHaveAttribute('data-phase', 'playing');
     await expect(page.locator('.sgr-playback svg')).toHaveCount(1);
     await expect(page.locator('[data-action="watch"]')).toHaveCount(0);
@@ -43,14 +48,58 @@ test('picture-only guided stories auto-play and reward exactly once', async ({ p
   }
   expect(await page.evaluate(() => app.stars)).toBe(5);
   await page.evaluate(() => { app.activeGame.check(); app.activeGame.finishStory(); });
+  expect(await page.evaluate(() => window.__storySuccess)).toBe(3);
   expect(await page.evaluate(() => app.stars)).toBe(5);
   await page.locator('#btn-lang').click();
   await expect(page.locator('[data-action="replay"]')).toHaveAttribute('aria-label', 'Play again');
   expect(await page.locator('.sgr-game').innerText()).not.toMatch(/[\p{L}\p{N}]/u);
   await page.locator('[data-action="replay"]').click();
   await expect(page.locator('.sgr-card')).toHaveCount(3);
+  await expect(page.locator('.sgr-menu, [data-mode]')).toHaveCount(0);
   expect(await page.evaluate(() => app.activeGame.completed)).toBe(0);
   expect(errors).toEqual([]);
+});
+test('success stays quiet for wrong and partial stories, respects mute, and game home restarts directly', async ({ page }) => {
+  await openGarden(page);
+  await page.clock.install();
+  await page.clock.pauseAt(new Date());
+  await page.evaluate(() => {
+    window.__storyVoices = 0;
+    window.__storySuccess = 0;
+    const original = audio.playSuccess.bind(audio);
+    audio.playSuccess = () => { window.__storySuccess++; original(); };
+    audio._voice = () => window.__storyVoices++;
+    audio.muted = true;
+  });
+  await page.locator('[data-card="water"]').click();
+  await page.locator('[data-slot="0"]').click();
+  expect(await page.evaluate(() => window.__storySuccess)).toBe(0);
+  await page.locator('[data-slot="1"]').click();
+  await page.locator('[data-card="seed"]').click();
+  await page.locator('[data-slot="0"]').click();
+  expect(await page.evaluate(() => window.__storySuccess)).toBe(0);
+  await page.locator('[data-card="grown"]').click();
+  await page.locator('[data-slot="2"]').click();
+  expect(await page.evaluate(() => [window.__storySuccess, window.__storyVoices])).toEqual([1, 0]);
+  await page.evaluate(() => app.activeGame.check());
+  expect(await page.evaluate(() => window.__storySuccess)).toBe(1);
+  await page.clock.runFor(4300);
+  await page.locator('[data-action="next"]').click();
+  await page.evaluate(() => { audio.muted = false; });
+  for (let story = 1; story < 3; story++) {
+    await arrange(page, sequences[story]);
+    expect(await page.evaluate(() => window.__storySuccess)).toBe(story + 1);
+    await page.clock.runFor(4300);
+    if (story < 2) await page.locator('[data-action="next"]').click();
+  }
+  expect(await page.evaluate(() => window.__storyVoices)).toBeGreaterThan(0);
+  const previous = await page.evaluate(() => app.activeGame.sessionStories.map(story => story.id));
+  await page.locator('[data-action="menu"]').press('Enter');
+  await expect(page.locator('.sgr-game')).toHaveAttribute('data-phase', 'arrange');
+  await expect(page.locator('.sgr-card')).toHaveCount(3);
+  await expect(page.locator('.sgr-menu, [data-mode]')).toHaveCount(0);
+  expect(await page.evaluate(ids => app.activeGame.sessionStories.some(story => ids.includes(story.id)), previous)).toBe(false);
+  expect(await page.evaluate(() => ({ completed: app.activeGame.completed, timers: app.activeGame.timers.size, stars: app.stars }))).toEqual({ completed: 0, timers: 0, stars: 5 });
 });
 test('wrong placement stays in tray and highlights matching picture; language keeps state', async ({ page }) => {
   await openGarden(page);

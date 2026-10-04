@@ -7,7 +7,8 @@ async function openStories(page) {
   });
   await page.goto('/');
   await page.locator('[data-game="story-garden"]').click();
-  await page.locator('[data-mode="easy"]').click();
+  await expect(page.locator('.sgr-game')).toHaveAttribute('data-phase', 'arrange');
+  await expect(page.locator('.sgr-menu, [data-mode]')).toHaveCount(0);
 }
 
 test('all twelve stories play in short sessions without repeating before the library is used', async ({ page }) => {

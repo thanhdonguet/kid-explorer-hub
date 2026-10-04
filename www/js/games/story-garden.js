@@ -3,7 +3,7 @@ class StoryGarden extends ExplorerActivity {
   constructor(container, app) {
     super(container, app);
     this.mode = null;
-    this.phase = 'menu';
+    this.phase = 'arrange';
     this.completed = 0;
     this.rewarded = false;
     this.narration = false;
@@ -70,7 +70,7 @@ class StoryGarden extends ExplorerActivity {
       return step;
     });
   }
-  start() { this.render(); }
+  start() { this.startSession(); }
   updateHUD() {
     const score = document.getElementById('score-val');
     if (score) score.textContent = `${this.completed}/${this.sessionStories.length || this.sessionLength}`;
@@ -80,7 +80,7 @@ class StoryGarden extends ExplorerActivity {
     window.TTS?.cancel?.();
     this.render();
   }
-  startSession(mode) {
+  startSession() {
     if (this.destroyed) return;
     this.clearTimers();
     window.TTS?.cancel?.();
@@ -182,6 +182,7 @@ class StoryGarden extends ExplorerActivity {
     this.selected = null;
     this.issue = null;
     this.playIndex = 0;
+    if (typeof audio !== 'undefined') audio.playSuccess?.();
     this.playStep();
   }
   playStep() {
@@ -230,15 +231,9 @@ class StoryGarden extends ExplorerActivity {
     this.prepareRender();
     this.updateHUD();
     const title = this.text('Khu Vườn Diệu Kỳ', 'Story Garden');
-    const menu = this.phase === 'menu';
     const done = this.phase === 'complete' || this.phase === 'reward';
     this.container.innerHTML = `<section class="sgr-game" data-phase="${this.phase}" aria-label="${title}">
-      ${menu ? `<div class="sgr-menu">
-        <div class="sgr-welcome">${this.modelMarkup('rabbit', this.text('Bạn thỏ', 'Rabbit friend'))}${this.illustration('bean', 'grown')}</div>
-        <div class="sgr-demo" aria-hidden="true">${this.illustration('bean', 'seed')}<span>→</span>${this.illustration('bean', 'water')}<span>→</span>${this.illustration('bean', 'grown')}</div>
-        <div class="sgr-actions"><button type="button" data-mode="easy" data-level="easy" aria-label="${this.text('Bắt đầu chơi', 'Start playing')}"><span aria-hidden="true">▶</span></button>
-        ${this.iconButton('listen', '🔊', 'Nghe hướng dẫn', 'Listen to instructions')}</div>
-      </div>` : done ? `
+      ${done ? `
         <div class="sgr-celebrate" role="status" aria-label="${this.phase === 'complete' ? this.text('Hoàn thành, nhận 5 sao', 'Complete, five stars earned') : this.text('Đúng rồi!', 'Well done!')}"><span aria-hidden="true">${this.phase === 'complete' ? '★ ★ ★ ★ ★' : '🌟'}</span></div>
         ${this.gardenMarkup()}
         <div class="sgr-actions">${this.phase === 'complete'
@@ -266,7 +261,6 @@ class StoryGarden extends ExplorerActivity {
     this.bindUI();
   }
   bindUI() {
-    this.container.querySelectorAll('[data-mode]').forEach(button => button.addEventListener('click', () => this.startSession(button.dataset.mode)));
     this.container.querySelectorAll('[data-card]').forEach(button => button.addEventListener('click', () => this.choose(button.dataset.card)));
     this.container.querySelectorAll('[data-slot]').forEach(button => button.addEventListener('click', () => {
       const index = Number(button.dataset.slot);
@@ -280,12 +274,8 @@ class StoryGarden extends ExplorerActivity {
         case 'return': if (this.selected) this.move(this.selected, 'tray'); break;
         case 'narration': this.narration = button.checked; break;
         case 'next': if (this.phase === 'reward') this.startStory(); break;
-        case 'replay': if (this.phase === 'complete') this.startSession(this.mode); break;
-        case 'menu':
-          this.clearTimers();
-          this.phase = 'menu';
-          this.render();
-          break;
+        case 'replay':
+        case 'menu': if (this.phase === 'complete') this.startSession(); break;
       }
     }));
     if (this.phase === 'arrange') this.bindDragDrop('[data-drag-id]', '[data-drop-id]', (id, target) => this.move(id, target));

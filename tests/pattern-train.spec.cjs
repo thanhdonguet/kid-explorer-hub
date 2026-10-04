@@ -7,8 +7,8 @@ async function launch(page) {
   });
   await page.goto('/');
   await page.locator('.island-card[data-game="pattern-train"]').click();
-  await expect(page.locator('.ptr-mascot kid-model[model="train"]')).toBeVisible();
-  await page.locator('[data-mode="easy"]').click();
+  await expect(page.locator('.ptr-game')).toHaveAttribute('data-phase', 'playing');
+  await expect(page.locator('[data-mode],.ptr-mascot,.ptr-demo')).toHaveCount(0);
 }
 
 async function correctIndex(page) {
@@ -47,13 +47,16 @@ for (const mode of ['easy']) {
           matches: r.choices.filter(t => g.tokenKey(t) === g.tokenKey(r.sequence[r.missingIndex])).length,
           missing: r.missingIndex,
           sizeBased: r.sizeBased,
-          pattern: r.pattern.map(t => g.tokenKey(t))
+          pattern: r.pattern.map(t => g.tokenKey(t)),
+          sequence: r.sequence.map(t => g.tokenKey(t))
         };
       });
       expect(new Set(state.choices).size).toBe(2);
       expect(state.matches).toBe(1);
-      expect(state.missing).toBe(3);
+      expect(state.missing).toBe(4);
       expect(state.pattern).toHaveLength(2);
+      expect(state.sequence).toEqual([state.pattern[0], state.pattern[1], state.pattern[0], state.pattern[1], state.pattern[0]]);
+      await expect(page.locator('.ptr-train .ptr-carriage')).toHaveCount(5);
       await solve(page);
       await expect(page.locator('#score-val')).toHaveText(`${station + 1}/5`);
     }
@@ -69,7 +72,10 @@ for (const mode of ['easy']) {
     for (let i = 0; i < 5; i++) await solve(page);
     expect(await page.evaluate(() => window.__ptrRewards)).toEqual([5, 5]);
     await page.locator('[data-action="menu"]').click();
-    await expect(page.locator('[data-mode]')).toHaveCount(1);
+    await expect(page.locator('.ptr-game')).toHaveAttribute('data-phase', 'playing');
+    await expect(page.locator('[data-mode]')).toHaveCount(0);
+    await expect(page.locator('.ptr-train .ptr-carriage')).toHaveCount(5);
+    await expect(page.locator('#score-val')).toHaveText('0/5');
   });
 }
 
@@ -96,6 +102,38 @@ test('pattern train: wrong answers stay put, rapid clicks lock one answer and co
   await expect(page.locator('.ptr-choice:enabled')).toHaveCount(2);
   await page.waitForTimeout(1200);
   expect(await page.evaluate(() => app.activeGame.roundIndex)).toBe(1);
+});
+
+test('pattern train: each correct answer plays one shared success sound and respects mute', async ({ page }) => {
+  await launch(page);
+  await page.clock.install();
+  await page.clock.pauseAt(new Date());
+  await page.evaluate(() => {
+    window.__ptrSuccess = 0;
+    window.__ptrVoices = 0;
+    const success = audio.playSuccess.bind(audio);
+    audio.playSuccess = () => { window.__ptrSuccess++; success(); };
+    audio._voice = () => window.__ptrVoices++;
+  });
+  const first = await correctIndex(page);
+  await page.locator(`[data-choice="${1 - first}"]`).click();
+  expect(await page.evaluate(() => ({ success: __ptrSuccess, voices: __ptrVoices }))).toEqual({ success: 0, voices: 0 });
+  await page.locator(`[data-choice="${first}"]`).press('Enter');
+  await page.evaluate(index => { for (let i = 0; i < 20; i++) app.activeGame.choose(index); }, first);
+  expect(await page.evaluate(() => ({ success: __ptrSuccess, voices: __ptrVoices }))).toEqual({ success: 1, voices: 4 });
+  await page.locator('#btn-lang').click();
+  expect(await page.evaluate(() => __ptrSuccess)).toBe(1);
+  await page.clock.runFor(3200);
+  expect(await page.evaluate(() => app.activeGame.roundIndex)).toBe(1);
+
+  await page.locator('#btn-sound').click();
+  expect(await page.evaluate(() => audio.muted)).toBe(true);
+  await page.evaluate(() => { window.__ptrVoices = 0; });
+  const second = await correctIndex(page);
+  await page.locator(`[data-choice="${second}"]`).press('Space');
+  await page.evaluate(index => { for (let i = 0; i < 20; i++) app.activeGame.choose(index); }, second);
+  expect(await page.evaluate(() => ({ success: __ptrSuccess, voices: __ptrVoices }))).toEqual({ success: 2, voices: 0 });
+  await expect(page.locator('#score-val')).toHaveText('2/5');
 });
 
 test('pattern train: VI/EN, speech and keyboard preserve round and explanation state', async ({ page }) => {
@@ -133,7 +171,6 @@ test('pattern train: back during explanation cleans timers, models and score', a
   expect(await page.evaluate(() => window.__oldPatternTrain.timers.size)).toBe(0);
   await expect(page.locator('.ptr-game')).toHaveCount(0);
   await page.locator('.island-card[data-game="pattern-train"]').click();
-  await page.locator('[data-mode="easy"]').click();
   await page.waitForTimeout(1500);
   await expect(page.locator('#score-val')).toHaveText('0/5');
   await expect(page.locator('.ptr-game')).toHaveAttribute('data-phase', 'playing');
@@ -148,11 +185,10 @@ test('pattern train: leaving during departure cancels the automatic next lesson'
   await page.clock.pauseAt(new Date());
   await page.evaluate(() => { window.__oldPatternTrain = app.activeGame; });
   await page.locator(`.ptr-choice[data-choice="${await correctIndex(page)}"]`).click();
-  await page.clock.runFor(1520);
+  await page.clock.runFor(1900);
   await expect(page.locator('.ptr-game')).toHaveAttribute('data-phase', 'departing');
   await page.locator('#btn-back').click();
   await page.locator('[data-game="pattern-train"]').click();
-  await page.locator('[data-level="easy"]').click();
   await page.clock.runFor(1100);
   expect(await page.evaluate(() => ({
     oldRound: window.__oldPatternTrain.roundIndex,
@@ -170,7 +206,7 @@ test('pattern train: reduced motion still auto-advances and only after the expla
   await page.clock.pauseAt(new Date());
   await page.locator(`.ptr-choice[data-choice="${await correctIndex(page)}"]`).press('Enter');
   await expect(page.locator('.ptr-game')).toHaveAttribute('data-phase', 'explaining');
-  await page.clock.runFor(420);
+  await page.clock.runFor(560);
   expect(await page.evaluate(() => app.activeGame.roundIndex)).toBe(0);
   await page.clock.runFor(200);
   expect(await page.evaluate(() => app.activeGame.roundIndex)).toBe(1);
@@ -184,9 +220,9 @@ test('pattern train: dog uses its local illustration rather than a generic star'
     const dog = { model: 'dog', size: 'normal' };
     const cat = { model: 'cat', size: 'normal' };
     app.activeGame.rounds[0] = {
-      pattern: [dog, cat], sequence: [dog, cat, dog, cat, dog, cat],
-      missingIndex: 5, sizeBased: false,
-      choices: [dog, cat, { model: 'star', size: 'normal' }]
+      pattern: [dog, cat], sequence: [dog, cat, dog, cat, dog],
+      missingIndex: 4, sizeBased: false,
+      choices: [dog, cat]
     };
     app.activeGame.beginRound();
   });
@@ -235,7 +271,7 @@ for (const width of [320, 1440]) {
         answer: answer.model,
       };
     });
-    expect(result.count).toBe(5);
+    expect(result.count).toBe(6);
     expect(result.wrong.retained).toBe(true);
     expect(result.rightRetained).toBe(true);
     expect(result.sameTrain).toBe(true);
@@ -267,9 +303,9 @@ test('pattern train: pending 3D models do not flash SVG and context loss restore
   await page.evaluate(() => {
     app.activeGame.rounds[0] = {
       pattern: [{ model: 'cat', size: 'normal' }, { model: 'banana', size: 'normal' }],
-      sequence: Array.from({ length: 6 }, (_, i) => ({ model: i % 2 ? 'banana' : 'cat', size: 'normal' })),
-      missingIndex: 5, sizeBased: false,
-      choices: ['cat', 'banana', 'star'].map(model => ({ model, size: 'normal' })),
+      sequence: Array.from({ length: 5 }, (_, i) => ({ model: i % 2 ? 'banana' : 'cat', size: 'normal' })),
+      missingIndex: 4, sizeBased: false,
+      choices: ['cat', 'banana'].map(model => ({ model, size: 'normal' })),
     };
     app.activeGame.beginRound();
   });
@@ -282,7 +318,7 @@ test('pattern train: pending 3D models do not flash SVG and context loss restore
   await page.evaluate(() => window.__trainWebGLCanvas.dispatchEvent(new Event('webglcontextlost', { cancelable: true })));
   await expect(page.locator('html')).toHaveAttribute('data-graphics', 'fallback');
   await expect(model.locator('.model-fallback')).toBeVisible();
-  await expect(page.locator('.ptr-choice')).toHaveCount(3);
+  await expect(page.locator('.ptr-choice')).toHaveCount(2);
 });
 
 for (const [width, height] of [[320, 740], [390, 844], [844, 390]]) {
@@ -290,11 +326,23 @@ for (const [width, height] of [[320, 740], [390, 844], [844, 390]]) {
     await page.setViewportSize({ width, height });
     await launch(page);
     await page.emulateMedia({ reducedMotion: 'no-preference' });
-    await expect(page.locator('.ptr-train .ptr-carriage')).toHaveCount(4);
+    await expect(page.locator('.ptr-train .ptr-carriage')).toHaveCount(5);
     await expect(page.locator('.ptr-choice')).toHaveCount(2);
     await expect(page.locator('.ptr-carriage-label, .ptr-carriage-number, .ptr-instruction')).toHaveCount(0);
     await expect(page.locator('#game-hint')).toBeHidden();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    const trainLayout = await page.locator('.ptr-train').evaluate(train => {
+      const track = train.closest('.ptr-track').getBoundingClientRect();
+      const carriages = [...train.children].map(carriage => carriage.getBoundingClientRect());
+      return {
+        oneRow: carriages.every(carriage => Math.abs(carriage.top - carriages[0].top) < 1),
+        inside: carriages.every(carriage => carriage.left >= track.left && carriage.right <= track.right),
+        minimumWidth: Math.min(...carriages.map(carriage => carriage.width)),
+      };
+    });
+    expect(trainLayout.oneRow).toBe(true);
+    expect(trainLayout.inside).toBe(true);
+    expect(trainLayout.minimumWidth).toBeGreaterThanOrEqual(44);
     for (const button of await page.locator('.ptr-choice, .ptr-listen').all()) {
       const rect = await button.boundingBox();
       expect(rect.width).toBeGreaterThanOrEqual(44);
