@@ -133,6 +133,11 @@ class AlphabetPop {
     window.TTS.speak(text, { lang: 'en-US', rate: 0.9 });
   }
 
+  speakLetter(letter) {
+    if (this.destroyed || !window.TTS) return;
+    window.TTS.speakLetter(letter, { rate: 0.9 });
+  }
+
   /* ── Screen 1: Alphabet Board ── */
   renderScreen1() {
     this.currentScreen = 1;
@@ -154,7 +159,7 @@ class AlphabetPop {
         if (this.selectingLetter) return;
         this.selectingLetter = true;
         // Highlight logic and TTS
-        this.speak(letter);
+        this.speakLetter(letter);
         // Add effect, then transition to Screen 2
         btn.classList.add('ap-selected');
         this._later(() => {
@@ -261,7 +266,7 @@ class AlphabetPop {
     if (typeof audio !== 'undefined' && audio.playPop) audio.playPop();
 
     if (isCorrect) {
-      this.speak(this.selectedLetter);
+      this.speakLetter(this.selectedLetter);
 
       // Pop all others
       this.activeObjects.forEach(obj => {

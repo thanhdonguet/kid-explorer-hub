@@ -9,7 +9,7 @@ async function openGarden(page) {
   await page.addInitScript(() => {
     localStorage.setItem('kid_explorer_lang', 'vi');
     localStorage.setItem('kid_explorer_stars', '0');
-    Math.random = () => .27;
+    Math.random = () => .9999;
   });
   await page.goto('/');
   await page.locator('[data-game="story-garden"]').click();

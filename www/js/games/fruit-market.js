@@ -121,6 +121,12 @@ class FruitMarket {
     return `<div class="fm-blocks" aria-hidden="true">${Array.from({ length: Math.floor(value / 10) }, () =>
       '<span class="fm-ten">' + '<i></i>'.repeat(10) + '</span>').join('')}${'<span class="fm-one"></span>'.repeat(value % 10)}</div>`;
   }
+  celebration() {
+    // Decorative only: the success badge remains visible without motion or sound.
+    const stars = [[-120, -60], [-85, -125], [-40, -155], [10, -135], [65, -155], [115, -95], [-100, 45], [105, 45]];
+    return `<div class="fm-celebration" aria-hidden="true">${stars.map(([x, y], i) =>
+      `<span class="fm-celebration-star" style="--fm-x:${x}px;--fm-y:${y}px;--fm-delay:${i * 18}ms;--fm-turn:${i % 2 ? 35 : -35}deg">★</span>`).join('')}</div>`;
+  }
   render() {
     if (this.destroyed) return;
     const title = this.text('Bé Học Cộng', 'Addition Adventure');
@@ -144,10 +150,10 @@ class FruitMarket {
         <div class="fm-equation" role="group" aria-label="${a} + ${b} = ${locked ? sum : '?'}"><span class="fm-a">${a}</span><span>+</span><span class="fm-b">${b}</span><span>=</span><strong class="fm-result">${locked ? sum : '?'}</strong></div>
         <div class="fm-hint" ${this.hint ? '' : 'hidden'}><div class="fm-quantities"><div aria-label="${a}">${this.quantity(a)}</div><span class="fm-plus" aria-hidden="true">+</span><div aria-label="${b}">${this.quantity(b)}</div></div>
         ${this.currentLevel !== 'easy' ? '<div class="fm-legend" aria-hidden="true"><span class="fm-ten">' + '<i></i>'.repeat(10) + '</span> = 10 <span class="fm-one"></span> = 1</div>' : ''}</div>
-        <div class="fm-feedback" role="status" aria-live="polite">${locked ? this.text('Đúng rồi! 🌟', 'Correct! 🌟') : this.wrongAnswer !== null ? this.text('Thử lại nhé 👀', 'Try again 👀') : this.text('Chọn đáp án', 'Choose an answer')}</div>
+        <div class="fm-feedback ${locked ? 'fm-success' : ''}" role="status" aria-live="polite">${locked ? `<span class="fm-success-mark" aria-hidden="true">✓</span><span>${this.text('Đúng rồi! 🌟', 'Correct! 🌟')}</span>` : this.wrongAnswer !== null ? this.text('Thử lại nhé 👀', 'Try again 👀') : this.text('Chọn đáp án', 'Choose an answer')}</div>
         <div class="fm-answers" role="group" aria-label="${this.text('Đáp án', 'Answers')}">${choices.map(value => `<button type="button" class="fm-answer ${this.wrongAnswer === value ? 'fm-wrong' : ''} ${locked && value === sum ? 'fm-right' : ''}" data-answer="${value}" ${locked ? 'disabled' : ''}>${value}</button>`).join('')}</div>`;
     }
-    this.container.innerHTML = `<section class="fm-addition" data-phase="${this.phase}" lang="${this.lang}" aria-label="${title}">${content}</section>`;
+    this.container.innerHTML = `<section class="fm-addition" data-phase="${this.phase}" lang="${this.lang}" aria-label="${title}">${content}${this.phase === 'correct' ? this.celebration() : ''}</section>`;
     this.container.querySelectorAll('[data-level]').forEach(button => button.addEventListener('click', () => this.startLevel(button.dataset.level)));
     this.container.querySelectorAll('[data-answer]').forEach(button => button.addEventListener('click', () => this.choose(Number(button.dataset.answer))));
     this.container.querySelector('[data-action="listen"]')?.addEventListener('click', () => this.speak());

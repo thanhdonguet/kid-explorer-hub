@@ -38,6 +38,17 @@
     'microsoft zira', 'microsoft david',
   ];
 
+  // A bare uppercase character can be announced as "capital A" by some
+  // speech engines. These spoken names also prevent lowercase a from
+  // becoming the article "a" and keep Z in the app's US pronunciation.
+  const ENGLISH_LETTER_NAMES = {
+    A: 'ay', B: 'bee', C: 'see', D: 'dee', E: 'ee', F: 'eff',
+    G: 'gee', H: 'aitch', I: 'eye', J: 'jay', K: 'kay', L: 'ell',
+    M: 'em', N: 'en', O: 'oh', P: 'pee', Q: 'cue', R: 'are',
+    S: 'ess', T: 'tee', U: 'you', V: 'vee', W: 'double you',
+    X: 'ex', Y: 'why', Z: 'zee',
+  };
+
   let cachedVoices = [];
   let warmed = false;
   let primed = false;
@@ -159,6 +170,15 @@
     return utt;
   }
 
+  /** Speak an English letter name without asking the engine to read its case. */
+  function speakLetter(letter, options) {
+    if (typeof letter !== 'string' || !/^[a-z]$/i.test(letter)) return null;
+    return speak(ENGLISH_LETTER_NAMES[letter.toUpperCase()], {
+      ...options,
+      lang: 'en-US',
+    });
+  }
+
   function cancel() {
     if ('speechSynthesis' in global) global.speechSynthesis.cancel();
   }
@@ -185,5 +205,5 @@
     }
   }
 
-  global.TTS = { speak, cancel, warm, primeIfNeeded };
+  global.TTS = { speak, speakLetter, cancel, warm, primeIfNeeded };
 })(window);

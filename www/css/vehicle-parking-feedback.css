@@ -1,0 +1,124 @@
+/* Keep each correct answer visible above the parking scene. */
+.vp-top-section {
+  position: relative;
+  z-index: 20;
+}
+
+.vp-success-feedback {
+  position: absolute;
+  inset: 0;
+  z-index: 110;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: #276b45;
+  text-align: center;
+  pointer-events: none;
+  animation: vpSuccessPop 450ms ease-out both;
+}
+
+.vp-success-feedback[hidden] {
+  display: none;
+}
+
+.vp-success-feedback strong {
+  font: 800 clamp(22px, 4vw, 32px)/1.2 var(--font-title);
+  padding: 8px 20px;
+  border: 2px solid #79ba8c;
+  border-radius: 20px;
+  background: #f4fff0;
+  box-shadow: 0 5px 0 #bad6b8;
+}
+
+.vp-success-feedback > span:last-child {
+  font-size: 16px;
+  padding: 4px 12px;
+  border-radius: 12px;
+  background: #f4fff0;
+}
+
+.vp-success-star {
+  color: #db9a1f;
+  font-size: 48px;
+  line-height: 1;
+  text-shadow: 0 3px 0 #fff3c9;
+}
+
+.vp-station-card.vp-station-parked {
+  border: 3px solid #48a469;
+  background: linear-gradient(150deg, #f7fff0, #d9f3dc);
+  box-shadow: 0 5px 0 #76a883, 0 0 0 5px #ffffff80;
+  animation: vpParkedPulse 650ms ease-in-out 2;
+}
+
+.vp-parked-check {
+  display: none;
+}
+
+.vp-station-parked .vp-parked-check {
+  display: grid;
+  place-items: center;
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 32px;
+  height: 32px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  color: #fff;
+  background: #348853;
+  font: 800 23px/1 var(--font-title);
+}
+
+.vp-celebration-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 200;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.vp-celebration-layer .vp-confetti {
+  width: 11px;
+  height: 16px;
+  border-radius: 3px;
+  animation: vpParkingConfetti 1500ms ease-out both;
+  pointer-events: none;
+}
+
+@keyframes vpSuccessPop {
+  from { opacity: 0; transform: scale(.75); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes vpParkedPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06) translateY(-4px); }
+}
+
+@keyframes vpWrongParkingShake {
+  0%, 100% { transform: var(--vp-drop-transform); }
+  25%, 75% { transform: translateX(-12px) var(--vp-drop-transform) rotate(-5deg); }
+  50% { transform: translateX(12px) var(--vp-drop-transform) rotate(5deg); }
+}
+
+@keyframes vpParkingConfetti {
+  0% { opacity: 1; transform: translate(0, 0) rotate(var(--vp-confetti-tilt)); }
+  35% { opacity: 1; transform: translate(var(--vp-confetti-x), -110px) rotate(180deg); }
+  100% { opacity: 0; transform: translate(var(--vp-confetti-x), 65px) rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vp-success-feedback,
+  .vp-station-card.vp-station-parked,
+  .vp-celebration-layer .vp-confetti {
+    animation: none !important;
+  }
+
+  .vp-celebration-layer .vp-confetti {
+    opacity: 1;
+    transform: rotate(var(--vp-confetti-tilt));
+  }
+}

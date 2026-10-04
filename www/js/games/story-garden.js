@@ -7,6 +7,9 @@ class StoryGarden extends ExplorerActivity {
     this.completed = 0;
     this.rewarded = false;
     this.narration = false;
+    this.sessionLength = 3;
+    this.sessionStories = [];
+    this.playedStoryIds = new Set();
     this.stories = [
       {
         id: 'bean', title: ['Hạt đậu lớn lên', 'A bean grows'],
@@ -51,11 +54,12 @@ class StoryGarden extends ExplorerActivity {
         reward: 'rabbit', rewardName: ['Bạn thỏ', 'Rabbit friend'],
       },
     ];
+    this.stories.push(...window.StoryScenes.stories);
   }
 
   text(vi, en) { return this.lang === 'en' ? en : vi; }
   pair(values) { return values[this.lang === 'en' ? 1 : 0]; }
-  get story() { return this.stories[this.completed]; }
+  get story() { return this.sessionStories[this.completed]; }
   get steps() {
     return this.story[this.mode].map(index => {
       const step = [...this.story.steps[index]];
@@ -69,7 +73,7 @@ class StoryGarden extends ExplorerActivity {
   start() { this.render(); }
   updateHUD() {
     const score = document.getElementById('score-val');
-    if (score) score.textContent = `${this.completed}/3`;
+    if (score) score.textContent = `${this.completed}/${this.sessionStories.length || this.sessionLength}`;
   }
   updateLanguage(lang) {
     this.lang = lang;
@@ -81,9 +85,25 @@ class StoryGarden extends ExplorerActivity {
     this.clearTimers();
     window.TTS?.cancel?.();
     this.mode = 'easy';
+    this.selectStories();
     this.completed = 0;
     this.rewarded = false;
     this.startStory();
+  }
+  selectStories() {
+    let available = this.stories.filter(story => !this.playedStoryIds.has(story.id));
+    if (available.length < this.sessionLength) {
+      this.playedStoryIds.clear();
+      const previous = new Set(this.sessionStories.map(story => story.id));
+      available = this.stories.filter(story => !previous.has(story.id));
+      if (available.length < this.sessionLength) available = [...this.stories];
+    }
+    for (let i = available.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [available[i], available[j]] = [available[j], available[i]];
+    }
+    this.sessionStories = available.slice(0, this.sessionLength);
+    this.sessionStories.forEach(story => this.playedStoryIds.add(story.id));
   }
   startStory() {
     this.phase = 'arrange';
@@ -178,8 +198,8 @@ class StoryGarden extends ExplorerActivity {
     if (this.destroyed || this.phase !== 'playing') return;
     window.TTS?.cancel?.();
     this.completed++;
-    this.phase = this.completed === 3 ? 'complete' : 'reward';
-    if (this.completed === 3 && !this.rewarded) {
+    this.phase = this.completed === this.sessionStories.length ? 'complete' : 'reward';
+    if (this.phase === 'complete' && !this.rewarded) {
       this.rewarded = true;
       this.app.addStars(5);
     }
@@ -197,7 +217,7 @@ class StoryGarden extends ExplorerActivity {
       + expected[this.lang === 'en' ? 4 : 3];
   }
   gardenMarkup() {
-    return `<div class="sgr-garden" aria-label="${this.text('Khu vườn đã trồng', 'Your growing garden')}">${this.stories.map((story, i) =>
+    return `<div class="sgr-garden" aria-label="${this.text('Khu vườn đã trồng', 'Your growing garden')}">${this.sessionStories.map((story, i) =>
       `<div class="sgr-garden-plot ${i < this.completed ? 'sgr-earned' : ''}" data-earned="${i < this.completed}">
         ${i < this.completed ? this.modelMarkup(story.reward, this.pair(story.rewardName)) : this.illustration('bean', 'sprout')}
       </div>`).join('')}</div>`;
@@ -225,12 +245,12 @@ class StoryGarden extends ExplorerActivity {
           ? this.iconButton('replay', '↻', 'Chơi lại', 'Play again') + this.iconButton('menu', '⌂', 'Về đầu trò chơi', 'Game home')
           : this.iconButton('next', '▶', 'Câu chuyện tiếp theo', 'Next story')}</div>
       ` : `
-        <div class="sgr-story-heading"><div class="sgr-progress" aria-label="${this.completed + 1}/3">${this.stories.map((_, i) => `<span aria-hidden="true">${i < this.completed ? '🌼' : '○'}</span>`).join('')}</div>
+        <div class="sgr-story-heading"><div class="sgr-progress" aria-label="${this.completed + 1}/${this.sessionStories.length}">${this.sessionStories.map((_, i) => `<span aria-hidden="true">${i < this.completed ? '🌼' : '○'}</span>`).join('')}</div>
           ${this.iconButton('listen', '🔊', 'Nghe hướng dẫn', 'Listen to instructions', this.phase === 'playing' ? 'disabled' : '')}</div>
         ${this.phase === 'playing' ? `<div class="sgr-playback" role="status" aria-label="${this.label(this.slots[this.playIndex])}">
           ${this.illustration(this.story.id, this.slots[this.playIndex])}
           <div aria-hidden="true">${this.slots.map((_, i) => i === this.playIndex ? '●' : '○').join(' ')}</div></div>` : ''}
-        <div class="sgr-slots" style="--sgr-count:3" aria-label="${this.text('Thứ tự câu chuyện', 'Story order')}">
+        <div class="sgr-slots" style="--sgr-count:${this.slots.length}" aria-label="${this.text('Thứ tự câu chuyện', 'Story order')}">
           ${this.slots.map((id, i) => `<button type="button" class="sgr-slot ${id ? 'sgr-filled' : 'sgr-placeholder'} ${this.issue === i ? 'sgr-issue' : ''} ${id && this.selected === id ? 'sgr-selected' : ''} ${this.phase === 'playing' && this.playIndex === i ? 'sgr-current' : ''}"
             data-slot="${i}" data-drop-id="${i}" ${id ? `data-drag-id="${id}"` : ''} ${this.phase === 'playing' ? 'disabled' : ''}
             aria-label="${this.text('Ô', 'Space')} ${i + 1}: ${this.label(this.steps[i][0])}" aria-pressed="${Boolean(id && this.selected === id)}">
@@ -272,6 +292,8 @@ class StoryGarden extends ExplorerActivity {
   }
 
   illustration(story, step) {
+    const scene = window.StoryScenes.illustration(story, step);
+    if (scene) return scene;
     const soil = '<path d="M10 111 Q80 101 170 111V143H10Z" fill="#a96e42"/><path d="M18 120l13 3m19 10l9-4m66 3l12-4m15-10l8 3" stroke="#795039" stroke-width="3"/>';
     const seed = '<ellipse cx="86" cy="117" rx="9" ry="6" fill="#f3cb74" transform="rotate(-25 86 117)"/>';
     const rain = '<g fill="#4db8e5"><path d="M63 61q-9 13 0 13t0-13M78 72q-9 13 0 13t0-13M94 82q-9 13 0 13t0-13"/></g>';

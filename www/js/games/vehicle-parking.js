@@ -43,11 +43,13 @@ class VehicleParking {
     this.stations = [];
     this.destroyed = false;
     this.timers = new Set();
+    this.confettiPieces = new Set();
+    this.roundFeedback = null;
 
     // ── Inline i18n (screens owned by this game) ──
     this.T_inline = {
-      vi: { winTitle: '🎉 Hoan Hô! 🎉', winSubtitle: 'Bạn đã đỗ đúng tất cả các xe!', replayBtn: 'Chơi Lại' },
-      en: { winTitle: '🎉 Hurray! 🎉',  winSubtitle: 'You parked every vehicle correctly!', replayBtn: 'Play Again' },
+      vi: { winTitle: '🎉 Hoan Hô! 🎉', winSubtitle: 'Bạn đã đỗ đúng tất cả các xe!', replayBtn: 'Chơi Lại', correctTitle: 'Đỗ đúng bến rồi!', correctSubtitle: 'Giỏi lắm, bé ơi!' },
+      en: { winTitle: '🎉 Hurray! 🎉',  winSubtitle: 'You parked every vehicle correctly!', replayBtn: 'Play Again', correctTitle: 'Perfect parking!', correctSubtitle: 'Great job!' },
     };
 
     // Audio Context (shared with the global SoundEngine)
@@ -115,6 +117,7 @@ class VehicleParking {
         <div class="vp-stations-grid" id="vp-stations-grid">
           <!-- Stations displayed here -->
         </div>
+        <div class="vp-celebration-layer" aria-hidden="true"></div>
       </div>
     `;
     this.topSection = document.getElementById('vp-top-section');
@@ -126,6 +129,8 @@ class VehicleParking {
   generateRound() {
     if (this.destroyed) return;
     this.roundLocked = false;
+    this.roundFeedback = null;
+    this.clearConfetti();
 
     // Pick a random vehicle to park – never the same one twice in a row
     const previousName = this.currentVehicle ? this.currentVehicle.name : null;
@@ -165,6 +170,7 @@ class VehicleParking {
         <kid-model model="vehicle-${this.currentVehicle.name}" color="${this.currentVehicle.color || '#e6b554'}" class="vp-vehicle-img" aria-label="${vName}"><img class="model-fallback" src="img/vocab/${this.currentVehicle.img}" alt="" draggable="false"></kid-model>
         <div class="vp-vehicle-name">${vName}</div>
       </div>
+      <div class="vp-success-feedback" role="status" aria-live="polite" aria-atomic="true" hidden></div>
     `;
     
     // Render stations
@@ -179,6 +185,7 @@ class VehicleParking {
       card.innerHTML = `
         <div class="vp-station-emoji"><kid-model model="station-${st.station}" aria-label="${sName}"><span class="model-fallback" style="font-size:48px">${st.emoji}</span></kid-model></div>
         <span class="vp-station-symbol" aria-hidden="true">${st.emoji}</span>
+        <span class="vp-parked-check" aria-hidden="true">✓</span>
         <div class="vp-station-name">${sName}</div>
       `;
       this.stationsGrid.appendChild(card);
@@ -231,7 +238,7 @@ class VehicleParking {
     };
     
     const onMove = (e) => {
-      if (!isDragging) return;
+      if (!isDragging || this.roundLocked) return;
       if (e.type === 'touchmove') e.preventDefault();
       
       const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
@@ -276,7 +283,7 @@ class VehicleParking {
         vehicleEl.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
         vehicleEl.style.transform = 'translate(0, 0) scale(1) rotate(0deg)';
         this._later(() => {
-          if (!isDragging) {
+          if (!isDragging && !this.roundLocked) {
             vehicleEl.style.transition = 'none';
             vehicleEl.style.animation = 'vehicleBounce 2s infinite ease-in-out';
           }
@@ -328,6 +335,7 @@ class VehicleParking {
   handleDrop(vehicleEl, stationEl) {
     if (this.roundLocked || this.destroyed) return;
     this.roundLocked = true;
+    this.stationsGrid.querySelectorAll('.vp-station-card').forEach(card => { card.disabled = true; });
     const targetStation = stationEl.dataset.station;
     const isCorrect = targetStation === this.currentVehicle.station;
     
@@ -342,8 +350,8 @@ class VehicleParking {
     const vCenterY = vRect.top + vRect.height / 2;
     
     // Current translate offset (from drag)
-    const style = window.getComputedStyle(vehicleEl);
-    const matrix = new DOMMatrix(style.transform);
+    const transform = window.getComputedStyle(vehicleEl).transform;
+    const matrix = new DOMMatrix(transform);
     const curTx = matrix.m41;
     const curTy = matrix.m42;
     
@@ -353,7 +361,11 @@ class VehicleParking {
     
     // Scale down to fit inside the station card
     const targetScale = Math.min(sRect.width, sRect.height) / Math.max(vRect.width, vRect.height) * 0.7;
-    
+
+    // The entrance animation keeps its final transform. Release it so taps,
+    // like drags, can move the vehicle into the selected station.
+    vehicleEl.style.animation = 'none';
+    vehicleEl.style.transform = transform;
     vehicleEl.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
     vehicleEl.style.transform = `translate(${flyDx}px, ${flyDy}px) scale(${targetScale}) rotate(0deg)`;
     
@@ -371,22 +383,22 @@ class VehicleParking {
   }
 
   onCorrect(vehicleEl, stationEl) {
+    if (this.destroyed || this.roundFeedback === 'correct') return;
+    this.roundFeedback = 'correct';
     // Play vehicle sound then applause
     this.playGroupSound(this.currentVehicle.group);
     this._later(() => this.playApplause(), 1000);
     
     // Mark the station as "parked" visually
-    stationEl.classList.add('highlight');
-    stationEl.style.borderStyle = 'solid';
-    stationEl.style.borderColor = '#4CAF50';
-    stationEl.style.background = '#E8F5E9';
+    stationEl.classList.add('vp-station-parked');
+    this.showCorrectFeedback();
     
     // Fade out the vehicle in place
     vehicleEl.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
     vehicleEl.style.opacity = '0';
     vehicleEl.style.transform += ' scale(0.3)';
     
-    this.createConfetti(vehicleEl);
+    this.createConfetti(stationEl);
     
     this.score++;
     if (this.scoreVal) this.scoreVal.textContent = `${this.score} / ${this.maxScore}`;
@@ -397,7 +409,15 @@ class VehicleParking {
       } else {
         this.generateRound();
       }
-    }, 1200);
+    }, 1600);
+  }
+
+  showCorrectFeedback() {
+    const feedback = this.topSection.querySelector('.vp-success-feedback');
+    if (!feedback) return;
+    const t = this.T_inline[this.lang] || this.T_inline.vi;
+    feedback.innerHTML = `<span class="vp-success-star" aria-hidden="true">★</span><strong>${t.correctTitle}</strong><span>${t.correctSubtitle}</span>`;
+    feedback.hidden = false;
   }
 
   onWrong(vehicleEl) {
@@ -405,14 +425,20 @@ class VehicleParking {
     this.playGlass();
     this.speakOops();
 
+    // Shake around the parked position, then release the animation before
+    // returning to the road. The drop has disabled the entrance animation.
+    vehicleEl.style.setProperty('--vp-drop-transform', vehicleEl.style.transform);
+    vehicleEl.style.animation = 'vpWrongParkingShake 0.4s ease-in-out forwards';
     vehicleEl.classList.add('anim-wrong-shake');
     this._later(() => {
       vehicleEl.classList.remove('anim-wrong-shake');
+      vehicleEl.style.animation = 'none';
       vehicleEl.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
       vehicleEl.style.transform = 'translate(0, 0) scale(1) rotate(0deg)';
       this._later(() => {
         if (this.currentVehicle) {
           this.roundLocked = false;
+          this.stationsGrid.querySelectorAll('.vp-station-card').forEach(card => { card.disabled = false; });
           vehicleEl.style.transition = 'none';
           vehicleEl.style.animation = 'vehicleBounce 2s infinite ease-in-out';
         }
@@ -421,9 +447,12 @@ class VehicleParking {
   }
   
   createConfetti(el) {
+    const layer = this.container.querySelector('.vp-celebration-layer');
+    if (!layer) return;
     const rect = el.getBoundingClientRect();
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
+    const layerRect = layer.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2 - layerRect.left;
+    const cy = rect.top - layerRect.top;
     
     for(let i=0; i<15; i++) {
       const conf = document.createElement('div');
@@ -431,12 +460,24 @@ class VehicleParking {
       conf.style.left = (cx + (Math.random() - 0.5) * 100) + 'px';
       conf.style.top = cy + 'px';
       conf.style.backgroundColor = ['#ffeb3b', '#ff5722', '#4caf50', '#2196f3', '#e91e63'][Math.floor(Math.random() * 5)];
-      document.body.appendChild(conf);
-      setTimeout(() => conf.remove(), 2000);
+      conf.style.setProperty('--vp-confetti-x', `${(Math.random() - 0.5) * 220}px`);
+      conf.style.setProperty('--vp-confetti-tilt', `${Math.random() * 180}deg`);
+      layer.appendChild(conf);
+      this.confettiPieces.add(conf);
+      this._later(() => {
+        conf.remove();
+        this.confettiPieces.delete(conf);
+      }, 1600);
     }
   }
 
+  clearConfetti() {
+    this.confettiPieces.forEach(piece => piece.remove());
+    this.confettiPieces.clear();
+  }
+
   showWinScreen() {
+    this.clearConfetti();
     this.app.winGame(1);
     this.won = true;
     this.renderWinScreen();
@@ -461,8 +502,19 @@ class VehicleParking {
     if (this.won) {
       this.renderWinScreen();
     } else if (this.currentVehicle) {
-      // re-render the current screen to update languages
-      this.renderGameScreen();
+      // Update text in place so switching language preserves a drag or the
+      // success feedback while the next-round timer is running.
+      const vName = lang === 'vi' ? this.currentVehicle.nameVi : this.currentVehicle.name;
+      this.topSection.querySelector('.vp-vehicle-name').textContent = vName;
+      this.topSection.querySelector('.vp-vehicle-img').setAttribute('aria-label', vName);
+      this.stationsGrid.querySelectorAll('.vp-station-card').forEach(card => {
+        const station = this.stations.find(st => st.station === card.dataset.station);
+        const name = lang === 'vi' ? station.stationVi : station.station;
+        card.setAttribute('aria-label', name);
+        card.querySelector('.vp-station-name').textContent = name;
+        card.querySelector('kid-model').setAttribute('aria-label', name);
+      });
+      if (this.roundFeedback === 'correct') this.showCorrectFeedback();
     }
   }
 
@@ -483,8 +535,7 @@ class VehicleParking {
     // audioCtx belongs to the global SoundEngine – never close it here.
     this.audioCtx = null;
 
-    // Confetti lives on document.body, so it must be swept up explicitly
-    document.querySelectorAll('.vp-confetti').forEach(c => c.remove());
+    this.clearConfetti();
 
     this.container.innerHTML = '';
   }
